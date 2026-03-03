@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>支出トラッカー</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#1a1a2e;color:#e4e4e7;font-family:system-ui,-apple-system,sans-serif;min-height:100vh;padding:16px}
+  .container{max-width:560px;margin:0 auto}
+  header{text-align:center;padding:20px 0 24px}
+  header h1{font-size:22px;font-weight:800;color:#4DD9D9}
+  .total-card{
+    background:#16213e;border:1px solid #2a2a4e;border-radius:14px;
+    padding:20px;text-align:center;margin-bottom:20px;
+  }
+  .total-label{font-size:12px;color:#71717a;text-transform:uppercase;letter-spacing:2px}
+  .total-amount{font-size:42px;font-weight:900;color:#4DD9D9;font-variant-numeric:tabular-nums;margin-top:4px}
+
+  /* Form */
+  .form-card{background:#16213e;border:1px solid #2a2a4e;border-radius:14px;padding:16px;margin-bottom:20px}
+  .form-row{display:flex;gap:10px;margin-bottom:10px}
+  .form-row:last-child{margin-bottom:0}
+  input,select,textarea{
+    flex:1;padding:10px 12px;border:1px solid #2a2a4e;border-radius:10px;
+    background:#0f3460;color:#e4e4e7;font-size:14px;font-family:inherit;outline:none;
+    transition:border-color .2s;
+  }
+  input:focus,select:focus,textarea:focus{border-color:#4DD9D9}
+  input::placeholder,textarea::placeholder{color:#52527a}
+  select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2371717a'%3E%3Cpath d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+  select option{background:#0f3460}
+  textarea{resize:none;min-height:40px}
+  .add-btn{
+    width:100%;padding:11px;border:none;border-radius:10px;
+    background:#4DD9D9;color:#1a1a2e;font-size:14px;font-weight:700;
+    cursor:pointer;transition:background .2s;
+  }
+  .add-btn:hover{background:#3bc4c4}
+  .add-btn:active{transform:scale(.98)}
+
+  /* Chart */
+  .chart-card{background:#16213e;border:1px solid #2a2a4e;border-radius:14px;padding:16px;margin-bottom:20px}
+  .chart-card h2{font-size:13px;color:#71717a;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px}
+  .chart-wrap{max-width:260px;margin:0 auto}
+
+  /* List */
+  .list-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+  .list-header h2{font-size:13px;color:#71717a;text-transform:uppercase;letter-spacing:1.5px}
+  .list-header span{font-size:12px;color:#52527a}
+  .list{display:flex;flex-direction:column;gap:8px;padding-bottom:24px}
+  .entry{
+    display:flex;align-items:center;gap:12px;
+    background:#16213e;border:1px solid #2a2a4e;border-radius:12px;padding:12px 14px;
+    animation:slideIn .25s ease;
+  }
+  @keyframes slideIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+  .cat-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+  .entry-body{flex:1;min-width:0}
+  .entry-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .entry-cat{font-size:12px;color:#a1a1ba}
+  .entry-amount{font-size:16px;font-weight:700;font-variant-numeric:tabular-nums;color:#fff;white-space:nowrap}
+  .entry-meta{font-size:11px;color:#52527a;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .del-btn{
+    width:30px;height:30px;border:none;border-radius:8px;background:transparent;
+    color:#52527a;font-size:16px;cursor:pointer;flex-shrink:0;transition:all .15s;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .del-btn:hover{background:#ef4444;color:#fff}
+  .empty{text-align:center;padding:40px 16px;color:#3a3a5e;font-size:14px}
+</style>
+</head>
+<body>
+<div class="container">
+  <header><h1>支出トラッカー</h1></header>
+
+  <div class="total-card">
+    <div class="total-label">合計支出</div>
+    <div class="total-amount" id="total">&yen;0</div>
+  </div>
+
+  <div class="form-card">
+    <div class="form-row">
+      <input id="amount" type="number" inputmode="numeric" placeholder="金額" min="0">
+      <select id="category">
+        <option value="食費">食費</option>
+        <option value="交通費">交通費</option>
+        <option value="娯楽">娯楽</option>
+        <option value="日用品">日用品</option>
+        <option value="その他">その他</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <textarea id="memo" placeholder="メモ（任意）" rows="1"></textarea>
+    </div>
+    <button class="add-btn" onclick="addEntry()">追加</button>
+  </div>
+
+  <div class="chart-card" id="chartCard" style="display:none">
+    <h2>カテゴリ別</h2>
+    <div class="chart-wrap"><canvas id="chart"></canvas></div>
+  </div>
+
+  <div class="list-header">
+    <h2>履歴</h2>
+    <span id="count"></span>
+  </div>
+  <div class="list" id="list"></div>
+</div>
+<script>
+const STORAGE = 'expense-tracker';
+const CAT_COLORS = { '食費':'#4DD9D9', '交通費':'#fbbf24', '娯楽':'#a855f7', '日用品':'#22c55e', 'その他':'#6366f1' };
+let entries = JSON.parse(localStorage.getItem(STORAGE) || '[]');
+let chart = null;
+
+function persist() { localStorage.setItem(STORAGE, JSON.stringify(entries)); }
+
+function fmt(n) { return '¥' + Number(n).toLocaleString(); }
+
+function fmtDate(iso) {
+  const d = new Date(iso);
+  return `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+
+function addEntry() {
+  const amountEl = document.getElementById('amount');
+  const catEl = document.getElementById('category');
+  const memoEl = document.getElementById('memo');
+  const val = parseInt(amountEl.value);
+  if (!val || val <= 0) { amountEl.focus(); return; }
+  entries.unshift({ id: Date.now(), amount: val, category: catEl.value, memo: memoEl.value.trim(), date: new Date().toISOString() });
+  persist();
+  amountEl.value = '';
+  memoEl.value = '';
+  amountEl.focus();
+  render();
+}
+
+function deleteEntry(id) {
+  entries = entries.filter(e => e.id !== id);
+  persist();
+  render();
+}
+
+function render() {
+  const total = entries.reduce((s, e) => s + e.amount, 0);
+  document.getElementById('total').textContent = fmt(total);
+  document.getElementById('count').textContent = entries.length ? `${entries.length}件` : '';
+
+  const list = document.getElementById('list');
+  if (entries.length === 0) {
+    list.innerHTML = '<div class="empty">まだ支出がありません</div>';
+  } else {
+    list.innerHTML = entries.map(e => `
+      <div class="entry">
+        <div class="cat-dot" style="background:${CAT_COLORS[e.category]||'#6366f1'}"></div>
+        <div class="entry-body">
+          <div class="entry-top">
+            <span class="entry-cat">${e.category}</span>
+            <span class="entry-amount">${fmt(e.amount)}</span>
+          </div>
+          <div class="entry-meta">${fmtDate(e.date)}${e.memo ? ' · ' + e.memo : ''}</div>
+        </div>
+        <button class="del-btn" onclick="deleteEntry(${e.id})">&#10005;</button>
+      </div>`).join('');
+  }
+
+  renderChart();
+}
+
+function renderChart() {
+  const card = document.getElementById('chartCard');
+  if (entries.length === 0) { card.style.display = 'none'; return; }
+  card.style.display = 'block';
+
+  const sums = {};
+  entries.forEach(e => { sums[e.category] = (sums[e.category] || 0) + e.amount; });
+  const labels = Object.keys(sums);
+  const data = Object.values(sums);
+  const colors = labels.map(l => CAT_COLORS[l] || '#6366f1');
+
+  if (chart) {
+    chart.data.labels = labels;
+    chart.data.datasets[0].data = data;
+    chart.data.datasets[0].backgroundColor = colors;
+    chart.update();
+  } else {
+    chart = new Chart(document.getElementById('chart'), {
+      type: 'doughnut',
+      data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 0, hoverOffset: 6 }] },
+      options: {
+        cutout: '65%',
+        plugins: {
+          legend: { position: 'bottom', labels: { color: '#a1a1ba', padding: 14, font: { size: 12 }, usePointStyle: true, pointStyleWidth: 8 } },
+          tooltip: {
+            backgroundColor: '#16213e', titleColor: '#e4e4e7', bodyColor: '#a1a1ba', borderColor: '#2a2a4e', borderWidth: 1,
+            callbacks: { label: ctx => ' ' + fmt(ctx.raw) }
+          }
+        }
+      }
+    });
+  }
+}
+
+document.getElementById('amount').addEventListener('keydown', e => { if (e.key === 'Enter') addEntry(); });
+document.getElementById('memo').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); addEntry(); } });
+
+render();
+</script>
+</body>
+</html>

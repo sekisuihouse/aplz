@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { createServerClient } from "@/lib/supabase";
 import { REACTION_EMOJIS } from "@/lib/utils";
 import ReactionBar from "./ReactionBar";
+import RatingSection from "./RatingSection";
 import CommentSection from "./CommentSection";
 
 export const revalidate = 10;
@@ -64,6 +65,26 @@ export default async function AppDetailPage({ params }: Props) {
     reactions[row.emoji] = (reactions[row.emoji] || 0) + 1;
   }
 
+  // Fetch ratings
+  const { data: ratingsData } = await supabase
+    .from("ratings")
+    .select("usability, design, idea")
+    .eq("app_id", app.id);
+
+  const ratingsList = ratingsData ?? [];
+  const ratingsCount = ratingsList.length;
+  const ratingsAverages =
+    ratingsCount > 0
+      ? {
+          usability:
+            ratingsList.reduce((sum, r) => sum + r.usability, 0) / ratingsCount,
+          design:
+            ratingsList.reduce((sum, r) => sum + r.design, 0) / ratingsCount,
+          idea:
+            ratingsList.reduce((sum, r) => sum + r.idea, 0) / ratingsCount,
+        }
+      : { usability: 0, design: 0, idea: 0 };
+
   const iframeSrc = `${process.env.R2_PUBLIC_URL}/${slug}/index.html`;
 
   return (
@@ -97,6 +118,13 @@ export default async function AppDetailPage({ params }: Props) {
 
       {/* Reactions */}
       <ReactionBar appId={app.id} initialReactions={reactions} />
+
+      {/* Ratings */}
+      <RatingSection
+        appId={app.id}
+        initialAverages={ratingsAverages}
+        initialCount={ratingsCount}
+      />
 
       {/* Comments */}
       <CommentSection appId={app.id} initialComments={comments ?? []} />

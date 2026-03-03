@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vibe Checker</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{--accent:#22d3ee;--bg1:#0a0a0b;--bg2:#0f1020;--bg3:#0a0a0b}
+  body{
+    font-family:system-ui,-apple-system,sans-serif;
+    background:var(--bg1);color:#e4e4e7;
+    min-height:100vh;overflow-x:hidden;
+    transition:background 0.8s ease;
+  }
+  .bg-aura{
+    position:fixed;inset:0;z-index:0;opacity:.5;
+    background:radial-gradient(ellipse at 30% 20%,var(--bg2),transparent 60%),
+               radial-gradient(ellipse at 70% 80%,var(--bg3),transparent 60%);
+    transition:background 0.8s ease;
+    animation:drift 12s ease-in-out infinite alternate;
+  }
+  @keyframes drift{
+    0%{transform:scale(1) translate(0,0)}
+    100%{transform:scale(1.1) translate(-2%,3%)}
+  }
+  .container{position:relative;z-index:1;max-width:640px;margin:0 auto;padding:24px 16px;min-height:100vh;display:flex;flex-direction:column}
+  header{text-align:center;padding:32px 0 24px}
+  header h1{font-size:28px;font-weight:800;letter-spacing:-0.5px}
+  header h1 span{color:var(--accent);transition:color .5s ease}
+  textarea{
+    width:100%;padding:16px;border:1px solid #2a2a2e;border-radius:14px;
+    background:rgba(20,20,22,.7);backdrop-filter:blur(12px);
+    color:#e4e4e7;font-size:15px;line-height:1.7;font-family:inherit;
+    resize:vertical;min-height:120px;outline:none;transition:border-color .3s;
+  }
+  textarea:focus{border-color:var(--accent)}
+  textarea::placeholder{color:#52525b}
+  .placeholder-msg{
+    text-align:center;padding:64px 16px;color:#52525b;font-size:18px;
+    animation:pulse 3s ease-in-out infinite;
+  }
+  @keyframes pulse{0%,100%{opacity:.6}50%{opacity:1}}
+
+  /* Results */
+  .results{margin-top:24px;display:flex;flex-direction:column;gap:16px;animation:fadeUp .4s ease}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+  .card{
+    background:rgba(20,20,22,.6);backdrop-filter:blur(16px);
+    border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:24px;
+    transition:border-color .5s ease;
+  }
+  .card:hover{border-color:rgba(255,255,255,.1)}
+
+  /* Score */
+  .score-card{text-align:center;padding:32px 24px}
+  .score-num{
+    font-size:min(140px,28vw);font-weight:900;line-height:1;
+    color:var(--accent);transition:color .5s ease;
+    font-variant-numeric:tabular-nums;
+  }
+  .score-label{font-size:13px;color:#71717a;text-transform:uppercase;letter-spacing:3px;margin-top:8px}
+  .mood-tag{
+    display:inline-block;margin-top:16px;padding:6px 20px;border-radius:99px;
+    background:rgba(255,255,255,.06);font-size:15px;font-weight:600;
+    color:var(--accent);transition:color .5s ease,background .5s ease;
+  }
+
+  /* Meters */
+  .meters{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .meter{display:flex;flex-direction:column;gap:8px}
+  .meter-head{display:flex;justify-content:space-between;align-items:center}
+  .meter-label{font-size:12px;color:#71717a;text-transform:uppercase;letter-spacing:1.5px}
+  .meter-value{font-size:13px;font-weight:600;color:var(--accent);transition:color .5s ease}
+  .bar-track{height:6px;border-radius:99px;background:#1a1a1e;overflow:hidden}
+  .bar-fill{height:100%;border-radius:99px;background:var(--accent);transition:width .5s ease,background .5s ease}
+
+  /* Word stats */
+  .stats{display:flex;gap:12px;flex-wrap:wrap;margin-top:4px}
+  .stat{font-size:12px;color:#52525b;font-variant-numeric:tabular-nums}
+  .stat b{color:#71717a}
+
+  /* Share */
+  .share-btn{
+    width:100%;padding:12px;border:1px solid #2a2a2e;border-radius:12px;
+    background:rgba(20,20,22,.5);backdrop-filter:blur(8px);
+    color:#e4e4e7;font-size:14px;font-weight:600;cursor:pointer;
+    transition:all .25s;margin-top:8px;
+  }
+  .share-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+  @media(max-width:480px){
+    .meters{grid-template-columns:1fr}
+    header{padding:20px 0 16px}
+  }
+</style>
+</head>
+<body>
+<div class="bg-aura" id="aura"></div>
+<div class="container">
+  <header><h1>Vibe <span id="titleAccent">Checker</span></h1></header>
+  <textarea id="input" placeholder="Paste any text to check its vibe..." oninput="analyze()"></textarea>
+  <div id="output"><div class="placeholder-msg">Type something to feel the vibe &#10024;</div></div>
+</div>
+<script>
+const POSITIVE = ['good','great','awesome','amazing','love','happy','wonderful','fantastic','beautiful','excellent','brilliant','perfect','best','joy','delight','excited','super','cool','nice','lovely','fun','glad','enjoy','cheerful','bright','sunshine','smile','laugh','win','success','celebrate','yay','wow','incredible','outstanding','magnificent','marvelous','terrific','splendid','fabulous','paradise','bless','grateful','thankful','kind','sweet','gentle','warm','cozy','peace','calm','relax','serene','tranquil','bliss'];
+const NEGATIVE = ['bad','terrible','awful','horrible','hate','sad','angry','worst','ugly','stupid','boring','fail','wrong','pain','hurt','cry','die','kill','dead','fear','scare','dark','evil','toxic','danger','threat','doom','stress','anxious','worry','suffer','miserable','disgusting','nasty','cruel','violent','rage','fury','nightmare','dread','horror','tragic','grim','bleak'];
+const INTENSE = ['!','!!','!!!','omg','insane','crazy','wild','extreme','fire','lit','absolutely','definitely','totally','seriously','honestly','literally','massive','huge','epic','legendary','explosive','mind-blowing','unbelievable','unstoppable'];
+const FORMAL = ['therefore','furthermore','however','consequently','nevertheless','regarding','accordingly','hereby','whereas','thus','henceforth','notwithstanding','pursuant','subsequently','moreover','indeed','shall','ought','whom','facilitate','commence','terminate','endeavor','sufficient'];
+const CASUAL = ['lol','lmao','haha','gonna','wanna','gotta','kinda','sorta','ya','nah','yep','nope','sup','bro','dude','bruh','tbh','imo','btw','idk','omg','ngl','fr','lowkey','highkey','vibe','slay','based','cap','goat','flex','mood'];
+const MYSTERY = ['secret','hidden','unknown','shadow','whisper','enigma','cryptic','obscure','ancient','mystical','arcane','ethereal','cosmic','void','abyss','phantom','riddle','puzzle','maze','fog','mist','twilight','silence','echo','destiny','fate','omen','prophecy','oracle'];
+
+const MOODS = {
+  Happy:     { color: '#fbbf24', bg2: '#2d1f00', bg3: '#1a1200' },
+  Chill:     { color: '#22d3ee', bg2: '#001a22', bg3: '#00101a' },
+  Serious:   { color: '#6366f1', bg2: '#0f0f2e', bg3: '#08081a' },
+  Intense:   { color: '#ef4444', bg2: '#2a0a0a', bg3: '#1a0505' },
+  Mysterious:{ color: '#a855f7', bg2: '#1a0a2e', bg3: '#10051a' }
+};
+
+function countMatches(words, list) {
+  return words.reduce((n, w) => n + (list.includes(w) ? 1 : 0), 0);
+}
+
+function analyze() {
+  const raw = document.getElementById('input').value;
+  const out = document.getElementById('output');
+  if (!raw.trim()) {
+    out.innerHTML = '<div class="placeholder-msg">Type something to feel the vibe &#10024;</div>';
+    setTheme('Chill');
+    return;
+  }
+
+  const text = raw.toLowerCase();
+  const words = text.match(/[a-z']+/g) || [];
+  const sentences = raw.split(/[.!?]+/).filter(s => s.trim());
+  const excl = (raw.match(/!/g) || []).length;
+  const caps = (raw.match(/[A-Z]{2,}/g) || []).length;
+
+  // Score
+  const pos = countMatches(words, POSITIVE);
+  const neg = countMatches(words, NEGATIVE);
+  const total = words.length || 1;
+  let score = Math.round(50 + ((pos - neg) / total) * 200);
+  score = Math.max(0, Math.min(100, score));
+
+  // Energy
+  const avgLen = sentences.length ? words.length / sentences.length : words.length;
+  const energyRaw = Math.min(100, (excl * 12) + (caps * 8) + (avgLen > 20 ? 20 : 0) + countMatches(words, INTENSE) * 10);
+  const energy = energyRaw > 60 ? 'High' : energyRaw > 30 ? 'Medium' : 'Low';
+  const energyPct = Math.min(100, energyRaw);
+
+  // Formality
+  const formalCount = countMatches(words, FORMAL);
+  const casualCount = countMatches(words, CASUAL);
+  const formalRaw = Math.round(50 + ((formalCount - casualCount) / total) * 300);
+  const formalPct = Math.max(0, Math.min(100, formalRaw));
+  const formality = formalPct > 60 ? 'Formal' : formalPct > 35 ? 'Balanced' : 'Casual';
+
+  // Mood
+  const mysteryCount = countMatches(words, MYSTERY);
+  let mood;
+  if (mysteryCount > 2 || (mysteryCount >= 1 && total < 20)) mood = 'Mysterious';
+  else if (energyRaw > 55 && neg > pos) mood = 'Intense';
+  else if (energyRaw > 55) mood = score > 50 ? 'Happy' : 'Intense';
+  else if (score >= 55) mood = 'Happy';
+  else if (score <= 35) mood = 'Serious';
+  else mood = 'Chill';
+
+  setTheme(mood);
+
+  out.innerHTML = `
+    <div class="results">
+      <div class="card score-card">
+        <div class="score-num">${score}</div>
+        <div class="score-label">Vibe Score</div>
+        <div class="mood-tag">${moodEmoji(mood)} ${mood}</div>
+      </div>
+      <div class="card meters">
+        <div class="meter">
+          <div class="meter-head"><span class="meter-label">Energy</span><span class="meter-value">${energy}</span></div>
+          <div class="bar-track"><div class="bar-fill" style="width:${energyPct}%"></div></div>
+        </div>
+        <div class="meter">
+          <div class="meter-head"><span class="meter-label">Formality</span><span class="meter-value">${formality}</span></div>
+          <div class="bar-track"><div class="bar-fill" style="width:${formalPct}%"></div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="stats">
+          <span class="stat"><b>${words.length}</b> words</span>
+          <span class="stat"><b>${sentences.length}</b> sentences</span>
+          <span class="stat"><b>${pos}</b> positive</span>
+          <span class="stat"><b>${neg}</b> negative</span>
+        </div>
+      </div>
+      <button class="share-btn" onclick="shareVibe(${score},'${mood}','${energy}','${formality}')">Share Vibe</button>
+    </div>`;
+}
+
+function moodEmoji(m) {
+  return { Happy: '&#9728;&#65039;', Chill: '&#127754;', Serious: '&#129488;', Intense: '&#128293;', Mysterious: '&#127764;' }[m] || '';
+}
+
+function setTheme(mood) {
+  const t = MOODS[mood] || MOODS.Chill;
+  document.documentElement.style.setProperty('--accent', t.color);
+  document.documentElement.style.setProperty('--bg2', t.bg2);
+  document.documentElement.style.setProperty('--bg3', t.bg3);
+}
+
+function shareVibe(score, mood, energy, formality) {
+  const text = `My Vibe Check ✨\nScore: ${score}/100\nMood: ${mood}\nEnergy: ${energy}\nFormality: ${formality}\n\nChecked with Vibe Checker`;
+  navigator.clipboard.writeText(text);
+  const btn = document.querySelector('.share-btn');
+  btn.textContent = 'Copied!';
+  setTimeout(() => btn.textContent = 'Share Vibe', 1500);
+}
+
+setTheme('Chill');
+</script>
+</body>
+</html>
