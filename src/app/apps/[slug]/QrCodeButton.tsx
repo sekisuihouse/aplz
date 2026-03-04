@@ -3,14 +3,11 @@
 import { useState } from "react";
 import { QrCode, X } from "lucide-react";
 
-interface Props {
-  appUrl: string;
-}
-
-export default function QrCodeButton({ appUrl }: Props) {
+export default function QrCodeButton() {
   const [open, setOpen] = useState(false);
 
-  const qrSrc = `https://chart.googleapis.com/chart?cht=qr&chs=200x200&chl=${encodeURIComponent(appUrl)}`;
+  const pageUrl = typeof window !== "undefined" ? window.location.href : "";
+  const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(pageUrl)}`;
 
   return (
     <>

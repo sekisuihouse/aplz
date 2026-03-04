@@ -196,7 +196,7 @@ export default async function AppDetailPage({ params }: Props) {
                 >
                   新しいタブで開く &#8599;
                 </a>
-                <QrCodeButton appUrl={iframeSrc} />
+                <QrCodeButton />
                 {isOwner && (
                   <Link
                     href={`/apps/${slug}/edit`}
