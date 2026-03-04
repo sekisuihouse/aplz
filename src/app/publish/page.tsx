@@ -1,6 +1,9 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { Suspense, useState, useCallback, useRef, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
+import { Upload } from "lucide-react";
+import { createBrowserClient } from "@/lib/supabase";
 
 interface PublishResult {
   app_id: string;
@@ -10,7 +13,24 @@ interface PublishResult {
   edit_token: string;
 }
 
+interface Community {
+  id: string;
+  name: string;
+  slug: string;
+}
+
 export default function PublishPage() {
+  return (
+    <Suspense>
+      <PublishForm />
+    </Suspense>
+  );
+}
+
+function PublishForm() {
+  const searchParams = useSearchParams();
+  const communitySlug = searchParams.get("community");
+
   const [file, setFile] = useState<File | null>(null);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -19,19 +39,36 @@ export default function PublishPage() {
   const [result, setResult] = useState<PublishResult | null>(null);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState<string | null>(null);
+  const [community, setCommunity] = useState<Community | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setDragging(false);
-    const dropped = e.dataTransfer.files[0];
-    if (dropped) {
-      setFile(dropped);
-      if (!name) {
-        setName(dropped.name.replace(/\.(zip|html)$/i, ""));
+  useEffect(() => {
+    if (!communitySlug) return;
+    const supabase = createBrowserClient();
+    supabase
+      .from("communities")
+      .select("id, name, slug")
+      .eq("slug", communitySlug)
+      .single()
+      .then(({ data }) => {
+        if (data) setCommunity(data);
+      });
+  }, [communitySlug]);
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      setDragging(false);
+      const dropped = e.dataTransfer.files[0];
+      if (dropped) {
+        setFile(dropped);
+        if (!name) {
+          setName(dropped.name.replace(/\.(zip|html)$/i, ""));
+        }
       }
-    }
-  }, [name]);
+    },
+    [name]
+  );
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0];
@@ -53,6 +90,9 @@ export default function PublishPage() {
       formData.append("file", file);
       formData.append("name", name || "Untitled App");
       formData.append("description", description);
+      if (community) {
+        formData.append("community_id", community.id);
+      }
 
       const res = await fetch("/api/publish", {
         method: "POST",
@@ -61,13 +101,13 @@ export default function PublishPage() {
 
       const data = await res.json();
       if (!data.success) {
-        setError(data.error || "Publish failed");
+        setError(data.error || "公開に失敗しました");
         return;
       }
 
       setResult(data);
     } catch {
-      setError("Network error. Please try again.");
+      setError("ネットワークエラーが発生しました。もう一度お試しください。");
     } finally {
       setPublishing(false);
     }
@@ -90,28 +130,31 @@ export default function PublishPage() {
   if (result) {
     return (
       <div className="min-h-[calc(100vh-64px)] flex items-center justify-center p-4">
-        <div className="w-full max-w-lg bg-[#141416] border border-[#2a2a2e] rounded-xl p-8 animate-fade-in">
+        <div className="w-full max-w-lg bg-[#141416] border border-[#1e1e22] rounded-xl p-8 animate-fade-in">
           <div className="text-center mb-6">
-            <div className="text-4xl mb-3">&#127881;</div>
-            <h2 className="text-2xl font-bold text-white">Published!</h2>
-            <p className="text-gray-400 mt-1">Your app is now live</p>
+            <h2 className="text-2xl font-bold text-[#e4e4e7]">
+              公開しました！
+            </h2>
+            <p className="text-zinc-500 mt-1">アプリが公開されました</p>
           </div>
 
           <div className="space-y-4">
             <ResultRow
-              label="Live URL"
+              label="アプリURL"
               value={result.app_url}
               copied={copied === "app_url"}
               onCopy={() => copyToClipboard(result.app_url, "app_url")}
             />
             <ResultRow
-              label="Platform URL"
+              label="フィードバックページ"
               value={result.platform_url}
               copied={copied === "platform_url"}
-              onCopy={() => copyToClipboard(result.platform_url, "platform_url")}
+              onCopy={() =>
+                copyToClipboard(result.platform_url, "platform_url")
+              }
             />
             <ResultRow
-              label="Edit Token"
+              label="編集トークン"
               value={result.edit_token}
               copied={copied === "edit_token"}
               onCopy={() => copyToClipboard(result.edit_token, "edit_token")}
@@ -119,15 +162,15 @@ export default function PublishPage() {
             />
           </div>
 
-          <p className="text-xs text-gray-500 mt-4">
-            Save your edit token — you will need it to update or delete this app.
+          <p className="text-xs text-zinc-600 mt-4">
+            編集トークンを保存してください。アプリの更新・削除に必要です。
           </p>
 
           <button
             onClick={reset}
             className="w-full mt-6 py-3 rounded-lg bg-[#22d3ee] text-black font-semibold hover:bg-[#06b6d4] transition-colors cursor-pointer"
           >
-            Publish Another
+            もう一つ公開する
           </button>
         </div>
       </div>
@@ -137,10 +180,23 @@ export default function PublishPage() {
   return (
     <div className="min-h-[calc(100vh-64px)] flex items-center justify-center p-4">
       <div className="w-full max-w-lg animate-fade-in">
-        <h1 className="text-3xl font-bold text-white mb-2">Publish Your App</h1>
-        <p className="text-gray-400 mb-8">
-          Upload a .zip or .html file and get a live URL instantly.
+        <h1 className="text-3xl font-bold text-[#e4e4e7] mb-2">
+          アプリを公開
+        </h1>
+        <p className="text-zinc-500 mb-8">
+          ZIPまたはHTMLファイルをアップロードして、すぐに公開できます。
         </p>
+
+        {community && (
+          <div className="mb-6 px-4 py-3 bg-white/5 border border-[#1e1e22] rounded-lg">
+            <p className="text-sm text-zinc-400">
+              <span className="text-[#e4e4e7] font-medium">
+                {community.name}
+              </span>{" "}
+              に公開
+            </p>
+          </div>
+        )}
 
         {/* Drop Zone */}
         <div
@@ -155,10 +211,10 @@ export default function PublishPage() {
             border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-colors
             ${
               dragging
-                ? "border-[#22d3ee] bg-[#22d3ee]/10"
+                ? "border-zinc-500 bg-white/5"
                 : file
-                  ? "border-[#22d3ee]/50 bg-[#141416]"
-                  : "border-[#2a2a2e] bg-[#141416] hover:border-[#3a3a3e]"
+                  ? "border-zinc-600 bg-[#141416]"
+                  : "border-[#1e1e22] bg-[#141416] hover:border-[#2a2a2e]"
             }
           `}
         >
@@ -171,20 +227,22 @@ export default function PublishPage() {
           />
           {file ? (
             <div>
-              <div className="text-2xl mb-2">&#128230;</div>
-              <p className="text-white font-medium">{file.name}</p>
-              <p className="text-gray-500 text-sm mt-1">
-                {(file.size / 1024).toFixed(1)} KB — Click or drag to replace
+              <Upload size={20} className="mx-auto mb-2 text-zinc-400" />
+              <p className="text-[#e4e4e7] font-medium">{file.name}</p>
+              <p className="text-zinc-500 text-sm mt-1">
+                {(file.size / 1024).toFixed(1)} KB
+                — クリックまたはドラッグで変更
               </p>
             </div>
           ) : (
             <div>
-              <div className="text-3xl mb-3">&#128194;</div>
-              <p className="text-gray-300">
-                Drag & drop your <span className="text-[#22d3ee]">.zip</span> or{" "}
-                <span className="text-[#22d3ee]">.html</span> file here
+              <Upload size={24} className="mx-auto mb-3 text-zinc-500" />
+              <p className="text-zinc-300">
+                ファイルをドラッグ&ドロップ
               </p>
-              <p className="text-gray-500 text-sm mt-2">or click to browse</p>
+              <p className="text-zinc-600 text-sm mt-2">
+                ZIPまたはHTMLファイル
+              </p>
             </div>
           )}
         </div>
@@ -192,28 +250,27 @@ export default function PublishPage() {
         {/* Form Fields */}
         <div className="mt-6 space-y-4">
           <div>
-            <label className="block text-sm text-gray-400 mb-1.5">
-              App Name
+            <label className="block text-sm text-zinc-400 mb-1.5">
+              アプリ名
             </label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="My Awesome App"
-              className="w-full bg-[#141416] border border-[#2a2a2e] rounded-lg px-4 py-2.5 text-white placeholder:text-gray-600 focus:outline-none focus:border-[#22d3ee] transition-colors"
+              placeholder="アプリの名前"
+              className="w-full bg-[#141416] border border-[#1e1e22] rounded-lg px-4 py-2.5 text-[#e4e4e7] placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors"
             />
           </div>
           <div>
-            <label className="block text-sm text-gray-400 mb-1.5">
-              Description{" "}
-              <span className="text-gray-600">(optional)</span>
+            <label className="block text-sm text-zinc-400 mb-1.5">
+              説明 <span className="text-zinc-600">（任意）</span>
             </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="What does your app do?"
+              placeholder="アプリの説明"
               rows={3}
-              className="w-full bg-[#141416] border border-[#2a2a2e] rounded-lg px-4 py-2.5 text-white placeholder:text-gray-600 focus:outline-none focus:border-[#22d3ee] transition-colors resize-none"
+              className="w-full bg-[#141416] border border-[#1e1e22] rounded-lg px-4 py-2.5 text-[#e4e4e7] placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors resize-none"
             />
           </div>
         </div>
@@ -229,7 +286,7 @@ export default function PublishPage() {
           disabled={!file || publishing}
           className="w-full mt-6 py-3 rounded-lg bg-[#22d3ee] text-black font-semibold hover:bg-[#06b6d4] transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
         >
-          {publishing ? "Publishing..." : "Publish"}
+          {publishing ? "公開中..." : "公開する"}
         </button>
       </div>
     </div>
@@ -251,18 +308,18 @@ function ResultRow({
 }) {
   return (
     <div>
-      <label className="block text-xs text-gray-500 mb-1">{label}</label>
-      <div className="flex items-center gap-2 bg-[#0a0a0b] border border-[#2a2a2e] rounded-lg px-3 py-2">
+      <label className="block text-xs text-zinc-500 mb-1">{label}</label>
+      <div className="flex items-center gap-2 bg-[#0a0a0b] border border-[#1e1e22] rounded-lg px-3 py-2">
         <span
-          className={`flex-1 text-sm truncate ${mono ? "font-mono text-gray-300" : "text-[#22d3ee]"}`}
+          className={`flex-1 text-sm truncate ${mono ? "font-mono text-zinc-300" : "text-[#e4e4e7]"}`}
         >
           {value}
         </span>
         <button
           onClick={onCopy}
-          className="shrink-0 text-xs px-2 py-1 rounded bg-[#2a2a2e] text-gray-300 hover:bg-[#3a3a3e] transition-colors cursor-pointer"
+          className="shrink-0 text-xs px-2 py-1 rounded bg-white/10 text-zinc-300 hover:bg-white/15 transition-colors cursor-pointer"
         >
-          {copied ? "Copied!" : "Copy"}
+          {copied ? "コピー済み" : "コピー"}
         </button>
       </div>
     </div>

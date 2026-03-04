@@ -20,14 +20,14 @@ export async function generateMetadata({ params }: Props) {
     .eq("slug", slug)
     .single();
 
-  if (!app) return { title: "App not found" };
+  if (!app) return { title: "アプリが見つかりません" };
 
   return {
     title: `${app.name} — aplz`,
-    description: app.description || `Check out ${app.name} on aplz`,
+    description: app.description || `${app.name} を aplz でチェック`,
     openGraph: {
       title: app.name,
-      description: app.description || `Check out ${app.name} on aplz`,
+      description: app.description || `${app.name} を aplz でチェック`,
     },
   };
 }
@@ -43,6 +43,17 @@ export default async function AppDetailPage({ params }: Props) {
     .single();
 
   if (!app) notFound();
+
+  // Fetch community name if app belongs to one
+  let communityName: string | null = null;
+  if (app.community_id) {
+    const { data: community } = await supabase
+      .from("communities")
+      .select("name")
+      .eq("id", app.community_id)
+      .single();
+    communityName = community?.name ?? null;
+  }
 
   // Fetch comments
   const { data: comments } = await supabase
@@ -91,22 +102,29 @@ export default async function AppDetailPage({ params }: Props) {
     <main className="max-w-5xl mx-auto px-4 py-8">
       {/* Header */}
       <div className="mb-6 animate-fade-in">
-        <h1 className="text-3xl font-bold text-white">{app.name}</h1>
+        <h1 className="text-3xl font-bold text-[#e4e4e7]">
+          {app.name}
+          {communityName && (
+            <span className="text-sm font-normal text-zinc-500 ml-3">
+              {communityName}
+            </span>
+          )}
+        </h1>
         {app.description && (
-          <p className="text-gray-400 mt-2">{app.description}</p>
+          <p className="text-zinc-500 mt-2">{app.description}</p>
         )}
         <a
           href={iframeSrc}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 text-sm text-[#22d3ee] hover:underline mt-2"
+          className="inline-flex items-center gap-1 text-sm text-zinc-400 hover:text-zinc-300 transition-colors mt-2"
         >
-          Open in new tab &#8599;
+          新しいタブで開く &#8599;
         </a>
       </div>
 
       {/* iframe */}
-      <div className="rounded-xl border border-[#2a2a2e] overflow-hidden bg-white mb-6 animate-fade-in">
+      <div className="rounded-xl border border-[#1e1e22] overflow-hidden bg-white mb-6 animate-fade-in">
         <iframe
           src={iframeSrc}
           sandbox="allow-scripts allow-forms allow-popups allow-same-origin allow-modals"

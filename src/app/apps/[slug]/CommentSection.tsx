@@ -59,10 +59,10 @@ export default function CommentSection({ appId, initialComments }: Props) {
 
   return (
     <div className="animate-fade-in">
-      <h2 className="text-lg font-bold text-white mb-4">
-        Feedback{" "}
+      <h2 className="text-lg font-bold text-[#e4e4e7] mb-4">
+        フィードバック{" "}
         {comments.length > 0 && (
-          <span className="text-gray-500 font-normal">
+          <span className="text-zinc-500 font-normal">
             ({comments.length})
           </span>
         )}
@@ -70,16 +70,16 @@ export default function CommentSection({ appId, initialComments }: Props) {
 
       {/* Comment List */}
       {comments.length === 0 ? (
-        <div className="text-center py-12 bg-[#141416] border border-[#2a2a2e] rounded-xl mb-6">
-          <p className="text-gray-500">
-            No feedback yet. Be the first to share your thoughts!
+        <div className="text-center py-12 bg-[#141416] border border-[#1e1e22] rounded-xl mb-6">
+          <p className="text-zinc-500">
+            まだフィードバックはありません。最初の感想を書いてみましょう！
           </p>
         </div>
       ) : (
-        <div className="bg-[#141416] border border-[#2a2a2e] rounded-xl divide-y divide-[#2a2a2e] mb-6">
+        <div className="bg-[#141416] border border-[#1e1e22] rounded-xl divide-y divide-[#1e1e22] mb-6">
           {comments.map((comment) => (
             <div key={comment.id} className="p-4 flex gap-3">
-              <div className="shrink-0 w-8 h-8 rounded-full bg-[#22d3ee]/15 text-[#22d3ee] flex items-center justify-center text-sm font-semibold">
+              <div className="shrink-0 w-8 h-8 rounded-full bg-white/10 text-zinc-400 flex items-center justify-center text-sm font-semibold">
                 {comment.author_name.charAt(0).toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">
@@ -101,21 +101,21 @@ export default function CommentSection({ appId, initialComments }: Props) {
       )}
 
       {/* Comment Form */}
-      <div className="bg-[#141416] border border-[#2a2a2e] rounded-xl p-4">
+      <div className="bg-[#141416] border border-[#1e1e22] rounded-xl p-4">
         <input
           type="text"
           value={authorName}
           onChange={(e) => setAuthorName(e.target.value.slice(0, 30))}
-          placeholder="Your name (optional)"
-          className="w-full bg-[#0a0a0b] border border-[#2a2a2e] rounded-lg px-3 py-2 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-[#22d3ee] transition-colors mb-3"
+          placeholder="名前（任意）"
+          className="w-full bg-[#0a0a0b] border border-[#1e1e22] rounded-lg px-3 py-2 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-zinc-500 transition-colors mb-3"
         />
         <textarea
           value={body}
           onChange={(e) => setBody(e.target.value.slice(0, 500))}
           onKeyDown={handleKeyDown}
-          placeholder="Share your feedback..."
+          placeholder="感想を書く..."
           rows={2}
-          className="w-full bg-[#0a0a0b] border border-[#2a2a2e] rounded-lg px-3 py-2 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-[#22d3ee] transition-colors resize-none"
+          className="w-full bg-[#0a0a0b] border border-[#1e1e22] rounded-lg px-3 py-2 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-zinc-500 transition-colors resize-none"
         />
         <div className="flex items-center justify-between mt-2">
           <span className="text-xs text-gray-600 font-mono">
@@ -124,9 +124,9 @@ export default function CommentSection({ appId, initialComments }: Props) {
           <button
             onClick={handleSubmit}
             disabled={!canSubmit}
-            className="px-4 py-1.5 rounded-lg bg-[#22d3ee] text-black text-sm font-semibold hover:bg-[#06b6d4] transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            className="px-4 py-1.5 rounded-lg bg-white/10 text-zinc-300 text-sm font-medium hover:bg-white/15 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
           >
-            {submitting ? "Sending..." : "Send"}
+            {submitting ? "送信中..." : "送信"}
           </button>
         </div>
       </div>

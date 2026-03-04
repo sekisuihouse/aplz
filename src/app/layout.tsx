@@ -14,9 +14,9 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "aplz — Publish AI Apps Instantly",
+  title: "aplz — AIで作ったアプリを公開",
   description:
-    "Upload your HTML or ZIP and get a live URL. Collect feedback from the community.",
+    "HTMLやZIPをアップロードして即座に公開。コミュニティからフィードバックを集めよう。",
 };
 
 export default function RootLayout({
@@ -25,11 +25,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="ja">
       <body
         className={`${dmSans.variable} ${jetbrainsMono.variable} font-sans antialiased bg-[#0a0a0b] text-gray-100`}
       >
-        <header className="sticky top-0 z-50 backdrop-blur-md bg-[#0a0a0b]/80 border-b border-[#2a2a2e]">
+        <header className="sticky top-0 z-50 backdrop-blur-md bg-[#0a0a0b]/80 border-b border-[#1e1e22]">
           <nav className="max-w-5xl mx-auto flex items-center justify-between px-4 h-16">
             <Link href="/" className="flex items-center gap-2">
               <span className="text-xl font-bold text-[#22d3ee]">aplz</span>
@@ -39,17 +39,17 @@ export default function RootLayout({
             </Link>
             <Link
               href="/publish"
-              className="px-4 py-2 rounded-lg bg-[#22d3ee] text-black text-sm font-semibold hover:bg-[#06b6d4] transition-colors"
+              className="px-4 py-2 rounded-lg bg-[#22d3ee] text-black text-sm font-medium hover:bg-[#06b6d4] transition-colors"
             >
-              Publish App
+              アプリを公開
             </Link>
           </nav>
         </header>
         {children}
-        <footer className="border-t border-[#2a2a2e] py-8 text-center">
-          <p className="text-sm text-gray-600">
+        <footer className="border-t border-[#1e1e22] py-8 text-center">
+          <p className="text-sm text-zinc-600">
             <span className="font-semibold text-[#22d3ee]">aplz</span>
-            {" "}— the home for AI-built apps
+            {" "}— AIで作ったアプリの集まる場所
           </p>
         </footer>
       </body>

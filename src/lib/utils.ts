@@ -44,14 +44,14 @@ export function getMimeType(filename: string): string {
 export function formatDate(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
+  if (mins < 1) return "たった今";
+  if (mins < 60) return `${mins}分前`;
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
+  if (hours < 24) return `${hours}時間前`;
   const days = Math.floor(hours / 24);
-  if (days < 30) return `${days}d ago`;
+  if (days < 30) return `${days}日前`;
   const months = Math.floor(days / 30);
-  return `${months}mo ago`;
+  return `${months}ヶ月前`;
 }
 
 export const REACTION_EMOJIS = ["🔥", "👍", "💡", "🎨", "🚀"] as const;

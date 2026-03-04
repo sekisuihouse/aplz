@@ -10,6 +10,7 @@ export async function POST(req: NextRequest) {
     const file = formData.get("file") as File | null;
     const name = (formData.get("name") as string) || "Untitled App";
     const description = (formData.get("description") as string) || "";
+    const communityId = (formData.get("community_id") as string) || null;
 
     if (!file) {
       return NextResponse.json(
@@ -94,6 +95,7 @@ export async function POST(req: NextRequest) {
         slug,
         author_token: authorToken,
         file_count: fileCount,
+        community_id: communityId,
       })
       .select("id")
       .single();

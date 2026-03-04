@@ -44,7 +44,7 @@ export default function ReactionBar({ appId, initialReactions }: Props) {
           key={emoji}
           onClick={() => handleReact(emoji)}
           disabled={sending !== null}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#2a2a2e] bg-[#141416] hover:border-[#22d3ee]/50 transition-colors disabled:opacity-60 cursor-pointer"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#1e1e22] bg-[#141416] hover:border-[#2a2a2e] transition-colors disabled:opacity-60 cursor-pointer"
         >
           <span className="text-lg">{emoji}</span>
           {reactions[emoji] > 0 && (

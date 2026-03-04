@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createServerClient } from "@/lib/supabase";
-import { formatDate } from "@/lib/utils";
+import AppCard from "./components/AppCard";
 
 export const revalidate = 30;
 
@@ -12,112 +12,84 @@ export default async function Home() {
       `
       *,
       comments:comments(count),
-      reactions:reactions(count)
+      ratings:ratings(count)
     `
     )
     .order("created_at", { ascending: false })
     .limit(30);
 
-  const list = (apps ?? []).map((app) => ({
-    ...app,
-    comment_count: app.comments?.[0]?.count ?? 0,
-    reaction_count: app.reactions?.[0]?.count ?? 0,
-  }));
+  // Fetch rating averages for all apps
+  const { data: allRatings } = await supabase
+    .from("ratings")
+    .select("app_id, usability, design, idea");
+
+  const ratingsByApp: Record<string, { sum: number; count: number }> = {};
+  for (const r of allRatings ?? []) {
+    if (!ratingsByApp[r.app_id]) {
+      ratingsByApp[r.app_id] = { sum: 0, count: 0 };
+    }
+    ratingsByApp[r.app_id].sum += r.usability + r.design + r.idea;
+    ratingsByApp[r.app_id].count += 1;
+  }
+
+  const list = (apps ?? []).map((app) => {
+    const rd = ratingsByApp[app.id];
+    return {
+      ...app,
+      comment_count: app.comments?.[0]?.count ?? 0,
+      rating_count: rd?.count ?? 0,
+      avg_rating: rd ? rd.sum / rd.count / 3 : 0,
+    };
+  });
+
+  const r2PublicUrl = process.env.R2_PUBLIC_URL;
 
   return (
     <main>
       {/* Hero */}
-      <section className="flex flex-col items-center justify-center px-4 pt-24 pb-16 text-center">
-        <h1 className="text-5xl font-bold text-white mb-4">
-          Ship your app in <span className="text-[#22d3ee]">seconds</span>
+      <section className="flex flex-col items-center justify-center px-4 pt-16 pb-12 text-center">
+        <h1 className="text-2xl sm:text-3xl font-bold text-[#e4e4e7] mb-3 leading-snug">
+          AIで作ったアプリを、
+          <br />
+          ドラッグ&ドロップで公開。
         </h1>
-        <p className="text-gray-400 text-lg max-w-md mb-8">
-          Upload a ZIP or HTML file and get a live URL instantly. Collect
-          feedback from the community.
-        </p>
         <Link
           href="/publish"
-          className="px-8 py-3 rounded-lg bg-[#22d3ee] text-black font-semibold text-lg hover:bg-[#06b6d4] transition-colors"
+          className="mt-4 px-6 py-2.5 rounded-lg bg-[#22d3ee] text-black font-semibold text-sm hover:bg-[#06b6d4] transition-colors"
         >
-          Publish Your App
+          アプリを公開する
         </Link>
-      </section>
-
-      {/* How it works */}
-      <section className="max-w-3xl mx-auto px-4 pb-16">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
-          <div className="p-5">
-            <div className="text-3xl mb-2">&#128193;</div>
-            <h3 className="font-semibold text-white mb-1">Upload</h3>
-            <p className="text-sm text-gray-500">ZIP or HTML file — drag & drop and you&apos;re done</p>
-          </div>
-          <div className="p-5">
-            <div className="text-3xl mb-2">&#128279;</div>
-            <h3 className="font-semibold text-white mb-1">Get a URL</h3>
-            <p className="text-sm text-gray-500">Instant live link shared with anyone</p>
-          </div>
-          <div className="p-5">
-            <div className="text-3xl mb-2">&#128172;</div>
-            <h3 className="font-semibold text-white mb-1">Collect Feedback</h3>
-            <p className="text-sm text-gray-500">Comments & reactions from the community</p>
-          </div>
-        </div>
       </section>
 
       {/* App List */}
       <section className="max-w-5xl mx-auto px-4 pb-20">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-white">
-            Recently Published
-          </h2>
-          {list.length > 0 && (
-            <span className="text-sm text-gray-500 font-mono">
-              {list.length} app{list.length !== 1 ? "s" : ""}
-            </span>
-          )}
-        </div>
+        <h2 className="text-sm font-medium text-zinc-500 mb-4">
+          公開されたアプリ
+        </h2>
 
         {list.length === 0 ? (
-          <div className="text-center py-20 bg-[#141416] border border-[#2a2a2e] rounded-xl">
-            <div className="text-4xl mb-4">&#128640;</div>
-            <p className="text-gray-400 mb-4">
-              No apps published yet. Be the first!
-            </p>
+          <div className="text-center py-16 bg-[#141416] border border-[#1e1e22] rounded-xl">
+            <p className="text-zinc-500 mb-4">まだアプリがありません</p>
             <Link
               href="/publish"
-              className="inline-block px-6 py-2.5 rounded-lg bg-[#22d3ee] text-black font-semibold hover:bg-[#06b6d4] transition-colors"
+              className="inline-block px-5 py-2 rounded-lg bg-[#22d3ee] text-black font-semibold text-sm hover:bg-[#06b6d4] transition-colors"
             >
-              Publish Your App
+              最初のアプリを公開する
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {list.map((app) => (
-              <Link
+              <AppCard
                 key={app.id}
-                href={`/apps/${app.slug}`}
-                className="group bg-[#141416] border border-[#2a2a2e] rounded-xl p-5 hover:border-[#3a3a3e] transition-colors"
-              >
-                <h3 className="font-semibold text-white group-hover:text-[#22d3ee] transition-colors truncate">
-                  {app.name}
-                </h3>
-                {app.description && (
-                  <p className="text-sm text-gray-500 mt-1.5 line-clamp-2">
-                    {app.description}
-                  </p>
-                )}
-                <div className="flex items-center gap-3 mt-4 text-xs text-gray-600">
-                  <span className="font-mono">
-                    {formatDate(app.created_at)}
-                  </span>
-                  {app.reaction_count > 0 && (
-                    <span>&#128293; {app.reaction_count}</span>
-                  )}
-                  {app.comment_count > 0 && (
-                    <span>&#128172; {app.comment_count}</span>
-                  )}
-                </div>
-              </Link>
+                slug={app.slug}
+                name={app.name}
+                appUrl={`${r2PublicUrl}/${app.slug}/index.html`}
+                avgRating={app.avg_rating}
+                ratingCount={app.rating_count}
+                commentCount={app.comment_count}
+                createdAt={app.created_at}
+              />
             ))}
           </div>
         )}

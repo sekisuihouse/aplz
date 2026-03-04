@@ -121,9 +121,9 @@ export default function RatingSection({
       : 0;
 
   return (
-    <div className="bg-[#141416] border border-[#2a2a2e] rounded-xl p-6 mb-8 animate-fade-in">
+    <div className="bg-[#141416] border border-[#1e1e22] rounded-xl p-6 mb-8 animate-fade-in">
       {/* Average scores */}
-      <h2 className="text-lg font-bold text-white mb-4">Rate this app</h2>
+      <h2 className="text-lg font-bold text-[#e4e4e7] mb-4">このアプリを評価</h2>
 
       {count > 0 ? (
         <div className="mb-6">
@@ -162,7 +162,7 @@ export default function RatingSection({
           <p className="text-gray-500 text-sm mt-1">評価済み ✓</p>
         </div>
       ) : (
-        <div className="border-t border-[#2a2a2e] pt-5">
+        <div className="border-t border-[#1e1e22] pt-5">
           <h3 className="text-sm font-bold text-gray-300 mb-4">
             あなたの評価
           </h3>
