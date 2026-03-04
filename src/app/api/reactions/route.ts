@@ -68,7 +68,8 @@ export async function POST(req: NextRequest) {
       .insert({ app_id, emoji });
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      console.error("Reaction insert error:", error);
+      return NextResponse.json({ error: error.message, code: error.code, details: error.details }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });

@@ -37,7 +37,6 @@ function PublishForm() {
   const [file, setFile] = useState<File | null>(null);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [authorName, setAuthorName] = useState("");
   const [dragging, setDragging] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [result, setResult] = useState<PublishResult | null>(null);
@@ -100,7 +99,6 @@ function PublishForm() {
       formData.append("file", file);
       formData.append("name", name || "Untitled App");
       formData.append("description", description);
-      formData.append("author_name", authorName.trim() || "Anonymous");
       formData.append("is_public", isPublic ? "true" : "false");
       if (selectedCommunityId) {
         formData.append("community_id", selectedCommunityId);
@@ -135,7 +133,6 @@ function PublishForm() {
     setFile(null);
     setName("");
     setDescription("");
-    setAuthorName("");
     setIsPublic(true);
     setSelectedCommunityId(null);
     setCommunitySelections((prev) => prev.map((s) => ({ ...s, selected: false })));
@@ -311,18 +308,6 @@ function PublishForm() {
               placeholder="アプリの説明"
               rows={3}
               className="w-full bg-[#f5f5f5] border border-[#e5e5e5] rounded-lg px-4 py-2.5 text-[#0f0f0f] placeholder:text-[#909090] focus:outline-none focus:border-[#909090] transition-colors resize-none"
-            />
-          </div>
-          <div>
-            <label className="block text-sm text-[#606060] mb-1.5">
-              投稿者名 <span className="text-[#909090]">（任意）</span>
-            </label>
-            <input
-              type="text"
-              value={authorName}
-              onChange={(e) => setAuthorName(e.target.value.slice(0, 30))}
-              placeholder="Anonymous"
-              className="w-full bg-[#f5f5f5] border border-[#e5e5e5] rounded-lg px-4 py-2.5 text-[#0f0f0f] placeholder:text-[#909090] focus:outline-none focus:border-[#909090] transition-colors"
             />
           </div>
         </div>

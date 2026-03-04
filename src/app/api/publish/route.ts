@@ -36,8 +36,17 @@ export async function POST(req: NextRequest) {
     const name = (formData.get("name") as string) || "Untitled App";
     const description = (formData.get("description") as string) || "";
     const communityId = (formData.get("community_id") as string) || null;
-    const authorName = (formData.get("author_name") as string) || "Anonymous";
     const isPublic = formData.get("is_public") !== "false";
+
+    // Auto-set author_name from profile
+    let authorName = "Anonymous";
+    if (user) {
+      const db = createServerClient();
+      const { data: profile } = await db.from("profiles").select("display_name").eq("id", user.id).single();
+      if (profile?.display_name) {
+        authorName = profile.display_name;
+      }
+    }
 
     if (!file) {
       return NextResponse.json(

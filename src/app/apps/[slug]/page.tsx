@@ -131,7 +131,10 @@ export default async function AppDetailPage({ params }: Props) {
         {/* Main Column */}
         <div className="flex-1 min-w-0">
           {/* iframe */}
-          <div className="w-full rounded-lg overflow-hidden border border-[#e5e5e5] h-[300px] sm:h-[500px] mb-4 animate-fade-in">
+          <div
+            className="w-full rounded-lg overflow-hidden border border-[#e5e5e5] mb-4 animate-fade-in"
+            style={{ aspectRatio: "16/9", maxHeight: "80vh", minHeight: "300px" }}
+          >
             <iframe
               src={iframeSrc}
               className="w-full h-full border-0"
