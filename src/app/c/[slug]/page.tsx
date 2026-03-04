@@ -84,11 +84,11 @@ export default async function CommunityPage({ params }: Props) {
     <main className="max-w-5xl mx-auto px-4 py-8">
       {/* Community Header */}
       <div className="mb-8">
-        <h1 className="text-xl font-bold text-[#e4e4e7]">
+        <h1 className="text-xl font-bold text-[#0f0f0f]">
           {community.name}
         </h1>
         {community.description && (
-          <p className="text-sm text-zinc-500 mt-1">{community.description}</p>
+          <p className="text-sm text-[#606060] mt-1">{community.description}</p>
         )}
         <Link
           href={`/publish?community=${slug}`}
@@ -100,8 +100,8 @@ export default async function CommunityPage({ params }: Props) {
 
       {/* App Grid */}
       {list.length === 0 ? (
-        <div className="text-center py-16 bg-[#141416] border border-[#1e1e22] rounded-xl">
-          <p className="text-zinc-500 mb-4">
+        <div className="text-center py-16 bg-[#f5f5f5] border border-[#e5e5e5] rounded-xl">
+          <p className="text-[#606060] mb-4">
             まだアプリがありません。最初の一つを公開してみましょう
           </p>
           <Link
@@ -123,6 +123,8 @@ export default async function CommunityPage({ params }: Props) {
               ratingCount={app.rating_count}
               commentCount={app.comment_count}
               createdAt={app.created_at}
+              authorName={app.author_name}
+              version={app.version}
             />
           ))}
         </div>

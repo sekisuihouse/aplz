@@ -10,6 +10,8 @@ interface AppCardProps {
   ratingCount: number;
   commentCount: number;
   createdAt: string;
+  authorName?: string;
+  version?: number;
 }
 
 export default function AppCard({
@@ -20,11 +22,13 @@ export default function AppCard({
   ratingCount,
   commentCount,
   createdAt,
+  authorName,
+  version,
 }: AppCardProps) {
   return (
     <Link
       href={`/apps/${slug}`}
-      className="group bg-[#141416] border border-[#1e1e22] rounded-lg overflow-hidden hover:border-[#2a2a2e] transition-colors duration-200"
+      className="group bg-white border border-[#e5e5e5] rounded-lg overflow-hidden hover:shadow-md transition-all duration-200"
     >
       {/* iframe thumbnail */}
       <div
@@ -50,13 +54,23 @@ export default function AppCard({
 
       {/* Card body */}
       <div className="p-3">
-        <h3 className="text-sm font-medium text-[#e4e4e7] truncate">
+        <h3 className="text-sm font-medium text-[#0f0f0f] truncate">
           {name}
+          {version && version > 1 && (
+            <span className="ml-1 text-xs text-[#909090] font-normal">
+              v{version}
+            </span>
+          )}
         </h3>
-        <div className="flex items-center gap-2 mt-1.5 text-xs text-zinc-500">
+        {authorName && (
+          <p className="text-xs text-[#606060] truncate mt-0.5">
+            {authorName}
+          </p>
+        )}
+        <div className="flex items-center gap-2 mt-1.5 text-xs text-[#909090]">
           {ratingCount > 0 && (
             <span className="flex items-center gap-0.5">
-              <span className="text-amber-400">★</span>
+              <span className="text-amber-500">★</span>
               <span>{avgRating.toFixed(1)}</span>
               <span>({ratingCount}件)</span>
             </span>
@@ -68,7 +82,7 @@ export default function AppCard({
             </span>
           )}
         </div>
-        <p className="text-xs text-zinc-600 mt-1">
+        <p className="text-xs text-[#909090] mt-1">
           {formatDate(createdAt)}
         </p>
       </div>

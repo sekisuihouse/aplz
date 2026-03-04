@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { DM_Sans, JetBrains_Mono } from "next/font/google";
 import Link from "next/link";
+import { createAuthServerClient } from "@/lib/supabase-server";
+import NavUser from "./components/NavUser";
 import "./globals.css";
 
 const dmSans = DM_Sans({
@@ -19,35 +21,62 @@ export const metadata: Metadata = {
     "HTMLやZIPをアップロードして即座に公開。コミュニティからフィードバックを集めよう。",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const supabase = await createAuthServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   return (
     <html lang="ja">
       <body
-        className={`${dmSans.variable} ${jetbrainsMono.variable} font-sans antialiased bg-[#0a0a0b] text-gray-100`}
+        className={`${dmSans.variable} ${jetbrainsMono.variable} font-sans antialiased bg-white text-[#0f0f0f]`}
       >
-        <header className="sticky top-0 z-50 backdrop-blur-md bg-[#0a0a0b]/80 border-b border-[#1e1e22]">
+        <header className="sticky top-0 z-50 backdrop-blur-md bg-white/80 border-b border-[#e5e5e5]">
           <nav className="max-w-5xl mx-auto flex items-center justify-between px-4 h-16">
             <Link href="/" className="flex items-center gap-2">
               <span className="text-xl font-bold text-[#22d3ee]">aplz</span>
-              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-[#22d3ee]/15 text-[#22d3ee] uppercase tracking-wider">
+              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-[#22d3ee]/10 text-[#22d3ee] uppercase tracking-wider">
                 beta
               </span>
             </Link>
-            <Link
-              href="/publish"
-              className="px-4 py-2 rounded-lg bg-[#22d3ee] text-black text-sm font-medium hover:bg-[#06b6d4] transition-colors"
-            >
-              アプリを公開
-            </Link>
+            <div className="flex items-center gap-3">
+              {user ? (
+                <>
+                  <Link
+                    href="/publish"
+                    className="px-4 py-2 rounded-lg bg-[#22d3ee] text-black text-sm font-medium hover:bg-[#06b6d4] transition-colors"
+                  >
+                    アプリを公開
+                  </Link>
+                  <NavUser email={user.email ?? ""} />
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/login"
+                    className="px-4 py-2 rounded-lg text-[#0f0f0f] text-sm font-medium hover:bg-[#f5f5f5] transition-colors"
+                  >
+                    ログイン
+                  </Link>
+                  <Link
+                    href="/publish"
+                    className="px-4 py-2 rounded-lg bg-[#22d3ee] text-black text-sm font-medium hover:bg-[#06b6d4] transition-colors"
+                  >
+                    アプリを公開
+                  </Link>
+                </>
+              )}
+            </div>
           </nav>
         </header>
         {children}
-        <footer className="border-t border-[#1e1e22] py-8 text-center">
-          <p className="text-sm text-zinc-600">
+        <footer className="border-t border-[#e5e5e5] py-8 text-center">
+          <p className="text-sm text-[#909090]">
             <span className="font-semibold text-[#22d3ee]">aplz</span>
             {" "}— AIで作ったアプリの集まる場所
           </p>

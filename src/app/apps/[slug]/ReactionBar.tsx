@@ -26,11 +26,9 @@ export default function ReactionBar({ appId, initialReactions }: Props) {
         body: JSON.stringify({ app_id: appId, emoji }),
       });
       if (!res.ok) {
-        // Revert
         setReactions((prev) => ({ ...prev, [emoji]: (prev[emoji] || 1) - 1 }));
       }
     } catch {
-      // Revert
       setReactions((prev) => ({ ...prev, [emoji]: (prev[emoji] || 1) - 1 }));
     } finally {
       setSending(null);
@@ -44,11 +42,11 @@ export default function ReactionBar({ appId, initialReactions }: Props) {
           key={emoji}
           onClick={() => handleReact(emoji)}
           disabled={sending !== null}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#1e1e22] bg-[#141416] hover:border-[#2a2a2e] transition-colors disabled:opacity-60 cursor-pointer"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#e5e5e5] bg-white hover:shadow-md transition-all disabled:opacity-60 cursor-pointer"
         >
           <span className="text-lg">{emoji}</span>
           {reactions[emoji] > 0 && (
-            <span className="text-xs font-mono text-gray-400">
+            <span className="text-xs font-mono text-[#909090]">
               {reactions[emoji]}
             </span>
           )}

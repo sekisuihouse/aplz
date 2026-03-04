@@ -1,6 +1,9 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
+import { Pencil } from "lucide-react";
 import { createServerClient } from "@/lib/supabase";
-import { REACTION_EMOJIS } from "@/lib/utils";
+import { createAuthServerClient } from "@/lib/supabase-server";
+import { REACTION_EMOJIS, formatDate } from "@/lib/utils";
 import ReactionBar from "./ReactionBar";
 import RatingSection from "./RatingSection";
 import CommentSection from "./CommentSection";
@@ -43,6 +46,11 @@ export default async function AppDetailPage({ params }: Props) {
     .single();
 
   if (!app) notFound();
+
+  // Get current user
+  const authSupabase = await createAuthServerClient();
+  const { data: { user } } = await authSupabase.auth.getUser();
+  const isOwner = user && app.user_id && user.id === app.user_id;
 
   // Fetch community name if app belongs to one
   let communityName: string | null = null;
@@ -102,29 +110,59 @@ export default async function AppDetailPage({ params }: Props) {
     <main className="max-w-5xl mx-auto px-4 py-8">
       {/* Header */}
       <div className="mb-6 animate-fade-in">
-        <h1 className="text-3xl font-bold text-[#e4e4e7]">
-          {app.name}
-          {communityName && (
-            <span className="text-sm font-normal text-zinc-500 ml-3">
-              {communityName}
-            </span>
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-[#0f0f0f]">
+              {app.name}
+              {communityName && (
+                <span className="text-sm font-normal text-[#909090] ml-3">
+                  {communityName}
+                </span>
+              )}
+            </h1>
+            <div className="flex items-center gap-1.5 text-sm text-[#909090] mt-1">
+              {app.author_name && (
+                <span>作成: {app.author_name}</span>
+              )}
+              {app.version > 1 && (
+                <>
+                  <span>・</span>
+                  <span>v{app.version}</span>
+                </>
+              )}
+              {app.last_published_at && app.version > 1 && (
+                <>
+                  <span>・</span>
+                  <span>{formatDate(app.last_published_at)}に更新</span>
+                </>
+              )}
+            </div>
+          </div>
+          {isOwner && (
+            <Link
+              href={`/apps/${slug}/edit`}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#e5e5e5] text-sm text-[#606060] hover:shadow-md transition-all"
+            >
+              <Pencil size={14} />
+              編集
+            </Link>
           )}
-        </h1>
+        </div>
         {app.description && (
-          <p className="text-zinc-500 mt-2">{app.description}</p>
+          <p className="text-[#606060] mt-2">{app.description}</p>
         )}
         <a
           href={iframeSrc}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 text-sm text-zinc-400 hover:text-zinc-300 transition-colors mt-2"
+          className="inline-flex items-center gap-1 text-sm text-[#065fd4] hover:underline transition-colors mt-2"
         >
           新しいタブで開く &#8599;
         </a>
       </div>
 
       {/* iframe */}
-      <div className="rounded-xl border border-[#1e1e22] overflow-hidden bg-white mb-6 animate-fade-in">
+      <div className="rounded-lg border border-[#e5e5e5] overflow-hidden bg-white mb-6 animate-fade-in">
         <iframe
           src={iframeSrc}
           sandbox="allow-scripts allow-forms allow-popups allow-same-origin allow-modals"

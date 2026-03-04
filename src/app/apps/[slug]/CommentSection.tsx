@@ -59,10 +59,10 @@ export default function CommentSection({ appId, initialComments }: Props) {
 
   return (
     <div className="animate-fade-in">
-      <h2 className="text-lg font-bold text-[#e4e4e7] mb-4">
+      <h2 className="text-lg font-bold text-[#0f0f0f] mb-4">
         フィードバック{" "}
         {comments.length > 0 && (
-          <span className="text-zinc-500 font-normal">
+          <span className="text-[#909090] font-normal">
             ({comments.length})
           </span>
         )}
@@ -70,28 +70,28 @@ export default function CommentSection({ appId, initialComments }: Props) {
 
       {/* Comment List */}
       {comments.length === 0 ? (
-        <div className="text-center py-12 bg-[#141416] border border-[#1e1e22] rounded-xl mb-6">
-          <p className="text-zinc-500">
+        <div className="text-center py-12 bg-[#f5f5f5] border border-[#e5e5e5] rounded-lg mb-6">
+          <p className="text-[#909090]">
             まだフィードバックはありません。最初の感想を書いてみましょう！
           </p>
         </div>
       ) : (
-        <div className="bg-[#141416] border border-[#1e1e22] rounded-xl divide-y divide-[#1e1e22] mb-6">
+        <div className="bg-white border border-[#e5e5e5] rounded-lg divide-y divide-[#e5e5e5] mb-6">
           {comments.map((comment) => (
             <div key={comment.id} className="p-4 flex gap-3">
-              <div className="shrink-0 w-8 h-8 rounded-full bg-white/10 text-zinc-400 flex items-center justify-center text-sm font-semibold">
+              <div className="shrink-0 w-8 h-8 rounded-full bg-[#f5f5f5] text-[#606060] flex items-center justify-center text-sm font-semibold">
                 {comment.author_name.charAt(0).toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-sm font-medium text-white">
+                  <span className="text-sm font-medium text-[#0f0f0f]">
                     {comment.author_name}
                   </span>
-                  <span className="text-xs text-gray-600 font-mono">
+                  <span className="text-xs text-[#909090] font-mono">
                     {formatDate(comment.created_at)}
                   </span>
                 </div>
-                <p className="text-sm text-gray-300 break-words">
+                <p className="text-sm text-[#606060] break-words">
                   {comment.body}
                 </p>
               </div>
@@ -101,13 +101,13 @@ export default function CommentSection({ appId, initialComments }: Props) {
       )}
 
       {/* Comment Form */}
-      <div className="bg-[#141416] border border-[#1e1e22] rounded-xl p-4">
+      <div className="bg-white border border-[#e5e5e5] rounded-lg p-4">
         <input
           type="text"
           value={authorName}
           onChange={(e) => setAuthorName(e.target.value.slice(0, 30))}
           placeholder="名前（任意）"
-          className="w-full bg-[#0a0a0b] border border-[#1e1e22] rounded-lg px-3 py-2 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-zinc-500 transition-colors mb-3"
+          className="w-full bg-[#f5f5f5] border border-[#e5e5e5] rounded-lg px-3 py-2 text-sm text-[#0f0f0f] placeholder:text-[#909090] focus:outline-none focus:border-[#909090] transition-colors mb-3"
         />
         <textarea
           value={body}
@@ -115,16 +115,16 @@ export default function CommentSection({ appId, initialComments }: Props) {
           onKeyDown={handleKeyDown}
           placeholder="感想を書く..."
           rows={2}
-          className="w-full bg-[#0a0a0b] border border-[#1e1e22] rounded-lg px-3 py-2 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-zinc-500 transition-colors resize-none"
+          className="w-full bg-[#f5f5f5] border border-[#e5e5e5] rounded-lg px-3 py-2 text-sm text-[#0f0f0f] placeholder:text-[#909090] focus:outline-none focus:border-[#909090] transition-colors resize-none"
         />
         <div className="flex items-center justify-between mt-2">
-          <span className="text-xs text-gray-600 font-mono">
+          <span className="text-xs text-[#909090] font-mono">
             {body.length}/500
           </span>
           <button
             onClick={handleSubmit}
             disabled={!canSubmit}
-            className="px-4 py-1.5 rounded-lg bg-white/10 text-zinc-300 text-sm font-medium hover:bg-white/15 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            className="px-4 py-1.5 rounded-lg bg-[#f5f5f5] text-[#0f0f0f] text-sm font-medium hover:bg-[#ebebeb] transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
           >
             {submitting ? "送信中..." : "送信"}
           </button>

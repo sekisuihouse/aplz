@@ -48,7 +48,7 @@ export default async function Home() {
     <main>
       {/* Hero */}
       <section className="flex flex-col items-center justify-center px-4 pt-16 pb-12 text-center">
-        <h1 className="text-2xl sm:text-3xl font-bold text-[#e4e4e7] mb-3 leading-snug">
+        <h1 className="text-2xl sm:text-3xl font-bold text-[#0f0f0f] mb-3 leading-snug">
           AIで作ったアプリを、
           <br />
           ドラッグ&ドロップで公開。
@@ -63,13 +63,13 @@ export default async function Home() {
 
       {/* App List */}
       <section className="max-w-5xl mx-auto px-4 pb-20">
-        <h2 className="text-sm font-medium text-zinc-500 mb-4">
+        <h2 className="text-sm font-medium text-[#909090] mb-4">
           公開されたアプリ
         </h2>
 
         {list.length === 0 ? (
-          <div className="text-center py-16 bg-[#141416] border border-[#1e1e22] rounded-xl">
-            <p className="text-zinc-500 mb-4">まだアプリがありません</p>
+          <div className="text-center py-16 bg-[#f5f5f5] border border-[#e5e5e5] rounded-xl">
+            <p className="text-[#606060] mb-4">まだアプリがありません</p>
             <Link
               href="/publish"
               className="inline-block px-5 py-2 rounded-lg bg-[#22d3ee] text-black font-semibold text-sm hover:bg-[#06b6d4] transition-colors"
@@ -89,6 +89,8 @@ export default async function Home() {
                 ratingCount={app.rating_count}
                 commentCount={app.comment_count}
                 createdAt={app.created_at}
+                authorName={app.author_name}
+                version={app.version}
               />
             ))}
           </div>

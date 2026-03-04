@@ -10,7 +10,6 @@ interface PublishResult {
   slug: string;
   app_url: string;
   platform_url: string;
-  edit_token: string;
 }
 
 interface Community {
@@ -34,6 +33,7 @@ function PublishForm() {
   const [file, setFile] = useState<File | null>(null);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [authorName, setAuthorName] = useState("");
   const [dragging, setDragging] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [result, setResult] = useState<PublishResult | null>(null);
@@ -90,6 +90,7 @@ function PublishForm() {
       formData.append("file", file);
       formData.append("name", name || "Untitled App");
       formData.append("description", description);
+      formData.append("author_name", authorName.trim() || "Anonymous");
       if (community) {
         formData.append("community_id", community.id);
       }
@@ -123,6 +124,7 @@ function PublishForm() {
     setFile(null);
     setName("");
     setDescription("");
+    setAuthorName("");
     setResult(null);
     setError("");
   };
@@ -130,12 +132,12 @@ function PublishForm() {
   if (result) {
     return (
       <div className="min-h-[calc(100vh-64px)] flex items-center justify-center p-4">
-        <div className="w-full max-w-lg bg-[#141416] border border-[#1e1e22] rounded-xl p-8 animate-fade-in">
+        <div className="w-full max-w-lg bg-white border border-[#e5e5e5] rounded-xl p-8 animate-fade-in">
           <div className="text-center mb-6">
-            <h2 className="text-2xl font-bold text-[#e4e4e7]">
+            <h2 className="text-2xl font-bold text-[#0f0f0f]">
               公開しました！
             </h2>
-            <p className="text-zinc-500 mt-1">アプリが公開されました</p>
+            <p className="text-[#606060] mt-1">アプリが公開されました</p>
           </div>
 
           <div className="space-y-4">
@@ -153,18 +155,7 @@ function PublishForm() {
                 copyToClipboard(result.platform_url, "platform_url")
               }
             />
-            <ResultRow
-              label="編集トークン"
-              value={result.edit_token}
-              copied={copied === "edit_token"}
-              onCopy={() => copyToClipboard(result.edit_token, "edit_token")}
-              mono
-            />
           </div>
-
-          <p className="text-xs text-zinc-600 mt-4">
-            編集トークンを保存してください。アプリの更新・削除に必要です。
-          </p>
 
           <button
             onClick={reset}
@@ -180,17 +171,17 @@ function PublishForm() {
   return (
     <div className="min-h-[calc(100vh-64px)] flex items-center justify-center p-4">
       <div className="w-full max-w-lg animate-fade-in">
-        <h1 className="text-3xl font-bold text-[#e4e4e7] mb-2">
+        <h1 className="text-3xl font-bold text-[#0f0f0f] mb-2">
           アプリを公開
         </h1>
-        <p className="text-zinc-500 mb-8">
+        <p className="text-[#606060] mb-8">
           ZIPまたはHTMLファイルをアップロードして、すぐに公開できます。
         </p>
 
         {community && (
-          <div className="mb-6 px-4 py-3 bg-white/5 border border-[#1e1e22] rounded-lg">
-            <p className="text-sm text-zinc-400">
-              <span className="text-[#e4e4e7] font-medium">
+          <div className="mb-6 px-4 py-3 bg-[#f5f5f5] border border-[#e5e5e5] rounded-lg">
+            <p className="text-sm text-[#606060]">
+              <span className="text-[#0f0f0f] font-medium">
                 {community.name}
               </span>{" "}
               に公開
@@ -208,13 +199,13 @@ function PublishForm() {
           onDrop={handleDrop}
           onClick={() => inputRef.current?.click()}
           className={`
-            border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-colors
+            border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-all
             ${
               dragging
-                ? "border-zinc-500 bg-white/5"
+                ? "border-[#909090] bg-[#f5f5f5]"
                 : file
-                  ? "border-zinc-600 bg-[#141416]"
-                  : "border-[#1e1e22] bg-[#141416] hover:border-[#2a2a2e]"
+                  ? "border-[#e5e5e5] bg-[#f5f5f5]"
+                  : "border-[#e5e5e5] bg-[#f5f5f5] hover:shadow-md"
             }
           `}
         >
@@ -227,20 +218,20 @@ function PublishForm() {
           />
           {file ? (
             <div>
-              <Upload size={20} className="mx-auto mb-2 text-zinc-400" />
-              <p className="text-[#e4e4e7] font-medium">{file.name}</p>
-              <p className="text-zinc-500 text-sm mt-1">
+              <Upload size={20} className="mx-auto mb-2 text-[#606060]" />
+              <p className="text-[#0f0f0f] font-medium">{file.name}</p>
+              <p className="text-[#909090] text-sm mt-1">
                 {(file.size / 1024).toFixed(1)} KB
                 — クリックまたはドラッグで変更
               </p>
             </div>
           ) : (
             <div>
-              <Upload size={24} className="mx-auto mb-3 text-zinc-500" />
-              <p className="text-zinc-300">
+              <Upload size={24} className="mx-auto mb-3 text-[#909090]" />
+              <p className="text-[#0f0f0f]">
                 ファイルをドラッグ&ドロップ
               </p>
-              <p className="text-zinc-600 text-sm mt-2">
+              <p className="text-[#909090] text-sm mt-2">
                 ZIPまたはHTMLファイル
               </p>
             </div>
@@ -250,7 +241,7 @@ function PublishForm() {
         {/* Form Fields */}
         <div className="mt-6 space-y-4">
           <div>
-            <label className="block text-sm text-zinc-400 mb-1.5">
+            <label className="block text-sm text-[#606060] mb-1.5">
               アプリ名
             </label>
             <input
@@ -258,25 +249,37 @@ function PublishForm() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="アプリの名前"
-              className="w-full bg-[#141416] border border-[#1e1e22] rounded-lg px-4 py-2.5 text-[#e4e4e7] placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors"
+              className="w-full bg-[#f5f5f5] border border-[#e5e5e5] rounded-lg px-4 py-2.5 text-[#0f0f0f] placeholder:text-[#909090] focus:outline-none focus:border-[#909090] transition-colors"
             />
           </div>
           <div>
-            <label className="block text-sm text-zinc-400 mb-1.5">
-              説明 <span className="text-zinc-600">（任意）</span>
+            <label className="block text-sm text-[#606060] mb-1.5">
+              説明 <span className="text-[#909090]">（任意）</span>
             </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="アプリの説明"
               rows={3}
-              className="w-full bg-[#141416] border border-[#1e1e22] rounded-lg px-4 py-2.5 text-[#e4e4e7] placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors resize-none"
+              className="w-full bg-[#f5f5f5] border border-[#e5e5e5] rounded-lg px-4 py-2.5 text-[#0f0f0f] placeholder:text-[#909090] focus:outline-none focus:border-[#909090] transition-colors resize-none"
+            />
+          </div>
+          <div>
+            <label className="block text-sm text-[#606060] mb-1.5">
+              投稿者名 <span className="text-[#909090]">（任意）</span>
+            </label>
+            <input
+              type="text"
+              value={authorName}
+              onChange={(e) => setAuthorName(e.target.value.slice(0, 30))}
+              placeholder="Anonymous"
+              className="w-full bg-[#f5f5f5] border border-[#e5e5e5] rounded-lg px-4 py-2.5 text-[#0f0f0f] placeholder:text-[#909090] focus:outline-none focus:border-[#909090] transition-colors"
             />
           </div>
         </div>
 
         {error && (
-          <div className="mt-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+          <div className="mt-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm">
             {error}
           </div>
         )}
@@ -308,16 +311,16 @@ function ResultRow({
 }) {
   return (
     <div>
-      <label className="block text-xs text-zinc-500 mb-1">{label}</label>
-      <div className="flex items-center gap-2 bg-[#0a0a0b] border border-[#1e1e22] rounded-lg px-3 py-2">
+      <label className="block text-xs text-[#909090] mb-1">{label}</label>
+      <div className="flex items-center gap-2 bg-[#f5f5f5] border border-[#e5e5e5] rounded-lg px-3 py-2">
         <span
-          className={`flex-1 text-sm truncate ${mono ? "font-mono text-zinc-300" : "text-[#e4e4e7]"}`}
+          className={`flex-1 text-sm truncate ${mono ? "font-mono text-[#606060]" : "text-[#0f0f0f]"}`}
         >
           {value}
         </span>
         <button
           onClick={onCopy}
-          className="shrink-0 text-xs px-2 py-1 rounded bg-white/10 text-zinc-300 hover:bg-white/15 transition-colors cursor-pointer"
+          className="shrink-0 text-xs px-2 py-1 rounded bg-[#e5e5e5] text-[#0f0f0f] hover:bg-[#d5d5d5] transition-colors cursor-pointer"
         >
           {copied ? "コピー済み" : "コピー"}
         </button>

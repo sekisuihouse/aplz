@@ -21,7 +21,7 @@ function StarDisplay({ value }: { value: number }) {
       {[1, 2, 3, 4, 5].map((i) => (
         <span
           key={i}
-          className={i <= rounded ? "text-amber-400" : "text-zinc-600"}
+          className={i <= rounded ? "text-amber-400" : "text-[#d4d4d4]"}
         >
           {i <= rounded ? "★" : "☆"}
         </span>
@@ -55,7 +55,7 @@ function StarInput({
                 ? hovered
                   ? "text-amber-300"
                   : "text-amber-400"
-                : "text-zinc-600"
+                : "text-[#d4d4d4]"
             }`}
             onMouseEnter={() => setHovered(i)}
             onClick={() => onChange(i)}
@@ -99,7 +99,6 @@ export default function RatingSection({
       });
 
       if (res.ok) {
-        // Optimistic update
         const newCount = count + 1;
         setAverages({
           usability:
@@ -121,18 +120,17 @@ export default function RatingSection({
       : 0;
 
   return (
-    <div className="bg-[#141416] border border-[#1e1e22] rounded-xl p-6 mb-8 animate-fade-in">
-      {/* Average scores */}
-      <h2 className="text-lg font-bold text-[#e4e4e7] mb-4">このアプリを評価</h2>
+    <div className="bg-white border border-[#e5e5e5] rounded-lg p-6 mb-8 animate-fade-in">
+      <h2 className="text-lg font-bold text-[#0f0f0f] mb-4">このアプリを評価</h2>
 
       {count > 0 ? (
         <div className="mb-6">
           <div className="flex items-center gap-2 mb-4">
             <StarDisplay value={overallAvg} />
-            <span className="text-white font-bold text-lg">
+            <span className="text-[#0f0f0f] font-bold text-lg">
               {overallAvg.toFixed(1)}
             </span>
-            <span className="text-gray-400 text-sm">
+            <span className="text-[#909090] text-sm">
               平均 ({count}件の評価)
             </span>
           </div>
@@ -140,9 +138,9 @@ export default function RatingSection({
           <div className="space-y-2">
             {AXES.map(({ key, label }) => (
               <div key={key} className="flex items-center gap-3">
-                <span className="text-gray-300 text-sm w-24">{label}</span>
+                <span className="text-[#606060] text-sm w-24">{label}</span>
                 <StarDisplay value={averages[key]} />
-                <span className="text-gray-400 text-sm">
+                <span className="text-[#909090] text-sm">
                   {averages[key].toFixed(1)}
                 </span>
               </div>
@@ -150,7 +148,7 @@ export default function RatingSection({
           </div>
         </div>
       ) : (
-        <p className="text-gray-400 mb-6">
+        <p className="text-[#909090] mb-6">
           まだ評価がありません。最初の評価をしてみましょう！
         </p>
       )}
@@ -158,19 +156,19 @@ export default function RatingSection({
       {/* Rating form */}
       {submitted ? (
         <div className="text-center py-4">
-          <p className="text-green-400 font-medium">ありがとうございます！</p>
-          <p className="text-gray-500 text-sm mt-1">評価済み ✓</p>
+          <p className="text-green-600 font-medium">ありがとうございます！</p>
+          <p className="text-[#909090] text-sm mt-1">評価済み</p>
         </div>
       ) : (
-        <div className="border-t border-[#1e1e22] pt-5">
-          <h3 className="text-sm font-bold text-gray-300 mb-4">
+        <div className="border-t border-[#e5e5e5] pt-5">
+          <h3 className="text-sm font-bold text-[#606060] mb-4">
             あなたの評価
           </h3>
 
           <div className="space-y-3 mb-5">
             {AXES.map(({ key, label }) => (
               <div key={key} className="flex items-center gap-3">
-                <span className="text-gray-300 text-sm w-24">{label}</span>
+                <span className="text-[#606060] text-sm w-24">{label}</span>
                 <StarInput
                   value={ratings[key]}
                   onChange={(v) =>
