@@ -49,7 +49,7 @@ function PublishForm() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    fetch("/api/communities")
+    fetch("/api/communities?mine=true")
       .then((r) => r.json())
       .then((data: Community[]) => {
         const selections = data.map((c) => ({

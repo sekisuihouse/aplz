@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Plus } from "lucide-react";
 
 interface Community {
   id: string;
@@ -24,9 +24,11 @@ export default function WorkspaceSwitcher() {
   const label = activeCommunity?.name ?? "オープン";
 
   useEffect(() => {
-    fetch("/api/communities")
+    fetch("/api/communities?mine=true")
       .then((r) => r.json())
-      .then((data) => setCommunities(data))
+      .then((data) => {
+        if (Array.isArray(data)) setCommunities(data);
+      })
       .catch(() => {});
   }, []);
 
@@ -68,22 +70,33 @@ export default function WorkspaceSwitcher() {
           </Link>
 
           {communities.length > 0 && (
-            <div className="border-t border-[#e5e5e5] my-1" />
+            <>
+              <div className="border-t border-[#e5e5e5] my-1" />
+              <p className="px-4 py-1.5 text-xs text-[#909090]">あなたのコミュニティ</p>
+              {communities.map((c) => (
+                <Link
+                  key={c.id}
+                  href={`/c/${c.slug}`}
+                  className={`block px-4 py-2.5 text-sm transition-colors ${
+                    communitySlug === c.slug
+                      ? "text-[#22d3ee] font-medium bg-[#f5f5f5]"
+                      : "text-[#0f0f0f] hover:bg-[#f5f5f5]"
+                  }`}
+                >
+                  {c.name}
+                </Link>
+              ))}
+            </>
           )}
 
-          {communities.map((c) => (
-            <Link
-              key={c.id}
-              href={`/c/${c.slug}`}
-              className={`block px-4 py-2.5 text-sm transition-colors ${
-                communitySlug === c.slug
-                  ? "text-[#22d3ee] font-medium bg-[#f5f5f5]"
-                  : "text-[#0f0f0f] hover:bg-[#f5f5f5]"
-              }`}
-            >
-              {c.name}（メンバー限定）
-            </Link>
-          ))}
+          <div className="border-t border-[#e5e5e5] my-1" />
+          <Link
+            href="/c/join"
+            className="flex items-center gap-2 px-4 py-2.5 text-sm text-[#606060] hover:bg-[#f5f5f5] transition-colors"
+          >
+            <Plus size={14} />
+            コミュニティに参加
+          </Link>
         </div>
       )}
     </div>

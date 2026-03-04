@@ -2,13 +2,17 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import Image from "next/image";
 import { createAuthBrowserClient } from "@/lib/supabase";
 
 interface Props {
   email: string;
+  avatarUrl?: string | null;
+  displayName?: string | null;
 }
 
-export default function NavUser({ email }: Props) {
+export default function NavUser({ email, avatarUrl, displayName }: Props) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -29,15 +33,26 @@ export default function NavUser({ email }: Props) {
     router.refresh();
   };
 
-  const initial = email.charAt(0).toUpperCase();
+  const initial = (displayName || email).charAt(0).toUpperCase();
 
   return (
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="w-8 h-8 rounded-full bg-[#22d3ee] text-black font-semibold text-sm flex items-center justify-center hover:bg-[#06b6d4] transition-colors cursor-pointer"
+        className="w-8 h-8 rounded-full overflow-hidden bg-[#22d3ee] text-black font-semibold text-sm flex items-center justify-center hover:opacity-80 transition-opacity cursor-pointer"
       >
-        {initial}
+        {avatarUrl ? (
+          <Image
+            src={avatarUrl}
+            alt=""
+            width={32}
+            height={32}
+            className="w-full h-full object-cover"
+            unoptimized
+          />
+        ) : (
+          initial
+        )}
       </button>
 
       {open && (
@@ -45,6 +60,13 @@ export default function NavUser({ email }: Props) {
           <div className="px-3 py-2 border-b border-[#e5e5e5]">
             <p className="text-xs text-[#909090] truncate">{email}</p>
           </div>
+          <Link
+            href="/profile"
+            onClick={() => setOpen(false)}
+            className="block px-3 py-2 text-sm text-[#0f0f0f] hover:bg-[#f5f5f5] transition-colors"
+          >
+            プロフィール設定
+          </Link>
           <button
             onClick={handleSignOut}
             className="w-full text-left px-3 py-2 text-sm text-[#0f0f0f] hover:bg-[#f5f5f5] transition-colors cursor-pointer"

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { DM_Sans, JetBrains_Mono } from "next/font/google";
 import Link from "next/link";
 import { createAuthServerClient } from "@/lib/supabase-server";
+import { createServerClient } from "@/lib/supabase";
 import NavUser from "./components/NavUser";
 import WorkspaceSwitcher from "./components/WorkspaceSwitcher";
 import "./globals.css";
@@ -32,6 +33,21 @@ export default async function RootLayout({
     data: { user },
   } = await supabase.auth.getUser();
 
+  let avatarUrl: string | null = null;
+  let displayName: string | null = null;
+  if (user) {
+    const db = createServerClient();
+    const { data: profile } = await db
+      .from("profiles")
+      .select("avatar_url, display_name")
+      .eq("id", user.id)
+      .single();
+    if (profile) {
+      avatarUrl = profile.avatar_url;
+      displayName = profile.display_name;
+    }
+  }
+
   return (
     <html lang="ja">
       <body
@@ -57,7 +73,7 @@ export default async function RootLayout({
                   >
                     アプリを公開
                   </Link>
-                  <NavUser email={user.email ?? ""} />
+                  <NavUser email={user.email ?? ""} avatarUrl={avatarUrl} displayName={displayName} />
                 </>
               ) : (
                 <>

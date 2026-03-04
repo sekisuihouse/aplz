@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { MessageCircle } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 
@@ -11,6 +12,7 @@ interface AppCardProps {
   commentCount: number;
   createdAt: string;
   authorName?: string;
+  avatarUrl?: string | null;
   version?: number;
 }
 
@@ -23,6 +25,7 @@ export default function AppCard({
   commentCount,
   createdAt,
   authorName,
+  avatarUrl,
   version,
 }: AppCardProps) {
   return (
@@ -65,9 +68,21 @@ export default function AppCard({
           )}
         </h3>
         {authorName && (
-          <p className="text-xs text-[#606060] truncate mt-0.5">
-            {authorName}
-          </p>
+          <div className="flex items-center gap-1.5 mt-0.5">
+            {avatarUrl && (
+              <Image
+                src={avatarUrl}
+                alt=""
+                width={16}
+                height={16}
+                className="w-4 h-4 rounded-full object-cover"
+                unoptimized
+              />
+            )}
+            <p className="text-xs text-[#606060] truncate">
+              {authorName}
+            </p>
+          </div>
         )}
         <div className="flex items-center gap-2 mt-1.5 text-xs text-[#909090]">
           {ratingCount > 0 && (

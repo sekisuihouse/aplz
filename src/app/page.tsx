@@ -33,13 +33,29 @@ export default async function Home() {
     ratingsByApp[r.app_id].count += 1;
   }
 
+  // Fetch profiles for avatar display
+  const userIds = [...new Set((apps ?? []).map((a) => a.user_id).filter(Boolean))];
+  const { data: profiles } = userIds.length > 0
+    ? await supabase
+        .from("profiles")
+        .select("id, display_name, avatar_url")
+        .in("id", userIds)
+    : { data: [] };
+  const profileMap: Record<string, { display_name: string | null; avatar_url: string | null }> = {};
+  for (const p of profiles ?? []) {
+    profileMap[p.id] = { display_name: p.display_name, avatar_url: p.avatar_url };
+  }
+
   const list = (apps ?? []).map((app) => {
     const rd = ratingsByApp[app.id];
+    const profile = app.user_id ? profileMap[app.user_id] : null;
     return {
       ...app,
       comment_count: app.comments?.[0]?.count ?? 0,
       rating_count: rd?.count ?? 0,
       avg_rating: rd ? rd.sum / rd.count / 3 : 0,
+      profile_avatar_url: profile?.avatar_url ?? null,
+      profile_display_name: profile?.display_name ?? null,
     };
   });
 
@@ -90,7 +106,8 @@ export default async function Home() {
                 ratingCount={app.rating_count}
                 commentCount={app.comment_count}
                 createdAt={app.created_at}
-                authorName={app.author_name}
+                authorName={app.profile_display_name || app.author_name}
+                avatarUrl={app.profile_avatar_url}
                 version={app.version}
               />
             ))}

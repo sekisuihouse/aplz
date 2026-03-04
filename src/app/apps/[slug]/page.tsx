@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { Pencil } from "lucide-react";
 import { createServerClient } from "@/lib/supabase";
 import { createAuthServerClient } from "@/lib/supabase-server";
@@ -110,6 +111,17 @@ export default async function AppDetailPage({ params }: Props) {
         }
       : { usability: 0, design: 0, idea: 0 };
 
+  // Fetch author profile
+  let authorProfile: { display_name: string | null; avatar_url: string | null } | null = null;
+  if (app.user_id) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("display_name, avatar_url")
+      .eq("id", app.user_id)
+      .single();
+    authorProfile = profile;
+  }
+
   const iframeSrc = `${process.env.R2_PUBLIC_URL}/${slug}/index.html`;
   const r2PublicUrl = process.env.R2_PUBLIC_URL!;
 
@@ -119,12 +131,12 @@ export default async function AppDetailPage({ params }: Props) {
         {/* Main Column */}
         <div className="flex-1 min-w-0">
           {/* iframe */}
-          <div className="rounded-lg border border-[#e5e5e5] overflow-hidden bg-white mb-4 animate-fade-in">
+          <div className="w-full rounded-lg overflow-hidden border border-[#e5e5e5] h-[300px] sm:h-[500px] mb-4 animate-fade-in">
             <iframe
               src={iframeSrc}
-              sandbox="allow-scripts allow-forms allow-popups allow-same-origin allow-modals"
-              loading="lazy"
-              className="w-full h-[500px] border-0"
+              className="w-full h-full border-0"
+              sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+              allow="clipboard-write"
               title={app.name}
             />
           </div>
@@ -142,8 +154,20 @@ export default async function AppDetailPage({ params }: Props) {
                   )}
                 </h1>
                 <div className="flex items-center gap-1.5 text-sm text-[#909090] mt-1">
-                  {app.author_name && (
-                    <span>作成: {app.author_name}</span>
+                  {(authorProfile?.display_name || app.author_name) && (
+                    <span className="flex items-center gap-1.5">
+                      {authorProfile?.avatar_url && (
+                        <Image
+                          src={authorProfile.avatar_url}
+                          alt=""
+                          width={20}
+                          height={20}
+                          className="w-5 h-5 rounded-full object-cover"
+                          unoptimized
+                        />
+                      )}
+                      作成: {authorProfile?.display_name || app.author_name}
+                    </span>
                   )}
                   {app.version > 1 && (
                     <>
