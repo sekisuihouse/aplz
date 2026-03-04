@@ -1,0 +1,1880 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Regex Debugger - Real-time Visualizer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg: #fafafa;
+  --bg-card: #ffffff;
+  --border: #e2e2e2;
+  --border-focus: #6366f1;
+  --text: #1a1a1a;
+  --text-secondary: #6b7280;
+  --match-yellow: #fef08a;
+  --match-yellow-border: #eab308;
+  --group-green: #bbf7d0;
+  --group-green-border: #22c55e;
+  --capture-blue: #bfdbfe;
+  --capture-blue-border: #3b82f6;
+  --error-red: #fecaca;
+  --error-red-border: #ef4444;
+  --accent: #6366f1;
+  --accent-light: #e0e7ff;
+  --rail-bg: #f8fafc;
+  --rail-stroke: #334155;
+  --rail-fill-literal: #e0e7ff;
+  --rail-fill-class: #fef3c7;
+  --rail-fill-group: #f0fdf4;
+  --rail-fill-quant: #fce7f3;
+}
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: 'IBM Plex Mono', 'Noto Sans JP', monospace;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Header */
+.header {
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-title {
+  font-size: 1rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-logo {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+.header-help {
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.header-help:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Main container */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Card */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.card-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-body {
+  padding: 16px;
+}
+
+/* Section: Regex Input */
+.regex-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+  flex-wrap: wrap;
+}
+
+.regex-field-wrap {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.regex-slash {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--accent);
+  flex-shrink: 0;
+  line-height: 1;
+  padding: 0 2px;
+}
+
+.regex-input {
+  flex: 1;
+  min-width: 0;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 1rem;
+  padding: 10px 8px;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text);
+}
+
+.regex-field-wrap {
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  transition: border-color 0.15s;
+}
+
+.regex-field-wrap:focus-within {
+  border-color: var(--border-focus);
+}
+
+.regex-field-wrap.has-error {
+  border-color: var(--error-red-border);
+  background: #fff5f5;
+}
+
+.regex-error {
+  display: none;
+  padding: 8px 12px;
+  margin-top: 8px;
+  font-size: 0.8rem;
+  color: var(--error-red-border);
+  background: var(--error-red);
+  border-radius: 6px;
+  border: 1px solid var(--error-red-border);
+}
+
+.regex-error.visible {
+  display: block;
+}
+
+/* Flag buttons */
+.flags-row {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.flag-btn {
+  width: 44px;
+  height: 44px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.flag-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.flag-btn:hover:not(.active) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Preset select */
+.preset-row {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.preset-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
+}
+
+.preset-select {
+  flex: 1;
+  min-width: 180px;
+  height: 44px;
+  font-family: 'IBM Plex Mono', 'Noto Sans JP', monospace;
+  font-size: 0.85rem;
+  padding: 0 12px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%236b7280' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+}
+
+/* Middle area */
+.middle-area {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 768px) {
+  .middle-area {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Test string textarea */
+.test-textarea {
+  width: 100%;
+  min-height: 100px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.9rem;
+  padding: 12px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  resize: vertical;
+  line-height: 1.7;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.test-textarea:focus {
+  border-color: var(--border-focus);
+}
+
+/* Highlight render */
+.highlight-area {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.9rem;
+  line-height: 1.7;
+  min-height: 60px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  position: relative;
+  cursor: default;
+}
+
+.match-span {
+  background: var(--match-yellow);
+  border-bottom: 2px solid var(--match-yellow-border);
+  border-radius: 2px;
+  cursor: pointer;
+  position: relative;
+  padding: 1px 0;
+  transition: background 0.1s;
+}
+
+.match-span.group-1 {
+  background: var(--group-green);
+  border-bottom-color: var(--group-green-border);
+}
+
+.match-span.group-2 {
+  background: var(--capture-blue);
+  border-bottom-color: var(--capture-blue-border);
+}
+
+.match-span.group-3 {
+  background: #e9d5ff;
+  border-bottom-color: #a855f7;
+}
+
+.match-span.group-4 {
+  background: #fce7f3;
+  border-bottom-color: #ec4899;
+}
+
+.match-span.active-highlight {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* Match count badge */
+.match-count {
+  margin-top: 8px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.match-count-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 700;
+  border-radius: 10px;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  min-width: 24px;
+}
+
+/* Match popup tooltip */
+.match-popup {
+  display: none;
+  position: fixed;
+  z-index: 200;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  padding: 10px 14px;
+  font-size: 0.8rem;
+  max-width: 300px;
+  pointer-events: none;
+}
+
+.match-popup.visible {
+  display: block;
+}
+
+.match-popup-title {
+  font-weight: 700;
+  margin-bottom: 4px;
+  color: var(--accent);
+}
+
+.match-popup-content {
+  color: var(--text);
+  word-break: break-all;
+}
+
+.match-popup-group {
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid var(--border);
+}
+
+/* Results table */
+.results-wrap {
+  max-height: 400px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.results-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.results-table th {
+  position: sticky;
+  top: 0;
+  background: var(--bg-card);
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 2px solid var(--border);
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  z-index: 1;
+}
+
+.results-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+  word-break: break-all;
+}
+
+.results-table tr {
+  cursor: pointer;
+  transition: background 0.1s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.results-table tbody tr:hover {
+  background: var(--accent-light);
+}
+
+.results-table tbody tr.active-row {
+  background: var(--accent-light);
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.match-index-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.7rem;
+}
+
+.group-cell {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+}
+
+.group-cell.g0 { background: var(--match-yellow); }
+.group-cell.g1 { background: var(--group-green); }
+.group-cell.g2 { background: var(--capture-blue); }
+.group-cell.g3 { background: #e9d5ff; }
+.group-cell.g4 { background: #fce7f3; }
+
+.no-results {
+  text-align: center;
+  padding: 24px;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+/* Railroad diagram */
+.railroad-wrap {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  background: var(--rail-bg);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.railroad-wrap canvas {
+  display: block;
+}
+
+/* Overlay guide */
+.guide-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  animation: fadeIn 0.3s ease;
+}
+
+.guide-overlay.hidden {
+  display: none;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.guide-card {
+  background: var(--bg-card);
+  border-radius: 16px;
+  padding: 32px 24px;
+  max-width: 460px;
+  width: 100%;
+  text-align: center;
+  pointer-events: none;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.guide-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 16px;
+}
+
+.guide-card h2 {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.guide-card p {
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  line-height: 1.7;
+}
+
+.guide-card .guide-steps {
+  text-align: left;
+  margin: 16px 0;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 0.85rem;
+  color: var(--text);
+}
+
+.guide-steps li {
+  margin-bottom: 8px;
+  padding-left: 4px;
+  list-style: none;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.guide-step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+.guide-dismiss {
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-top: 16px;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+/* Small mobile tweaks */
+@media (max-width: 380px) {
+  .container { padding: 8px; gap: 12px; }
+  .card-body { padding: 12px; }
+  .regex-input { font-size: 0.9rem; }
+  .test-textarea { font-size: 0.85rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- Guide overlay -->
+<div class="guide-overlay" id="guideOverlay">
+  <div class="guide-card">
+    <svg class="guide-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="4" y="4" width="56" height="56" rx="12" stroke="#6366f1" stroke-width="3" fill="#e0e7ff"/>
+      <text x="32" y="28" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="14" font-weight="700" fill="#6366f1">/.*$/</text>
+      <path d="M18 38h28M18 44h20" stroke="#6366f1" stroke-width="2.5" stroke-linecap="round"/>
+    </svg>
+    <h2>Regex Debugger</h2>
+    <p>正規表現をリアルタイムで可視化・デバッグするツールです。</p>
+    <ul class="guide-steps">
+      <li><span class="guide-step-num">1</span>上部に正規表現パターンを入力</li>
+      <li><span class="guide-step-num">2</span>フラグボタンで g / i / m / s を切替</li>
+      <li><span class="guide-step-num">3</span>テスト文字列を入力してマッチを確認</li>
+      <li><span class="guide-step-num">4</span>マッチをタップすると詳細を表示</li>
+      <li><span class="guide-step-num">5</span>下部の構造図でパターンを視覚的に理解</li>
+    </ul>
+    <p class="guide-dismiss">タップして閉じる</p>
+  </div>
+</div>
+
+<!-- Match popup -->
+<div class="match-popup" id="matchPopup">
+  <div class="match-popup-title" id="matchPopupTitle"></div>
+  <div class="match-popup-content" id="matchPopupContent"></div>
+</div>
+
+<!-- Header -->
+<header class="header">
+  <div class="header-title">
+    <svg class="header-logo" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="1" y="1" width="26" height="26" rx="6" stroke="#6366f1" stroke-width="2" fill="#e0e7ff"/>
+      <text x="14" y="19" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" font-weight="700" fill="#6366f1">/.*/</text>
+    </svg>
+    Regex Debugger
+  </div>
+  <button class="header-help" id="helpBtn" aria-label="Help">?</button>
+</header>
+
+<main class="container">
+
+  <!-- Section: Regex Input -->
+  <section class="card">
+    <div class="card-header">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M7 2v10" stroke="#6b7280" stroke-width="2" stroke-linecap="round"/></svg>
+      Pattern
+    </div>
+    <div class="card-body">
+      <div class="regex-input-row">
+        <div class="regex-field-wrap" id="regexFieldWrap">
+          <span class="regex-slash">/</span>
+          <input type="text" class="regex-input" id="regexInput" placeholder="Enter regex pattern..." autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+          <span class="regex-slash">/</span>
+        </div>
+        <div class="flags-row">
+          <button class="flag-btn active" data-flag="g" aria-label="Global flag">g</button>
+          <button class="flag-btn" data-flag="i" aria-label="Case insensitive flag">i</button>
+          <button class="flag-btn" data-flag="m" aria-label="Multiline flag">m</button>
+          <button class="flag-btn" data-flag="s" aria-label="Dotall flag">s</button>
+        </div>
+      </div>
+      <div class="regex-error" id="regexError"></div>
+      <div class="preset-row">
+        <span class="preset-label">Presets</span>
+        <select class="preset-select" id="presetSelect">
+          <option value="">-- Select a preset --</option>
+          <option value="email">Email</option>
+          <option value="url">URL</option>
+          <option value="jpphone">Japanese Phone</option>
+          <option value="date">Date (YYYY-MM-DD)</option>
+          <option value="htmltag">HTML Tag</option>
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <!-- Middle area -->
+  <div class="middle-area">
+
+    <!-- Left: Test String -->
+    <section class="card">
+      <div class="card-header">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="2" width="12" height="10" rx="2" stroke="#6b7280" stroke-width="1.5" fill="none"/><path d="M4 5.5h6M4 8.5h4" stroke="#6b7280" stroke-width="1.5" stroke-linecap="round"/></svg>
+        Test String
+      </div>
+      <div class="card-body">
+        <textarea class="test-textarea" id="testInput" placeholder="Enter test string..."></textarea>
+        <div class="highlight-area" id="highlightArea"></div>
+        <div class="match-count" id="matchCount">
+          <span class="match-count-num" id="matchCountNum">0</span> matches found
+        </div>
+      </div>
+    </section>
+
+    <!-- Right: Results -->
+    <section class="card">
+      <div class="card-header">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 3h10M2 7h10M2 11h10" stroke="#6b7280" stroke-width="1.5" stroke-linecap="round"/></svg>
+        Match Results
+      </div>
+      <div class="card-body" style="padding:0;">
+        <div class="results-wrap" id="resultsWrap">
+          <div class="no-results" id="noResults">Enter a pattern and test string to see results.</div>
+          <table class="results-table" id="resultsTable" style="display:none;">
+            <thead id="resultsHead"></thead>
+            <tbody id="resultsBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Bottom: Railroad diagram -->
+  <section class="card">
+    <div class="card-header">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="3" cy="7" r="2" stroke="#6b7280" stroke-width="1.5" fill="none"/><circle cx="11" cy="7" r="2" stroke="#6b7280" stroke-width="1.5" fill="none"/><path d="M5 7h4" stroke="#6b7280" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Pattern Structure
+    </div>
+    <div class="card-body" style="padding:12px;">
+      <div class="railroad-wrap" id="railroadWrap">
+        <canvas id="railroadCanvas"></canvas>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+// ========================
+// State
+// ========================
+const state = {
+  pattern: '',
+  flags: { g: true, i: false, m: false, s: false },
+  testString: '',
+  matches: [],
+  error: null,
+  activeMatchIdx: -1,
+};
+
+const presets = {
+  email: {
+    pattern: '[\\w.-]+@[\\w.-]+\\.\\w+',
+    flags: { g: true, i: false, m: false, s: false },
+    test: 'Contact us at info@example.com or support@mail.co.jp\nPersonal: taro.yamada@gmail.com'
+  },
+  url: {
+    pattern: 'https?://[\\w./\\-?=&]+',
+    flags: { g: true, i: false, m: false, s: false },
+    test: 'Visit https://example.com/page?id=123 or http://test.co.jp/path/to/resource\nAlso: https://api.example.com/v2/users?name=taro&limit=10'
+  },
+  jpphone: {
+    pattern: '0\\d{1,4}-?\\d{1,4}-?\\d{3,4}',
+    flags: { g: true, i: false, m: false, s: false },
+    test: 'Tel: 03-1234-5678\nMobile: 090-1234-5678\nFreephone: 0120-123-456\nPlain: 09012345678'
+  },
+  date: {
+    pattern: '\\d{4}[-/]\\d{1,2}[-/]\\d{1,2}',
+    flags: { g: true, i: false, m: false, s: false },
+    test: 'Released: 2024-01-15\nUpdated: 2024/3/5\nDeadline: 2025-12-31\nInvalid: 99-1-1'
+  },
+  htmltag: {
+    pattern: '<(\\w+)[^>]*>(.*?)<\\/\\1>',
+    flags: { g: true, i: false, m: false, s: false },
+    test: '<div class="main">Hello World</div>\n<p>Paragraph text</p>\n<span>Inline text</span>\n<img src="photo.jpg">'
+  }
+};
+
+// ========================
+// DOM refs
+// ========================
+const $ = id => document.getElementById(id);
+const regexInput = $('regexInput');
+const regexFieldWrap = $('regexFieldWrap');
+const regexError = $('regexError');
+const testInput = $('testInput');
+const highlightArea = $('highlightArea');
+const matchCountNum = $('matchCountNum');
+const resultsTable = $('resultsTable');
+const resultsHead = $('resultsHead');
+const resultsBody = $('resultsBody');
+const noResults = $('noResults');
+const resultsWrap = $('resultsWrap');
+const presetSelect = $('presetSelect');
+const guideOverlay = $('guideOverlay');
+const helpBtn = $('helpBtn');
+const matchPopup = $('matchPopup');
+const matchPopupTitle = $('matchPopupTitle');
+const matchPopupContent = $('matchPopupContent');
+const railroadCanvas = $('railroadCanvas');
+const railroadWrap = $('railroadWrap');
+
+// ========================
+// Guide
+// ========================
+function initGuide() {
+  const seen = localStorage.getItem('regex-debugger-guide-seen');
+  if (seen) {
+    guideOverlay.classList.add('hidden');
+  }
+  guideOverlay.addEventListener('click', () => {
+    guideOverlay.classList.add('hidden');
+    localStorage.setItem('regex-debugger-guide-seen', '1');
+  });
+  helpBtn.addEventListener('click', () => {
+    guideOverlay.classList.remove('hidden');
+  });
+}
+
+// ========================
+// Flag toggles
+// ========================
+function initFlags() {
+  document.querySelectorAll('.flag-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const flag = btn.dataset.flag;
+      state.flags[flag] = !state.flags[flag];
+      btn.classList.toggle('active', state.flags[flag]);
+      runDebugger();
+    });
+  });
+}
+
+// ========================
+// Preset select
+// ========================
+function initPresets() {
+  presetSelect.addEventListener('change', () => {
+    const key = presetSelect.value;
+    if (!key || !presets[key]) return;
+    const p = presets[key];
+    regexInput.value = p.pattern;
+    state.pattern = p.pattern;
+    testInput.value = p.test;
+    state.testString = p.test;
+    Object.keys(p.flags).forEach(f => {
+      state.flags[f] = p.flags[f];
+      document.querySelector(`.flag-btn[data-flag="${f}"]`).classList.toggle('active', p.flags[f]);
+    });
+    runDebugger();
+  });
+}
+
+// ========================
+// Input handlers
+// ========================
+function initInputs() {
+  regexInput.addEventListener('input', () => {
+    state.pattern = regexInput.value;
+    presetSelect.value = '';
+    runDebugger();
+  });
+  testInput.addEventListener('input', () => {
+    state.testString = testInput.value;
+    runDebugger();
+  });
+}
+
+// ========================
+// Core: Run regex and update all
+// ========================
+function runDebugger() {
+  state.error = null;
+  state.matches = [];
+  state.activeMatchIdx = -1;
+
+  // Validate regex
+  let regex = null;
+  if (state.pattern) {
+    try {
+      const flagStr = Object.keys(state.flags).filter(f => state.flags[f]).join('');
+      regex = new RegExp(state.pattern, flagStr);
+      regexFieldWrap.classList.remove('has-error');
+      regexError.classList.remove('visible');
+    } catch (e) {
+      state.error = e.message;
+      regexFieldWrap.classList.add('has-error');
+      regexError.textContent = e.message;
+      regexError.classList.add('visible');
+    }
+  } else {
+    regexFieldWrap.classList.remove('has-error');
+    regexError.classList.remove('visible');
+  }
+
+  // Run matches
+  if (regex && state.testString) {
+    const matches = [];
+    let m;
+    let count = 0;
+    const limit = 1000;
+
+    if (regex.global) {
+      regex.lastIndex = 0;
+      while ((m = regex.exec(state.testString)) !== null) {
+        matches.push({
+          fullMatch: m[0],
+          groups: Array.from(m).slice(1),
+          index: m.index,
+          length: m[0].length,
+        });
+        count++;
+        if (count >= limit) break;
+        if (m[0].length === 0) {
+          regex.lastIndex++;
+          if (regex.lastIndex > state.testString.length) break;
+        }
+      }
+    } else {
+      m = regex.exec(state.testString);
+      if (m) {
+        matches.push({
+          fullMatch: m[0],
+          groups: Array.from(m).slice(1),
+          index: m.index,
+          length: m[0].length,
+        });
+      }
+    }
+    state.matches = matches;
+  }
+
+  renderHighlight();
+  renderResults();
+  renderRailroad();
+}
+
+// ========================
+// Render: Highlight area
+// ========================
+function renderHighlight() {
+  const area = highlightArea;
+  const text = state.testString;
+  const matches = state.matches;
+
+  matchCountNum.textContent = matches.length;
+
+  if (!text) {
+    area.innerHTML = '<span style="color:#9ca3af;">Highlighted matches will appear here.</span>';
+    return;
+  }
+
+  if (matches.length === 0) {
+    area.textContent = text;
+    return;
+  }
+
+  // Build highlighted HTML
+  // We need to handle overlapping groups by just highlighting the full match
+  // and adding group data attributes for popup
+  const sortedMatches = matches.slice().sort((a, b) => a.index - b.index);
+  let html = '';
+  let lastIdx = 0;
+
+  for (let i = 0; i < sortedMatches.length; i++) {
+    const m = sortedMatches[i];
+    const start = m.index;
+    const end = m.index + m.length;
+
+    if (start < lastIdx) continue; // skip overlapping
+
+    // Text before match
+    if (start > lastIdx) {
+      html += escapeHtml(text.slice(lastIdx, start));
+    }
+
+    // If match has capture groups, try to highlight sub-groups within
+    if (m.groups.length > 0 && m.groups.some(g => g !== undefined)) {
+      html += buildGroupHighlight(text, m, i);
+    } else {
+      html += `<span class="match-span" data-match-idx="${i}">${escapeHtml(text.slice(start, end))}</span>`;
+    }
+
+    lastIdx = end;
+  }
+
+  if (lastIdx < text.length) {
+    html += escapeHtml(text.slice(lastIdx));
+  }
+
+  area.innerHTML = html;
+
+  // Attach event listeners
+  area.querySelectorAll('.match-span').forEach(span => {
+    const touchHandler = (e) => {
+      e.preventDefault();
+      const idx = parseInt(span.dataset.matchIdx);
+      const groupIdx = span.dataset.groupIdx;
+      showPopupForSpan(span, idx, groupIdx);
+    };
+    span.addEventListener('touchstart', touchHandler, { passive: false });
+    span.addEventListener('mouseenter', (e) => {
+      const idx = parseInt(span.dataset.matchIdx);
+      const groupIdx = span.dataset.groupIdx;
+      showPopupAtPos(e.clientX, e.clientY, idx, groupIdx);
+    });
+    span.addEventListener('mouseleave', () => {
+      matchPopup.classList.remove('visible');
+    });
+  });
+}
+
+function buildGroupHighlight(text, match, matchIdx) {
+  // Try to find group positions within the full match using a fresh regex
+  // We re-run the regex on just the match substring to get group info
+  const fullText = match.fullMatch;
+  let result = `<span class="match-span" data-match-idx="${matchIdx}">`;
+
+  // Attempt to find groups using indices if available
+  try {
+    const flagStr = Object.keys(state.flags).filter(f => state.flags[f]).join('');
+    const re = new RegExp(state.pattern, flagStr.replace('g', '') + 'd');
+    const m = re.exec(text.slice(match.index));
+    if (m && m.indices && m.indices.length > 1) {
+      let innerHtml = '';
+      let pos = 0;
+      const full = m[0];
+
+      // Collect non-overlapping group ranges
+      const ranges = [];
+      for (let gi = 1; gi < m.indices.length; gi++) {
+        if (m.indices[gi]) {
+          ranges.push({ start: m.indices[gi][0], end: m.indices[gi][1], gi });
+        }
+      }
+      ranges.sort((a, b) => a.start - b.start);
+
+      // Remove overlaps
+      const filtered = [];
+      let lastEnd = -1;
+      for (const r of ranges) {
+        if (r.start >= lastEnd) {
+          filtered.push(r);
+          lastEnd = r.end;
+        }
+      }
+
+      for (const r of filtered) {
+        if (r.start > pos) {
+          innerHtml += escapeHtml(full.slice(pos, r.start));
+        }
+        const gClass = `group-${Math.min(r.gi, 4)}`;
+        innerHtml += `<span class="match-span ${gClass}" data-match-idx="${matchIdx}" data-group-idx="${r.gi}">${escapeHtml(full.slice(r.start, r.end))}</span>`;
+        pos = r.end;
+      }
+      if (pos < full.length) {
+        innerHtml += escapeHtml(full.slice(pos));
+      }
+      result += innerHtml;
+    } else {
+      result += escapeHtml(fullText);
+    }
+  } catch (e) {
+    // hasIndices not supported, just highlight entire match
+    result += escapeHtml(fullText);
+  }
+
+  result += '</span>';
+  return result;
+}
+
+function showPopupForSpan(span, matchIdx, groupIdx) {
+  const rect = span.getBoundingClientRect();
+  showPopupAtPos(rect.left + rect.width / 2, rect.top - 8, matchIdx, groupIdx);
+  // Auto-hide after 2s
+  setTimeout(() => matchPopup.classList.remove('visible'), 2500);
+}
+
+function showPopupAtPos(x, y, matchIdx, groupIdx) {
+  const m = state.matches[matchIdx];
+  if (!m) return;
+
+  if (groupIdx !== undefined && groupIdx !== null) {
+    const gi = parseInt(groupIdx);
+    matchPopupTitle.textContent = `Group ${gi}`;
+    let content = `"${m.groups[gi - 1] || ''}"`;
+    matchPopupContent.innerHTML = content;
+  } else {
+    matchPopupTitle.textContent = `Match #${matchIdx + 1}`;
+    let content = `"${m.fullMatch}"<br>Index: ${m.index}, Length: ${m.length}`;
+    if (m.groups.length > 0) {
+      content += '<div class="match-popup-group">';
+      m.groups.forEach((g, i) => {
+        if (g !== undefined) {
+          content += `Group ${i + 1}: "${g}"<br>`;
+        }
+      });
+      content += '</div>';
+    }
+    matchPopupContent.innerHTML = content;
+  }
+
+  matchPopup.classList.add('visible');
+
+  // Position
+  const pw = matchPopup.offsetWidth;
+  const ph = matchPopup.offsetHeight;
+  let left = x - pw / 2;
+  let top = y - ph - 12;
+  if (left < 8) left = 8;
+  if (left + pw > window.innerWidth - 8) left = window.innerWidth - pw - 8;
+  if (top < 8) top = y + 20;
+  matchPopup.style.left = left + 'px';
+  matchPopup.style.top = top + 'px';
+}
+
+// ========================
+// Render: Results table
+// ========================
+function renderResults() {
+  const matches = state.matches;
+
+  if (matches.length === 0) {
+    resultsTable.style.display = 'none';
+    noResults.style.display = '';
+    if (state.pattern && state.testString && !state.error) {
+      noResults.textContent = 'No matches found.';
+    } else if (state.error) {
+      noResults.textContent = 'Fix the pattern error above.';
+    } else {
+      noResults.textContent = 'Enter a pattern and test string to see results.';
+    }
+    return;
+  }
+
+  noResults.style.display = 'none';
+  resultsTable.style.display = '';
+
+  // Determine max group count
+  const maxGroups = matches.reduce((max, m) => Math.max(max, m.groups.length), 0);
+
+  // Header
+  let headHtml = '<tr><th>#</th><th>Full Match</th>';
+  for (let i = 0; i < maxGroups; i++) {
+    headHtml += `<th>Group ${i + 1}</th>`;
+  }
+  headHtml += '<th>Index</th><th>Len</th></tr>';
+  resultsHead.innerHTML = headHtml;
+
+  // Body
+  let bodyHtml = '';
+  matches.forEach((m, idx) => {
+    bodyHtml += `<tr data-match-idx="${idx}">`;
+    bodyHtml += `<td><span class="match-index-badge">${idx + 1}</span></td>`;
+    bodyHtml += `<td><span class="group-cell g0">${escapeHtml(m.fullMatch)}</span></td>`;
+    for (let i = 0; i < maxGroups; i++) {
+      const g = m.groups[i];
+      const gClass = `g${Math.min(i + 1, 4)}`;
+      bodyHtml += `<td>${g !== undefined ? `<span class="group-cell ${gClass}">${escapeHtml(g)}</span>` : '<span style="color:#ccc;">--</span>'}</td>`;
+    }
+    bodyHtml += `<td>${m.index}</td>`;
+    bodyHtml += `<td>${m.length}</td>`;
+    bodyHtml += '</tr>';
+  });
+  resultsBody.innerHTML = bodyHtml;
+
+  // Click handlers
+  resultsBody.querySelectorAll('tr').forEach(row => {
+    row.addEventListener('click', () => {
+      const idx = parseInt(row.dataset.matchIdx);
+      highlightMatchInView(idx);
+    });
+  });
+}
+
+function highlightMatchInView(idx) {
+  // Remove previous
+  document.querySelectorAll('.match-span.active-highlight').forEach(el => el.classList.remove('active-highlight'));
+  document.querySelectorAll('.results-table tbody tr.active-row').forEach(el => el.classList.remove('active-row'));
+
+  // Add to highlight area
+  const spans = highlightArea.querySelectorAll(`.match-span[data-match-idx="${idx}"]`);
+  spans.forEach(s => s.classList.add('active-highlight'));
+
+  // Add to results row
+  const row = resultsBody.querySelector(`tr[data-match-idx="${idx}"]`);
+  if (row) row.classList.add('active-row');
+
+  // Scroll highlight into view
+  if (spans.length > 0) {
+    spans[0].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  state.activeMatchIdx = idx;
+}
+
+// ========================
+// Render: Railroad diagram
+// ========================
+function renderRailroad() {
+  const canvas = railroadCanvas;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+
+  if (!state.pattern || state.error) {
+    canvas.width = 300 * dpr;
+    canvas.height = 60 * dpr;
+    canvas.style.width = '300px';
+    canvas.style.height = '60px';
+    ctx.scale(dpr, dpr);
+    ctx.font = '13px "IBM Plex Mono", monospace';
+    ctx.fillStyle = '#9ca3af';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(state.error ? 'Invalid pattern' : 'Enter a pattern to see structure', 150, 30);
+    return;
+  }
+
+  // Parse regex into simple AST
+  let ast;
+  try {
+    ast = parseRegex(state.pattern);
+  } catch (e) {
+    canvas.width = 300 * dpr;
+    canvas.height = 60 * dpr;
+    canvas.style.width = '300px';
+    canvas.style.height = '60px';
+    ctx.scale(dpr, dpr);
+    ctx.font = '13px "IBM Plex Mono", monospace';
+    ctx.fillStyle = '#9ca3af';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Cannot parse pattern structure', 150, 30);
+    return;
+  }
+
+  // Measure and draw
+  const metrics = measureNode(ctx, ast, dpr);
+  const padX = 60;
+  const padY = 30;
+  const totalW = metrics.width + padX * 2;
+  const totalH = metrics.height + padY * 2;
+
+  canvas.width = totalW * dpr;
+  canvas.height = totalH * dpr;
+  canvas.style.width = totalW + 'px';
+  canvas.style.height = totalH + 'px';
+  ctx.scale(dpr, dpr);
+
+  // Start/end circles
+  const startX = 20;
+  const endX = totalW - 20;
+  const midY = padY + metrics.height / 2;
+
+  ctx.fillStyle = '#334155';
+  ctx.beginPath();
+  ctx.arc(startX, midY, 6, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.strokeStyle = '#334155';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(endX, midY, 6, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(endX, midY, 3, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Draw line to first node
+  ctx.strokeStyle = '#334155';
+  ctx.lineWidth = 2;
+  drawArrowLine(ctx, startX + 6, midY, padX, midY);
+
+  // Draw AST
+  drawNode(ctx, ast, padX, padY, metrics);
+
+  // Draw line from last node to end
+  drawArrowLine(ctx, padX + metrics.width, midY, endX - 6, midY);
+}
+
+// Simple regex parser for railroad diagram
+function parseRegex(pattern) {
+  let pos = 0;
+  const len = pattern.length;
+
+  function parseAlternation() {
+    const branches = [parseSequence()];
+    while (pos < len && pattern[pos] === '|') {
+      pos++;
+      branches.push(parseSequence());
+    }
+    if (branches.length === 1) return branches[0];
+    return { type: 'alternation', branches };
+  }
+
+  function parseSequence() {
+    const items = [];
+    while (pos < len && pattern[pos] !== ')' && pattern[pos] !== '|') {
+      const atom = parseAtom();
+      if (atom) {
+        const quantified = parseQuantifier(atom);
+        items.push(quantified);
+      }
+    }
+    if (items.length === 0) return { type: 'literal', value: '' };
+    if (items.length === 1) return items[0];
+    return { type: 'sequence', items };
+  }
+
+  function parseAtom() {
+    if (pos >= len) return null;
+    const ch = pattern[pos];
+
+    if (ch === '(') {
+      pos++;
+      let groupType = 'capture';
+      let groupLabel = '';
+      if (pos < len && pattern[pos] === '?') {
+        pos++;
+        if (pos < len && pattern[pos] === ':') {
+          pos++;
+          groupType = 'non-capture';
+        } else if (pos < len && pattern[pos] === '=') {
+          pos++;
+          groupType = 'lookahead';
+          groupLabel = '?=';
+        } else if (pos < len && pattern[pos] === '!') {
+          pos++;
+          groupType = 'neg-lookahead';
+          groupLabel = '?!';
+        } else if (pos < len && pattern.slice(pos, pos + 2) === '<=') {
+          pos += 2;
+          groupType = 'lookbehind';
+          groupLabel = '?<=';
+        } else if (pos < len && pattern.slice(pos, pos + 2) === '<!') {
+          pos += 2;
+          groupType = 'neg-lookbehind';
+          groupLabel = '?<!';
+        } else {
+          // Unknown, treat as non-capture
+          groupType = 'non-capture';
+        }
+      }
+      const body = parseAlternation();
+      if (pos < len && pattern[pos] === ')') pos++;
+      return { type: 'group', groupType, label: groupLabel, body };
+    }
+
+    if (ch === '[') {
+      const start = pos;
+      pos++;
+      if (pos < len && pattern[pos] === '^') pos++;
+      let depth = 1;
+      while (pos < len && depth > 0) {
+        if (pattern[pos] === '\\' && pos + 1 < len) {
+          pos += 2;
+          continue;
+        }
+        if (pattern[pos] === ']') depth--;
+        if (depth > 0) pos++;
+      }
+      if (pos < len) pos++;
+      return { type: 'charclass', value: pattern.slice(start, pos) };
+    }
+
+    if (ch === '\\') {
+      pos++;
+      if (pos < len) {
+        const esc = pattern[pos];
+        pos++;
+        const specials = { d: '\\d', D: '\\D', w: '\\w', W: '\\W', s: '\\s', S: '\\S', b: '\\b', B: '\\B', n: '\\n', t: '\\t', r: '\\r' };
+        if (specials[esc]) {
+          return { type: 'charclass', value: specials[esc] };
+        }
+        return { type: 'literal', value: esc };
+      }
+      return { type: 'literal', value: '\\' };
+    }
+
+    if (ch === '.') {
+      pos++;
+      return { type: 'charclass', value: '.' };
+    }
+
+    if (ch === '^') {
+      pos++;
+      return { type: 'anchor', value: '^' };
+    }
+
+    if (ch === '$') {
+      pos++;
+      return { type: 'anchor', value: '$' };
+    }
+
+    // Regular literal - try to collect consecutive literals that aren't followed by quantifiers
+    pos++;
+    return { type: 'literal', value: ch };
+  }
+
+  function parseQuantifier(atom) {
+    if (pos >= len) return atom;
+    const ch = pattern[pos];
+    let quant = null;
+
+    if (ch === '*') { quant = '0+'; pos++; }
+    else if (ch === '+') { quant = '1+'; pos++; }
+    else if (ch === '?') { quant = '0..1'; pos++; }
+    else if (ch === '{') {
+      const start = pos;
+      pos++;
+      let num = '';
+      while (pos < len && pattern[pos] !== '}' && pattern[pos] !== ',') {
+        num += pattern[pos]; pos++;
+      }
+      if (pos < len && pattern[pos] === ',') {
+        pos++;
+        let num2 = '';
+        while (pos < len && pattern[pos] !== '}') {
+          num2 += pattern[pos]; pos++;
+        }
+        if (pos < len) pos++;
+        quant = num2 ? `${num}..${num2}` : `${num}+`;
+      } else {
+        if (pos < len) pos++;
+        quant = num;
+      }
+    }
+
+    if (!quant) return atom;
+
+    // Check for lazy
+    let lazy = false;
+    if (pos < len && pattern[pos] === '?') {
+      lazy = true;
+      pos++;
+    }
+
+    return { type: 'quantifier', quant, lazy, body: atom };
+  }
+
+  const result = parseAlternation();
+  return result;
+}
+
+// Measure node dimensions
+function measureNode(ctx, node, dpr) {
+  ctx.save();
+  ctx.font = '13px "IBM Plex Mono", monospace';
+
+  const result = _measure(ctx, node);
+  ctx.restore();
+  return result;
+}
+
+function _measure(ctx, node) {
+  const PAD = 12;
+  const GAP = 16;
+  const MIN_H = 36;
+
+  if (!node) return { width: 0, height: MIN_H };
+
+  switch (node.type) {
+    case 'literal': {
+      const text = node.value || '';
+      const tw = ctx.measureText(text).width;
+      return { width: Math.max(tw + PAD * 2, 30), height: MIN_H };
+    }
+    case 'charclass': {
+      const text = node.value;
+      const tw = ctx.measureText(text).width;
+      return { width: Math.max(tw + PAD * 2, 40), height: MIN_H };
+    }
+    case 'anchor': {
+      const tw = ctx.measureText(node.value).width;
+      return { width: tw + PAD * 2, height: MIN_H };
+    }
+    case 'sequence': {
+      let totalW = 0;
+      let maxH = MIN_H;
+      node.items.forEach((item, i) => {
+        const m = _measure(ctx, item);
+        item._m = m;
+        totalW += m.width;
+        if (i > 0) totalW += GAP;
+        maxH = Math.max(maxH, m.height);
+      });
+      return { width: totalW, height: maxH };
+    }
+    case 'alternation': {
+      let maxW = 0;
+      let totalH = 0;
+      const branchGap = 20;
+      node.branches.forEach((b, i) => {
+        const m = _measure(ctx, b);
+        b._m = m;
+        maxW = Math.max(maxW, m.width);
+        totalH += m.height;
+        if (i > 0) totalH += branchGap;
+      });
+      return { width: maxW + 60, height: totalH };
+    }
+    case 'group': {
+      const bodyM = _measure(ctx, node.body);
+      node.body._m = bodyM;
+      const labelW = node.groupType === 'capture' ? 0 : ctx.measureText(node.label || '?:').width + 8;
+      return { width: bodyM.width + 32 + labelW, height: bodyM.height + 20 };
+    }
+    case 'quantifier': {
+      const bodyM = _measure(ctx, node.body);
+      node.body._m = bodyM;
+      const qText = node.quant + (node.lazy ? '?' : '');
+      const qw = ctx.measureText(qText).width;
+      return { width: Math.max(bodyM.width, qw + 20) + 24, height: bodyM.height + 28 };
+    }
+    default:
+      return { width: 30, height: MIN_H };
+  }
+}
+
+// Draw nodes
+function drawNode(ctx, node, x, y, metrics) {
+  if (!node || !metrics) return;
+  const midY = y + metrics.height / 2;
+
+  switch (node.type) {
+    case 'literal': {
+      drawLiteralBox(ctx, x, y, metrics.width, metrics.height, node.value, '#e0e7ff', '#6366f1');
+      break;
+    }
+    case 'charclass': {
+      drawCharClassBox(ctx, x, y, metrics.width, metrics.height, node.value, '#fef3c7', '#d97706');
+      break;
+    }
+    case 'anchor': {
+      drawAnchorBox(ctx, x, y, metrics.width, metrics.height, node.value);
+      break;
+    }
+    case 'sequence': {
+      let cx = x;
+      node.items.forEach((item, i) => {
+        const m = item._m;
+        const iy = y + (metrics.height - m.height) / 2;
+        if (i > 0) {
+          drawArrowLine(ctx, cx, midY, cx + 16, midY);
+          cx += 16;
+        }
+        drawNode(ctx, item, cx, iy, m);
+        cx += m.width;
+      });
+      break;
+    }
+    case 'alternation': {
+      drawAlternation(ctx, node, x, y, metrics);
+      break;
+    }
+    case 'group': {
+      drawGroup(ctx, node, x, y, metrics);
+      break;
+    }
+    case 'quantifier': {
+      drawQuantifier(ctx, node, x, y, metrics);
+      break;
+    }
+  }
+}
+
+function drawLiteralBox(ctx, x, y, w, h, text, fill, stroke) {
+  const midY = y + h / 2;
+  ctx.fillStyle = fill;
+  ctx.strokeStyle = stroke;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.rect(x + 2, midY - 14, w - 4, 28);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = '#1e293b';
+  ctx.font = '13px "IBM Plex Mono", monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, x + w / 2, midY);
+}
+
+function drawCharClassBox(ctx, x, y, w, h, text, fill, stroke) {
+  const midY = y + h / 2;
+  const r = 10;
+  ctx.fillStyle = fill;
+  ctx.strokeStyle = stroke;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.roundRect(x + 2, midY - 14, w - 4, 28, r);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = '#92400e';
+  ctx.font = '12px "IBM Plex Mono", monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, x + w / 2, midY);
+}
+
+function drawAnchorBox(ctx, x, y, w, h, text) {
+  const midY = y + h / 2;
+  ctx.fillStyle = '#fce7f3';
+  ctx.strokeStyle = '#ec4899';
+  ctx.lineWidth = 1.5;
+
+  // Diamond shape
+  const cx = x + w / 2;
+  const halfW = w / 2 - 4;
+  const halfH = 14;
+  ctx.beginPath();
+  ctx.moveTo(cx, midY - halfH);
+  ctx.lineTo(cx + halfW, midY);
+  ctx.lineTo(cx, midY + halfH);
+  ctx.lineTo(cx - halfW, midY);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = '#9d174d';
+  ctx.font = '12px "IBM Plex Mono", monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, cx, midY);
+}
+
+function drawAlternation(ctx, node, x, y, metrics) {
+  const midY = y + metrics.height / 2;
+  const innerW = metrics.width - 60;
+  const startX = x + 30;
+  const branchGap = 20;
+
+  // Entry/exit lines
+  ctx.strokeStyle = '#334155';
+  ctx.lineWidth = 2;
+
+  let by = y;
+  node.branches.forEach((b, i) => {
+    const m = b._m;
+    const branchMidY = by + m.height / 2;
+
+    // Draw branch line from start
+    ctx.beginPath();
+    ctx.moveTo(x, midY);
+    ctx.quadraticCurveTo(x + 10, midY, startX - 4, branchMidY);
+    ctx.stroke();
+
+    // Draw branch content centered
+    const bx = startX + (innerW - m.width) / 2;
+    drawArrowLine(ctx, startX - 4, branchMidY, bx, branchMidY);
+    drawNode(ctx, b, bx, by, m);
+    drawArrowLine(ctx, bx + m.width, branchMidY, x + metrics.width - 30 + 4, branchMidY);
+
+    // Draw branch line to end
+    ctx.beginPath();
+    ctx.moveTo(x + metrics.width - 30 + 4, branchMidY);
+    ctx.quadraticCurveTo(x + metrics.width - 20, midY, x + metrics.width, midY);
+    ctx.stroke();
+
+    by += m.height + branchGap;
+  });
+}
+
+function drawGroup(ctx, node, x, y, metrics) {
+  const midY = y + metrics.height / 2;
+  const bodyM = node.body._m;
+
+  // Dashed outline
+  ctx.strokeStyle = node.groupType === 'capture' ? '#22c55e' : '#94a3b8';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([4, 3]);
+  ctx.beginPath();
+  ctx.roundRect(x + 4, y + 2, metrics.width - 8, metrics.height - 4, 6);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Group label
+  let label = '';
+  if (node.groupType === 'capture') label = 'group';
+  else if (node.groupType === 'non-capture') label = '?:';
+  else label = node.label;
+
+  if (label) {
+    ctx.font = '10px "IBM Plex Mono", monospace';
+    ctx.fillStyle = node.groupType === 'capture' ? '#16a34a' : '#64748b';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillText(label, x + 10, y + 5);
+  }
+
+  // Draw body centered
+  const bodyX = x + (metrics.width - bodyM.width) / 2;
+  const bodyY = y + (metrics.height - bodyM.height) / 2;
+
+  drawArrowLine(ctx, x, midY, bodyX, midY);
+  drawNode(ctx, node.body, bodyX, bodyY, bodyM);
+  drawArrowLine(ctx, bodyX + bodyM.width, midY, x + metrics.width, midY);
+}
+
+function drawQuantifier(ctx, node, x, y, metrics) {
+  const bodyM = node.body._m;
+  const bodyX = x + (metrics.width - bodyM.width) / 2;
+  const bodyY = y;
+  const midY = y + bodyM.height / 2;
+
+  // Draw body
+  drawNode(ctx, node.body, bodyX, bodyY, bodyM);
+
+  // Draw loop arrow below
+  const qText = node.quant + (node.lazy ? '?' : '');
+  const loopY = y + bodyM.height + 6;
+
+  ctx.strokeStyle = '#e11d48';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(bodyX + bodyM.width, midY);
+  ctx.quadraticCurveTo(bodyX + bodyM.width + 8, midY, bodyX + bodyM.width + 8, loopY);
+  ctx.lineTo(bodyX - 8, loopY);
+  ctx.quadraticCurveTo(bodyX - 8, midY, bodyX, midY);
+  ctx.stroke();
+
+  // Arrow tip on loop
+  ctx.fillStyle = '#e11d48';
+  ctx.beginPath();
+  ctx.moveTo(bodyX, midY);
+  ctx.lineTo(bodyX + 6, midY - 4);
+  ctx.lineTo(bodyX + 6, midY + 4);
+  ctx.closePath();
+  ctx.fill();
+
+  // Quantifier label
+  ctx.font = '11px "IBM Plex Mono", monospace';
+  ctx.fillStyle = '#e11d48';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+  ctx.fillText(qText, x + metrics.width / 2, loopY + 2);
+
+  // Draw connecting lines
+  drawLine(ctx, x, midY, bodyX, midY);
+  drawLine(ctx, bodyX + bodyM.width, midY, x + metrics.width, midY);
+}
+
+function drawArrowLine(ctx, x1, y1, x2, y2) {
+  ctx.strokeStyle = '#334155';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.stroke();
+
+  // Small arrow head
+  const angle = Math.atan2(y2 - y1, x2 - x1);
+  const sz = 5;
+  ctx.fillStyle = '#334155';
+  ctx.beginPath();
+  ctx.moveTo(x2, y2);
+  ctx.lineTo(x2 - sz * Math.cos(angle - 0.4), y2 - sz * Math.sin(angle - 0.4));
+  ctx.lineTo(x2 - sz * Math.cos(angle + 0.4), y2 - sz * Math.sin(angle + 0.4));
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawLine(ctx, x1, y1, x2, y2) {
+  ctx.strokeStyle = '#334155';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.stroke();
+}
+
+// ========================
+// Utility
+// ========================
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// roundRect polyfill
+if (!CanvasRenderingContext2D.prototype.roundRect) {
+  CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+    if (typeof r === 'number') r = [r];
+    const radii = r.map(v => Math.min(v, w / 2, h / 2));
+    const rad = radii[0] || 0;
+    this.moveTo(x + rad, y);
+    this.lineTo(x + w - rad, y);
+    this.arcTo(x + w, y, x + w, y + rad, rad);
+    this.lineTo(x + w, y + h - rad);
+    this.arcTo(x + w, y + h, x + w - rad, y + h, rad);
+    this.lineTo(x + rad, y + h);
+    this.arcTo(x, y + h, x, y + h - rad, rad);
+    this.lineTo(x, y + rad);
+    this.arcTo(x, y, x + rad, y, rad);
+    this.closePath();
+  };
+}
+
+// ========================
+// Init
+// ========================
+function init() {
+  initGuide();
+  initFlags();
+  initPresets();
+  initInputs();
+
+  // Initial empty state render
+  runDebugger();
+
+  // Handle window resize for railroad
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => renderRailroad(), 150);
+  });
+
+  // Close popup on scroll/touch elsewhere
+  document.addEventListener('touchstart', (e) => {
+    if (!e.target.closest('.match-span')) {
+      matchPopup.classList.remove('visible');
+    }
+  }, { passive: true });
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.match-span')) {
+      matchPopup.classList.remove('visible');
+    }
+  });
+}
+
+init();
+</script>
+</body>
+</html>

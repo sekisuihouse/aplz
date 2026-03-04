@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>API Gacha Machine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px;-webkit-tap-highlight-color:transparent}
+body{
+  font-family:'Quicksand','Noto Sans JP',sans-serif;
+  background:#f8f7ff;
+  color:#2d2b55;
+  min-height:100vh;
+  min-height:100dvh;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+button{
+  font-family:inherit;
+  cursor:pointer;
+  border:none;
+  outline:none;
+  -webkit-appearance:none;
+  touch-action:manipulation;
+}
+
+/* Header */
+.header{
+  text-align:center;
+  padding:20px 16px 10px;
+}
+.header h1{
+  font-size:1.6rem;
+  font-weight:700;
+  background:linear-gradient(135deg,#6366f1,#a855f7,#ec4899);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+  letter-spacing:0.02em;
+}
+.gacha-count{
+  font-size:0.85rem;
+  color:#8b8aad;
+  margin-top:4px;
+  font-weight:500;
+}
+.gacha-count span{
+  font-weight:700;
+  color:#6366f1;
+  font-size:1rem;
+}
+
+/* Category Filters */
+.filters{
+  display:flex;
+  gap:6px;
+  padding:10px 16px;
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+}
+.filters::-webkit-scrollbar{display:none}
+.filter-btn{
+  min-width:44px;
+  min-height:44px;
+  padding:8px 14px;
+  border-radius:22px;
+  font-size:0.8rem;
+  font-weight:600;
+  white-space:nowrap;
+  background:#eeecfa;
+  color:#6b6999;
+  transition:all 0.2s;
+  flex-shrink:0;
+}
+.filter-btn.active{
+  background:#6366f1;
+  color:#fff;
+  box-shadow:0 2px 10px rgba(99,102,241,0.3);
+}
+.filter-btn:active{
+  transform:scale(0.95);
+}
+
+/* Machine Container */
+.machine-area{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:10px 16px 20px;
+  position:relative;
+}
+
+/* SVG Machine */
+.gacha-machine-wrap{
+  position:relative;
+  width:220px;
+  height:280px;
+  margin:0 auto;
+}
+.gacha-machine-wrap svg{
+  width:100%;
+  height:100%;
+}
+
+/* Capsules inside dome */
+@keyframes floatCapsule1{
+  0%,100%{transform:translate(0,0) rotate(0deg)}
+  25%{transform:translate(4px,-3px) rotate(8deg)}
+  50%{transform:translate(-2px,2px) rotate(-5deg)}
+  75%{transform:translate(3px,1px) rotate(3deg)}
+}
+@keyframes floatCapsule2{
+  0%,100%{transform:translate(0,0) rotate(0deg)}
+  25%{transform:translate(-3px,2px) rotate(-6deg)}
+  50%{transform:translate(4px,-2px) rotate(7deg)}
+  75%{transform:translate(-1px,-3px) rotate(-4deg)}
+}
+@keyframes floatCapsule3{
+  0%,100%{transform:translate(0,0) rotate(0deg)}
+  25%{transform:translate(2px,3px) rotate(5deg)}
+  50%{transform:translate(-3px,-1px) rotate(-8deg)}
+  75%{transform:translate(1px,2px) rotate(3deg)}
+}
+
+/* Crank animation */
+@keyframes crankTurn{
+  0%{transform-origin:130px 195px;transform:rotate(0deg)}
+  50%{transform-origin:130px 195px;transform:rotate(180deg)}
+  100%{transform-origin:130px 195px;transform:rotate(360deg)}
+}
+.crank-group.spinning{
+  animation:crankTurn 0.6s ease-in-out;
+}
+
+/* Capsule drop */
+@keyframes capsuleDrop{
+  0%{transform:translateY(-20px);opacity:0}
+  20%{transform:translateY(0);opacity:1}
+  40%{transform:translateY(40px)}
+  60%{transform:translateY(30px)}
+  70%{transform:translateY(50px)}
+  80%{transform:translateY(45px)}
+  90%{transform:translateY(55px)}
+  100%{transform:translateY(60px);opacity:1}
+}
+
+/* Capsule opening */
+@keyframes capsuleOpen{
+  0%{transform:scale(1);opacity:1}
+  30%{transform:scale(1.3);opacity:1}
+  50%{transform:scale(1.4);opacity:0.8}
+  70%{transform:scale(0.5);opacity:0.4}
+  100%{transform:scale(0);opacity:0}
+}
+
+.dropped-capsule{
+  position:absolute;
+  bottom:0;
+  left:50%;
+  margin-left:-20px;
+  width:40px;
+  height:40px;
+  opacity:0;
+  pointer-events:none;
+}
+.dropped-capsule.animating{
+  animation:capsuleDrop 0.8s ease-in forwards;
+}
+.dropped-capsule.opening{
+  animation:capsuleOpen 0.5s ease-out forwards;
+}
+
+/* Spin Button */
+.spin-btn{
+  min-width:160px;
+  min-height:54px;
+  padding:14px 32px;
+  font-size:1.15rem;
+  font-weight:700;
+  color:#fff;
+  background:linear-gradient(135deg,#6366f1,#a855f7);
+  border-radius:27px;
+  box-shadow:0 4px 20px rgba(99,102,241,0.35);
+  transition:all 0.2s;
+  margin-top:10px;
+  letter-spacing:0.05em;
+  position:relative;
+  overflow:hidden;
+}
+.spin-btn:active{
+  transform:scale(0.96);
+  box-shadow:0 2px 10px rgba(99,102,241,0.25);
+}
+.spin-btn:disabled{
+  opacity:0.6;
+  pointer-events:none;
+}
+.spin-btn::after{
+  content:'';
+  position:absolute;
+  top:0;left:-100%;
+  width:100%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.25),transparent);
+  transition:none;
+}
+.spin-btn:not(:disabled):active::after{
+  left:100%;
+  transition:left 0.5s;
+}
+
+/* Result Area */
+.result-area{
+  padding:0 16px 20px;
+  max-width:500px;
+  margin:0 auto;
+  width:100%;
+}
+.result-card{
+  background:#fff;
+  border-radius:16px;
+  overflow:hidden;
+  box-shadow:0 4px 24px rgba(45,43,85,0.08);
+  animation:cardFadeIn 0.5s ease-out;
+  position:relative;
+}
+@keyframes cardFadeIn{
+  0%{opacity:0;transform:translateY(20px) scale(0.95)}
+  100%{opacity:1;transform:translateY(0) scale(1)}
+}
+.card-accent{
+  height:5px;
+  width:100%;
+}
+.card-image-wrap{
+  width:100%;
+  max-height:280px;
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#f3f2fc;
+}
+.card-image-wrap img{
+  width:100%;
+  height:auto;
+  max-height:280px;
+  object-fit:cover;
+  display:block;
+}
+.card-body{
+  padding:16px;
+}
+.card-category{
+  font-size:0.75rem;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:0.08em;
+  margin-bottom:6px;
+}
+.card-title{
+  font-size:1.1rem;
+  font-weight:700;
+  color:#2d2b55;
+  margin-bottom:8px;
+  line-height:1.4;
+}
+.card-desc{
+  font-size:0.9rem;
+  color:#6b6999;
+  line-height:1.6;
+  margin-bottom:12px;
+}
+.card-source{
+  font-size:0.72rem;
+  color:#a5a3c7;
+  margin-bottom:12px;
+}
+.card-actions{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.retry-btn{
+  min-width:44px;
+  min-height:44px;
+  padding:10px 20px;
+  border-radius:22px;
+  font-size:0.9rem;
+  font-weight:600;
+  background:linear-gradient(135deg,#6366f1,#a855f7);
+  color:#fff;
+  flex:1;
+  transition:all 0.2s;
+}
+.retry-btn:active{transform:scale(0.96)}
+.fav-btn{
+  min-width:44px;
+  min-height:44px;
+  width:44px;
+  border-radius:50%;
+  background:#eeecfa;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:all 0.2s;
+}
+.fav-btn.faved{
+  background:#ec4899;
+}
+.fav-btn:active{transform:scale(0.9)}
+
+/* Error Card */
+.error-card{
+  background:#fff;
+  border-radius:16px;
+  padding:30px 20px;
+  text-align:center;
+  box-shadow:0 4px 24px rgba(45,43,85,0.08);
+  animation:cardFadeIn 0.5s ease-out;
+}
+.error-card .error-icon{
+  margin-bottom:12px;
+}
+.error-card p{
+  font-size:1rem;
+  font-weight:600;
+  color:#6b6999;
+  margin-bottom:16px;
+}
+
+/* Favorites Section */
+.favorites-section{
+  padding:10px 16px 20px;
+  max-width:500px;
+  margin:0 auto;
+  width:100%;
+  display:none;
+}
+.favorites-section.has-items{display:block}
+.section-title{
+  font-size:0.9rem;
+  font-weight:700;
+  color:#8b8aad;
+  margin-bottom:10px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+
+/* History */
+.history-section{
+  padding:10px 16px 30px;
+  max-width:500px;
+  margin:0 auto;
+  width:100%;
+  display:none;
+}
+.history-section.has-items{display:block}
+.history-scroll{
+  display:flex;
+  gap:10px;
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+  padding-bottom:6px;
+}
+.history-scroll::-webkit-scrollbar{display:none}
+.history-card{
+  min-width:120px;
+  max-width:120px;
+  background:#fff;
+  border-radius:12px;
+  overflow:hidden;
+  box-shadow:0 2px 12px rgba(45,43,85,0.06);
+  flex-shrink:0;
+  cursor:pointer;
+  transition:transform 0.2s;
+  min-height:44px;
+}
+.history-card:active{transform:scale(0.95)}
+.history-card-accent{height:3px;width:100%}
+.history-card-thumb{
+  width:100%;
+  height:70px;
+  overflow:hidden;
+  background:#f3f2fc;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.history-card-thumb img{
+  width:100%;
+  height:70px;
+  object-fit:cover;
+}
+.history-card-label{
+  padding:6px 8px;
+  font-size:0.68rem;
+  font-weight:600;
+  color:#6b6999;
+  line-height:1.3;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+/* Favorites scroll */
+.fav-scroll{
+  display:flex;
+  gap:10px;
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+  padding-bottom:6px;
+}
+.fav-scroll::-webkit-scrollbar{display:none}
+
+/* Overlay Guide */
+.guide-overlay{
+  position:fixed;
+  top:0;left:0;right:0;bottom:0;
+  background:rgba(45,43,85,0.85);
+  z-index:1000;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  animation:fadeIn 0.3s ease-out;
+}
+@keyframes fadeIn{
+  0%{opacity:0}
+  100%{opacity:1}
+}
+.guide-content{
+  background:#fff;
+  border-radius:20px;
+  padding:30px 24px;
+  max-width:340px;
+  width:100%;
+  text-align:center;
+  position:relative;
+  animation:guideIn 0.4s ease-out;
+}
+@keyframes guideIn{
+  0%{opacity:0;transform:scale(0.8) translateY(20px)}
+  100%{opacity:1;transform:scale(1) translateY(0)}
+}
+.guide-content h2{
+  font-size:1.4rem;
+  font-weight:700;
+  margin-bottom:12px;
+  background:linear-gradient(135deg,#6366f1,#a855f7);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.guide-content p{
+  font-size:0.92rem;
+  color:#6b6999;
+  line-height:1.7;
+  margin-bottom:8px;
+}
+.guide-steps{
+  text-align:left;
+  margin:16px 0;
+}
+.guide-step{
+  display:flex;
+  align-items:flex-start;
+  gap:10px;
+  margin-bottom:12px;
+  font-size:0.88rem;
+  color:#4a4878;
+  line-height:1.5;
+}
+.step-num{
+  min-width:28px;
+  height:28px;
+  border-radius:50%;
+  background:linear-gradient(135deg,#6366f1,#a855f7);
+  color:#fff;
+  font-size:0.8rem;
+  font-weight:700;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-shrink:0;
+}
+.guide-dismiss{
+  min-width:44px;
+  min-height:44px;
+  padding:12px 30px;
+  border-radius:25px;
+  font-size:1rem;
+  font-weight:700;
+  color:#fff;
+  background:linear-gradient(135deg,#6366f1,#a855f7);
+  margin-top:8px;
+  transition:all 0.2s;
+}
+.guide-dismiss:active{transform:scale(0.96)}
+
+/* Loading shimmer */
+@keyframes shimmer{
+  0%{background-position:-200% 0}
+  100%{background-position:200% 0}
+}
+.loading-shimmer{
+  background:linear-gradient(90deg,#f3f2fc 25%,#e8e6f8 50%,#f3f2fc 75%);
+  background-size:200% 100%;
+  animation:shimmer 1.5s infinite;
+}
+
+/* Sparkle animation for gacha reveal */
+@keyframes sparkle{
+  0%{transform:scale(0) rotate(0deg);opacity:1}
+  50%{transform:scale(1) rotate(180deg);opacity:0.8}
+  100%{transform:scale(0) rotate(360deg);opacity:0}
+}
+
+/* Responsive */
+@media(min-width:480px){
+  .header h1{font-size:1.8rem}
+  .gacha-machine-wrap{width:260px;height:320px}
+  .card-image-wrap{max-height:340px}
+  .card-image-wrap img{max-height:340px}
+}
+
+/* Keyboard hint (PC only) */
+@media(hover:hover)and(pointer:fine){
+  .spin-btn::before{
+    content:'Space';
+    position:absolute;
+    top:-20px;
+    left:50%;
+    transform:translateX(-50%);
+    font-size:0.65rem;
+    color:#a5a3c7;
+    background:#eeecfa;
+    padding:2px 8px;
+    border-radius:4px;
+    opacity:0;
+    transition:opacity 0.2s;
+    pointer-events:none;
+  }
+  .spin-btn:hover::before{opacity:1}
+  .spin-btn:hover{
+    transform:translateY(-2px);
+    box-shadow:0 6px 24px rgba(99,102,241,0.4);
+  }
+}
+
+.hidden{display:none !important}
+</style>
+</head>
+<body>
+
+<!-- Guide Overlay -->
+<div class="guide-overlay hidden" id="guideOverlay">
+  <div class="guide-content">
+    <svg width="64" height="64" viewBox="0 0 64 64" fill="none" style="margin-bottom:10px">
+      <circle cx="32" cy="32" r="30" fill="url(#gg1)" stroke="#e2e0f5" stroke-width="2"/>
+      <defs><linearGradient id="gg1" x1="0" y1="0" x2="64" y2="64"><stop stop-color="#6366f1"/><stop offset="1" stop-color="#a855f7"/></linearGradient></defs>
+      <text x="32" y="40" text-anchor="middle" fill="#fff" font-size="28" font-weight="700" font-family="Quicksand">?</text>
+    </svg>
+    <h2>API ガチャマシン</h2>
+    <p>ボタンを回して、ランダムなAPIから面白いデータをゲットしよう!</p>
+    <div class="guide-steps">
+      <div class="guide-step">
+        <div class="step-num">1</div>
+        <div>カテゴリを選ぶ（または「全て」のまま）</div>
+      </div>
+      <div class="guide-step">
+        <div class="step-num">2</div>
+        <div>「回す」ボタンをタップ</div>
+      </div>
+      <div class="guide-step">
+        <div class="step-num">3</div>
+        <div>ガチャが回って結果が出る! 何が出るかはお楽しみ</div>
+      </div>
+    </div>
+    <button class="guide-dismiss" id="guideDismiss">はじめる</button>
+  </div>
+</div>
+
+<!-- Header -->
+<header class="header">
+  <h1>API ガチャマシン</h1>
+  <div class="gacha-count">ガチャ回数: <span id="totalCount">0</span></div>
+</header>
+
+<!-- Category Filters -->
+<div class="filters" id="filters">
+  <button class="filter-btn active" data-cat="all">全て</button>
+  <button class="filter-btn" data-cat="動物">動物</button>
+  <button class="filter-btn" data-cat="宇宙">宇宙</button>
+  <button class="filter-btn" data-cat="ユーモア">ユーモア</button>
+  <button class="filter-btn" data-cat="知恵">知恵</button>
+  <button class="filter-btn" data-cat="金融">金融</button>
+  <button class="filter-btn" data-cat="データ">データ</button>
+</div>
+
+<!-- Machine -->
+<div class="machine-area">
+  <div class="gacha-machine-wrap" id="machineWrap">
+    <svg id="gachaSvg" viewBox="0 0 220 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Machine body -->
+      <rect x="40" y="100" width="140" height="140" rx="10" fill="#e8e6f8" stroke="#c7c5e2" stroke-width="2"/>
+      <!-- Coin slot -->
+      <rect x="88" y="110" width="44" height="6" rx="3" fill="#b0aed0"/>
+      <!-- Glass dome -->
+      <ellipse cx="110" cy="105" rx="70" ry="65" fill="#f0eeff" stroke="#c7c5e2" stroke-width="2"/>
+      <ellipse cx="110" cy="105" rx="70" ry="65" fill="url(#domeGrad)" opacity="0.3"/>
+      <defs>
+        <radialGradient id="domeGrad" cx="0.3" cy="0.3" r="0.7">
+          <stop stop-color="#fff" stop-opacity="0.6"/>
+          <stop offset="1" stop-color="#c7c5e2" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+      <!-- Capsules floating in dome -->
+      <g style="animation:floatCapsule1 3s ease-in-out infinite">
+        <rect x="78" y="70" width="22" height="16" rx="8" fill="#f97316"/>
+        <rect x="78" y="78" width="22" height="8" rx="4" fill="#fb923c"/>
+      </g>
+      <g style="animation:floatCapsule2 3.5s ease-in-out infinite 0.3s">
+        <rect x="108" y="85" width="22" height="16" rx="8" fill="#6366f1"/>
+        <rect x="108" y="93" width="22" height="8" rx="4" fill="#818cf8"/>
+      </g>
+      <g style="animation:floatCapsule3 4s ease-in-out infinite 0.7s">
+        <rect x="90" y="100" width="22" height="16" rx="8" fill="#10b981"/>
+        <rect x="90" y="108" width="22" height="8" rx="4" fill="#34d399"/>
+      </g>
+      <g style="animation:floatCapsule1 3.2s ease-in-out infinite 1s">
+        <rect x="120" y="65" width="22" height="16" rx="8" fill="#ec4899"/>
+        <rect x="120" y="73" width="22" height="8" rx="4" fill="#f472b6"/>
+      </g>
+      <g style="animation:floatCapsule2 3.8s ease-in-out infinite 0.5s">
+        <rect x="72" y="90" width="22" height="16" rx="8" fill="#f59e0b"/>
+        <rect x="72" y="98" width="22" height="8" rx="4" fill="#fbbf24"/>
+      </g>
+      <g style="animation:floatCapsule3 3.3s ease-in-out infinite 1.2s">
+        <rect x="115" y="100" width="22" height="16" rx="8" fill="#8b5cf6"/>
+        <rect x="115" y="108" width="22" height="8" rx="4" fill="#a78bfa"/>
+      </g>
+      <!-- Dome highlight -->
+      <ellipse cx="90" cy="75" rx="25" ry="18" fill="#fff" opacity="0.15"/>
+      <!-- Crank handle -->
+      <g class="crank-group" id="crankGroup">
+        <circle cx="190" cy="155" r="12" fill="#8b5cf6" stroke="#7c3aed" stroke-width="2"/>
+        <rect x="150" y="152" width="40" height="6" rx="3" fill="#a78bfa"/>
+        <circle cx="190" cy="155" r="5" fill="#7c3aed"/>
+      </g>
+      <!-- Chute -->
+      <rect x="85" y="230" width="50" height="30" rx="5" fill="#d4d2ed" stroke="#c7c5e2" stroke-width="1.5"/>
+      <rect x="95" y="228" width="30" height="6" rx="3" fill="#b0aed0"/>
+      <!-- Machine legs -->
+      <rect x="55" y="236" width="12" height="24" rx="4" fill="#c7c5e2"/>
+      <rect x="153" y="236" width="12" height="24" rx="4" fill="#c7c5e2"/>
+      <!-- Machine label -->
+      <rect x="70" y="170" width="80" height="26" rx="6" fill="#6366f1"/>
+      <text x="110" y="188" text-anchor="middle" fill="#fff" font-size="11" font-weight="700" font-family="Quicksand,sans-serif">GACHA</text>
+      <!-- Decorative screws -->
+      <circle cx="56" cy="115" r="4" fill="#b0aed0"/>
+      <circle cx="164" cy="115" r="4" fill="#b0aed0"/>
+      <circle cx="56" cy="225" r="4" fill="#b0aed0"/>
+      <circle cx="164" cy="225" r="4" fill="#b0aed0"/>
+    </svg>
+
+    <!-- Dropped capsule (animated element) -->
+    <svg class="dropped-capsule" id="droppedCapsule" viewBox="0 0 40 40" fill="none">
+      <rect x="4" y="6" width="32" height="24" rx="12" fill="#6366f1" id="capsuleColor"/>
+      <rect x="4" y="18" width="32" height="12" rx="6" fill="#818cf8" id="capsuleColorLight"/>
+      <line x1="4" y1="18" x2="36" y2="18" stroke="#fff" stroke-width="1.5" stroke-opacity="0.4"/>
+    </svg>
+  </div>
+
+  <button class="spin-btn" id="spinBtn">回す</button>
+</div>
+
+<!-- Result Area -->
+<div class="result-area" id="resultArea"></div>
+
+<!-- Favorites -->
+<div class="favorites-section" id="favSection">
+  <div class="section-title">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1.5l2 4.1 4.5.6-3.3 3.2.8 4.5L8 11.7l-4 2.2.8-4.5L1.5 6.2l4.5-.6L8 1.5z" fill="#ec4899"/></svg>
+    お気に入り
+  </div>
+  <div class="fav-scroll" id="favScroll"></div>
+</div>
+
+<!-- History -->
+<div class="history-section" id="historySection">
+  <div class="section-title">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="#8b8aad" stroke-width="1.5" fill="none"/><path d="M8 4v4.5l3 1.5" stroke="#8b8aad" stroke-width="1.5" stroke-linecap="round"/></svg>
+    履歴
+  </div>
+  <div class="history-scroll" id="historyScroll"></div>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+// --- API Data ---
+const apis = [
+  {
+    name: 'ランダム猫画像',
+    category: '動物',
+    color: '#f97316',
+    url: 'https://api.thecatapi.com/v1/images/search',
+    transform: function(data){ return { image: data[0].url, title: 'にゃんこ' }; }
+  },
+  {
+    name: 'ランダム犬画像',
+    category: '動物',
+    color: '#f97316',
+    url: 'https://dog.ceo/api/breeds/image/random',
+    transform: function(data){ return { image: data.message, title: 'わんこ' }; }
+  },
+  {
+    name: '今日の天文写真',
+    category: '宇宙',
+    color: '#6366f1',
+    url: 'https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY',
+    transform: function(data){ return { image: data.url, title: data.title, description: data.explanation ? data.explanation.slice(0,150) : '' }; }
+  },
+  {
+    name: 'ランダムジョーク',
+    category: 'ユーモア',
+    color: '#10b981',
+    url: 'https://official-joke-api.appspot.com/random_joke',
+    transform: function(data){ return { title: data.setup, description: data.punchline }; }
+  },
+  {
+    name: 'ランダムアドバイス',
+    category: '知恵',
+    color: '#8b5cf6',
+    url: 'https://api.adviceslip.com/advice',
+    transform: function(data){ return { title: data.slip.advice }; }
+  },
+  {
+    name: '為替レート',
+    category: '金融',
+    color: '#14b8a6',
+    url: 'https://open.er-api.com/v6/latest/JPY',
+    transform: function(data){ return { title: '1 JPY = ' + data.rates.USD.toFixed(6) + ' USD', description: '更新: ' + data.time_last_update_utc }; }
+  },
+  {
+    name: 'ランダムユーザー',
+    category: 'データ',
+    color: '#f59e0b',
+    url: 'https://randomuser.me/api/',
+    transform: function(data){ return { image: data.results[0].picture.large, title: data.results[0].name.first + ' ' + data.results[0].name.last, description: data.results[0].location.city + ', ' + data.results[0].location.country }; }
+  },
+  {
+    name: 'ランダムFox画像',
+    category: '動物',
+    color: '#f97316',
+    url: 'https://randomfox.ca/floof/',
+    transform: function(data){ return { image: data.image, title: 'きつね' }; }
+  }
+];
+
+// --- State ---
+var totalCount = 0;
+var activeFilter = 'all';
+var isSpinning = false;
+var history = [];
+var favorites = [];
+var currentResult = null;
+var currentApi = null;
+
+// --- DOM refs ---
+var spinBtn = document.getElementById('spinBtn');
+var resultArea = document.getElementById('resultArea');
+var totalCountEl = document.getElementById('totalCount');
+var crankGroup = document.getElementById('crankGroup');
+var droppedCapsule = document.getElementById('droppedCapsule');
+var capsuleColorEl = document.getElementById('capsuleColor');
+var capsuleColorLightEl = document.getElementById('capsuleColorLight');
+var historySection = document.getElementById('historySection');
+var historyScroll = document.getElementById('historyScroll');
+var favSection = document.getElementById('favSection');
+var favScroll = document.getElementById('favScroll');
+var guideOverlay = document.getElementById('guideOverlay');
+var guideDismiss = document.getElementById('guideDismiss');
+var filtersContainer = document.getElementById('filters');
+
+// --- Guide ---
+function checkGuide(){
+  try {
+    if(!localStorage.getItem('api-gacha-visited')){
+      guideOverlay.classList.remove('hidden');
+    }
+  } catch(e){
+    guideOverlay.classList.remove('hidden');
+  }
+}
+function dismissGuide(){
+  guideOverlay.classList.add('hidden');
+  try { localStorage.setItem('api-gacha-visited','1'); } catch(e){}
+}
+guideDismiss.addEventListener('click', dismissGuide);
+guideOverlay.addEventListener('click', function(e){
+  if(e.target === guideOverlay) dismissGuide();
+});
+checkGuide();
+
+// --- Filters ---
+filtersContainer.addEventListener('click', function(e){
+  var btn = e.target.closest('.filter-btn');
+  if(!btn) return;
+  activeFilter = btn.dataset.cat;
+  var btns = filtersContainer.querySelectorAll('.filter-btn');
+  for(var i=0;i<btns.length;i++){
+    btns[i].classList.toggle('active', btns[i].dataset.cat === activeFilter);
+  }
+});
+
+// --- Get filtered APIs ---
+function getFilteredApis(){
+  if(activeFilter === 'all') return apis.slice();
+  return apis.filter(function(a){ return a.category === activeFilter; });
+}
+
+// --- Random pick ---
+function pickRandom(arr){
+  return arr[Math.floor(Math.random()*arr.length)];
+}
+
+// --- Color helpers ---
+function lightenColor(hex){
+  var r = parseInt(hex.slice(1,3),16);
+  var g = parseInt(hex.slice(3,5),16);
+  var b = parseInt(hex.slice(5,7),16);
+  r = Math.min(255, r+60);
+  g = Math.min(255, g+60);
+  b = Math.min(255, b+60);
+  return '#'+r.toString(16).padStart(2,'0')+g.toString(16).padStart(2,'0')+b.toString(16).padStart(2,'0');
+}
+
+// --- Fetch with timeout ---
+function fetchWithTimeout(url, timeout){
+  return new Promise(function(resolve, reject){
+    var timer = setTimeout(function(){ reject(new Error('timeout')); }, timeout);
+    fetch(url)
+      .then(function(res){
+        clearTimeout(timer);
+        if(!res.ok) throw new Error('HTTP '+res.status);
+        return res.json();
+      })
+      .then(resolve)
+      .catch(function(err){
+        clearTimeout(timer);
+        reject(err);
+      });
+  });
+}
+
+// --- Spin sequence ---
+function spin(){
+  if(isSpinning) return;
+  var filtered = getFilteredApis();
+  if(filtered.length === 0) return;
+
+  isSpinning = true;
+  spinBtn.disabled = true;
+  resultArea.innerHTML = '';
+
+  var api = pickRandom(filtered);
+  currentApi = api;
+
+  // Set capsule color
+  capsuleColorEl.setAttribute('fill', api.color);
+  capsuleColorLightEl.setAttribute('fill', lightenColor(api.color));
+
+  // Step 1: Crank turn
+  crankGroup.classList.remove('spinning');
+  void crankGroup.offsetWidth;
+  crankGroup.classList.add('spinning');
+
+  // Step 2: Capsule drop (after crank)
+  setTimeout(function(){
+    droppedCapsule.classList.remove('animating','opening');
+    void droppedCapsule.offsetWidth;
+    droppedCapsule.classList.add('animating');
+  }, 400);
+
+  // Step 3: API call during animation
+  var apiPromise = fetchWithTimeout(api.url, 5000)
+    .then(function(data){
+      return api.transform(data);
+    })
+    .catch(function(){
+      return null;
+    });
+
+  // Step 4: Capsule opens after drop, then show result
+  setTimeout(function(){
+    droppedCapsule.classList.remove('animating');
+    void droppedCapsule.offsetWidth;
+    droppedCapsule.classList.add('opening');
+
+    // Create sparkle particles
+    createSparkles(api.color);
+
+    setTimeout(function(){
+      droppedCapsule.classList.remove('opening');
+      droppedCapsule.style.opacity = '0';
+
+      apiPromise.then(function(result){
+        totalCount++;
+        totalCountEl.textContent = totalCount;
+
+        if(result){
+          currentResult = { api: api, data: result, id: Date.now() };
+          showResultCard(api, result);
+          addToHistory(currentResult);
+        } else {
+          showErrorCard(api);
+        }
+        isSpinning = false;
+        spinBtn.disabled = false;
+      });
+    }, 500);
+  }, 1200);
+}
+
+// --- Sparkle particles ---
+function createSparkles(color){
+  var machineWrap = document.getElementById('machineWrap');
+  var count = 8;
+  for(var i=0;i<count;i++){
+    (function(idx){
+      var spark = document.createElement('div');
+      var angle = (360/count)*idx;
+      var rad = angle * Math.PI/180;
+      var dist = 30 + Math.random()*30;
+      var x = Math.cos(rad)*dist;
+      var y = Math.sin(rad)*dist;
+      spark.style.cssText = 'position:absolute;bottom:20px;left:50%;width:8px;height:8px;border-radius:50%;pointer-events:none;z-index:10;background:'+color+';';
+      spark.style.animation = 'sparkle 0.6s ease-out forwards';
+      spark.style.transform = 'translate('+x+'px, '+y+'px)';
+      spark.style.animationDelay = (idx*0.04)+'s';
+      machineWrap.appendChild(spark);
+      setTimeout(function(){ if(spark.parentNode) spark.parentNode.removeChild(spark); }, 800);
+    })(i);
+  }
+}
+
+// --- Star SVG ---
+function starSvg(filled){
+  if(filled){
+    return '<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2l2.5 5.1 5.6.8-4.1 4 1 5.6L10 14.7l-5 2.8 1-5.6-4.1-4 5.6-.8L10 2z" fill="#ec4899"/></svg>';
+  }
+  return '<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2l2.5 5.1 5.6.8-4.1 4 1 5.6L10 14.7l-5 2.8 1-5.6-4.1-4 5.6-.8L10 2z" fill="none" stroke="#ec4899" stroke-width="1.5"/></svg>';
+}
+
+// --- No-image placeholder SVG ---
+function placeholderSvg(color){
+  return '<svg width="80" height="80" viewBox="0 0 80 80" fill="none"><circle cx="40" cy="40" r="35" fill="'+color+'" opacity="0.15"/><text x="40" y="48" text-anchor="middle" fill="'+color+'" font-size="28" font-weight="700" font-family="Quicksand,sans-serif">?</text></svg>';
+}
+
+// --- Show Result Card ---
+function showResultCard(api, data){
+  var isFaved = favorites.some(function(f){ return f.id === currentResult.id; });
+  var html = '<div class="result-card">';
+  html += '<div class="card-accent" style="background:'+api.color+'"></div>';
+
+  if(data.image){
+    html += '<div class="card-image-wrap"><img src="'+escapeHtml(data.image)+'" alt="'+escapeHtml(data.title||'')+'" loading="eager" onerror="this.parentNode.innerHTML=\''+placeholderSvg(api.color).replace(/'/g,"\\'")+'\'"></div>';
+  }
+
+  html += '<div class="card-body">';
+  html += '<div class="card-category" style="color:'+api.color+'">'+escapeHtml(api.category)+'</div>';
+  if(data.title){
+    html += '<div class="card-title">'+escapeHtml(data.title)+'</div>';
+  }
+  if(data.description){
+    html += '<div class="card-desc">'+escapeHtml(data.description)+'</div>';
+  }
+  html += '<div class="card-source">'+escapeHtml(api.name)+' APIより</div>';
+  html += '<div class="card-actions">';
+  html += '<button class="retry-btn" id="retryBtn">もう一回</button>';
+  html += '<button class="fav-btn'+(isFaved?' faved':'')+'" id="favBtn">'+starSvg(isFaved)+'</button>';
+  html += '</div></div></div>';
+
+  resultArea.innerHTML = html;
+
+  document.getElementById('retryBtn').addEventListener('click', spin);
+  document.getElementById('favBtn').addEventListener('click', function(){
+    toggleFavorite(currentResult);
+  });
+}
+
+// --- Show Error Card ---
+function showErrorCard(api){
+  var html = '<div class="error-card">';
+  html += '<div class="error-icon"><svg width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="#fee2e2" stroke="#fca5a5" stroke-width="2"/><path d="M16 16l16 16M32 16L16 32" stroke="#ef4444" stroke-width="3" stroke-linecap="round"/></svg></div>';
+  html += '<p>接続できませんでした</p>';
+  html += '<button class="retry-btn" id="retryBtn" style="max-width:200px;margin:0 auto">もう一回試す</button>';
+  html += '</div>';
+
+  resultArea.innerHTML = html;
+  document.getElementById('retryBtn').addEventListener('click', spin);
+  currentResult = null;
+}
+
+// --- History ---
+function addToHistory(entry){
+  history.unshift(entry);
+  if(history.length > 20) history.pop();
+  renderHistory();
+}
+
+function renderHistory(){
+  if(history.length === 0){
+    historySection.classList.remove('has-items');
+    return;
+  }
+  historySection.classList.add('has-items');
+  var html = '';
+  for(var i=0;i<history.length;i++){
+    var h = history[i];
+    html += '<div class="history-card" data-idx="'+i+'">';
+    html += '<div class="history-card-accent" style="background:'+h.api.color+'"></div>';
+    if(h.data.image){
+      html += '<div class="history-card-thumb"><img src="'+escapeHtml(h.data.image)+'" alt="" loading="lazy" onerror="this.parentNode.innerHTML=\''+placeholderSvg(h.api.color).replace(/'/g,"\\'")+'\'"></div>';
+    } else {
+      html += '<div class="history-card-thumb">'+placeholderSvg(h.api.color)+'</div>';
+    }
+    html += '<div class="history-card-label">'+escapeHtml(h.data.title || h.api.name)+'</div>';
+    html += '</div>';
+  }
+  historyScroll.innerHTML = html;
+}
+
+historyScroll.addEventListener('click', function(e){
+  var card = e.target.closest('.history-card');
+  if(!card) return;
+  var idx = parseInt(card.dataset.idx);
+  if(idx >= 0 && idx < history.length){
+    currentResult = history[idx];
+    currentApi = history[idx].api;
+    showResultCard(history[idx].api, history[idx].data);
+    resultArea.scrollIntoView({ behavior:'smooth', block:'nearest' });
+  }
+});
+
+// --- Favorites ---
+function toggleFavorite(entry){
+  if(!entry) return;
+  var idx = favorites.findIndex(function(f){ return f.id === entry.id; });
+  if(idx >= 0){
+    favorites.splice(idx,1);
+  } else {
+    favorites.push(entry);
+  }
+  renderFavorites();
+  // Update fav button in current card
+  var favBtn = document.getElementById('favBtn');
+  if(favBtn){
+    var isFaved = favorites.some(function(f){ return f.id === entry.id; });
+    favBtn.classList.toggle('faved', isFaved);
+    favBtn.innerHTML = starSvg(isFaved);
+  }
+}
+
+function renderFavorites(){
+  if(favorites.length === 0){
+    favSection.classList.remove('has-items');
+    return;
+  }
+  favSection.classList.add('has-items');
+  var html = '';
+  for(var i=0;i<favorites.length;i++){
+    var f = favorites[i];
+    html += '<div class="history-card" data-fidx="'+i+'">';
+    html += '<div class="history-card-accent" style="background:'+f.api.color+'"></div>';
+    if(f.data.image){
+      html += '<div class="history-card-thumb"><img src="'+escapeHtml(f.data.image)+'" alt="" loading="lazy" onerror="this.parentNode.innerHTML=\''+placeholderSvg(f.api.color).replace(/'/g,"\\'")+'\'"></div>';
+    } else {
+      html += '<div class="history-card-thumb">'+placeholderSvg(f.api.color)+'</div>';
+    }
+    html += '<div class="history-card-label">'+escapeHtml(f.data.title || f.api.name)+'</div>';
+    html += '</div>';
+  }
+  favScroll.innerHTML = html;
+}
+
+favScroll.addEventListener('click', function(e){
+  var card = e.target.closest('.history-card');
+  if(!card) return;
+  var idx = parseInt(card.dataset.fidx);
+  if(idx >= 0 && idx < favorites.length){
+    currentResult = favorites[idx];
+    currentApi = favorites[idx].api;
+    showResultCard(favorites[idx].api, favorites[idx].data);
+    resultArea.scrollIntoView({ behavior:'smooth', block:'nearest' });
+  }
+});
+
+// --- Escape HTML ---
+function escapeHtml(str){
+  if(!str) return '';
+  var div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// --- Spin button ---
+spinBtn.addEventListener('click', spin);
+
+// --- Keyboard (PC fallback) ---
+document.addEventListener('keydown', function(e){
+  if(e.code === 'Space' && !isSpinning){
+    e.preventDefault();
+    spin();
+  }
+});
+
+})();
+</script>
+</body>
+</html>

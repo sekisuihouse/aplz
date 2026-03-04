@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pomodoro Timer</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0f0f0f;
+    color: #e4e4e7;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+  }
+  .container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 32px;
+    padding: 24px;
+  }
+  .mode-toggle {
+    display: flex;
+    background: #1a1a1e;
+    border-radius: 12px;
+    padding: 4px;
+    gap: 4px;
+  }
+  .mode-btn {
+    padding: 8px 24px;
+    border: none;
+    border-radius: 10px;
+    background: transparent;
+    color: #71717a;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s;
+  }
+  .mode-btn.active {
+    background: #22d3ee;
+    color: #0f0f0f;
+  }
+  .timer-ring {
+    position: relative;
+    width: min(300px, 70vw);
+    height: min(300px, 70vw);
+  }
+  .timer-ring svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+  }
+  .track { fill: none; stroke: #1a1a1e; stroke-width: 6; }
+  .progress {
+    fill: none;
+    stroke: #22d3ee;
+    stroke-width: 6;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.5s linear;
+  }
+  .time-display {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: min(64px, 14vw);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 2px;
+  }
+  .controls {
+    display: flex;
+    gap: 12px;
+  }
+  .btn {
+    width: 56px;
+    height: 56px;
+    border: 2px solid #2a2a2e;
+    border-radius: 50%;
+    background: #141416;
+    color: #e4e4e7;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+  .btn:hover { border-color: #22d3ee; }
+  .btn.primary {
+    width: 72px;
+    height: 72px;
+    background: #22d3ee;
+    border-color: #22d3ee;
+    color: #0f0f0f;
+    font-size: 24px;
+  }
+  .btn.primary:hover { background: #06b6d4; border-color: #06b6d4; }
+  .label {
+    font-size: 13px;
+    color: #52525b;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="mode-toggle">
+    <button class="mode-btn active" onclick="setMode(25)">Focus</button>
+    <button class="mode-btn" onclick="setMode(5)">Break</button>
+  </div>
+  <div class="timer-ring">
+    <svg viewBox="0 0 200 200">
+      <circle class="track" cx="100" cy="100" r="90"/>
+      <circle class="progress" id="prog" cx="100" cy="100" r="90"
+        stroke-dasharray="565.49" stroke-dashoffset="0"/>
+    </svg>
+    <div class="time-display" id="display">25:00</div>
+  </div>
+  <p class="label" id="label">focus</p>
+  <div class="controls">
+    <button class="btn" onclick="reset()">&#8634;</button>
+    <button class="btn primary" id="playBtn" onclick="toggle()">&#9654;</button>
+  </div>
+</div>
+<script>
+  const C = 2 * Math.PI * 90;
+  const prog = document.getElementById('prog');
+  const display = document.getElementById('display');
+  const playBtn = document.getElementById('playBtn');
+  const label = document.getElementById('label');
+  const modeBtns = document.querySelectorAll('.mode-btn');
+
+  let total = 25 * 60, remaining = total, running = false, interval = null;
+
+  function fmt(s) {
+    const m = Math.floor(s / 60);
+    return String(m).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+  }
+
+  function render() {
+    display.textContent = fmt(remaining);
+    const frac = 1 - remaining / total;
+    prog.style.strokeDashoffset = C * (1 - frac);
+  }
+
+  function toggle() {
+    if (running) {
+      clearInterval(interval);
+      running = false;
+      playBtn.innerHTML = '&#9654;';
+    } else {
+      running = true;
+      playBtn.innerHTML = '&#9646;&#9646;';
+      interval = setInterval(() => {
+        remaining--;
+        if (remaining <= 0) { remaining = 0; clearInterval(interval); running = false; playBtn.innerHTML = '&#9654;'; beep(); }
+        render();
+      }, 1000);
+    }
+  }
+
+  function reset() {
+    clearInterval(interval);
+    running = false;
+    remaining = total;
+    playBtn.innerHTML = '&#9654;';
+    render();
+  }
+
+  function setMode(min) {
+    clearInterval(interval);
+    running = false;
+    total = min * 60;
+    remaining = total;
+    playBtn.innerHTML = '&#9654;';
+    label.textContent = min === 25 ? 'focus' : 'break';
+    modeBtns.forEach(b => b.classList.toggle('active', parseInt(b.textContent) || (b.textContent.trim().toLowerCase() === 'focus' ? 25 : 5) ? false : false));
+    modeBtns[0].classList.toggle('active', min === 25);
+    modeBtns[1].classList.toggle('active', min === 5);
+    render();
+  }
+
+  function beep() {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [0, 0.2, 0.4].forEach(t => {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.frequency.value = 880;
+      g.gain.setValueAtTime(0.3, ctx.currentTime + t);
+      g.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + t + 0.15);
+      o.start(ctx.currentTime + t);
+      o.stop(ctx.currentTime + t + 0.15);
+    });
+  }
+
+  render();
+</script>
+</body>
+</html>

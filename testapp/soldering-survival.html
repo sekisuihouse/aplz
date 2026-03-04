@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Soldering Survival - Kosen Workshop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;900&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;touch-action:none;user-select:none}
+html,body{width:100%;height:100%;overflow:hidden;background:#111;font-family:'M PLUS Rounded 1c',sans-serif}
+#gameContainer{position:relative;width:100%;height:100%;display:flex;flex-direction:column;background:#1a1a1a}
+canvas{display:block;flex:1;width:100%;cursor:none}
+#hud{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:rgba(0,0,0,0.7);z-index:10;pointer-events:none}
+#hud>*{pointer-events:auto}
+.hud-text{font-family:'Orbitron',sans-serif;color:#0f0;font-size:13px;text-shadow:0 0 6px #0f0}
+.hud-label{font-family:'M PLUS Rounded 1c',sans-serif;color:#aaa;font-size:10px;display:block}
+#pauseBtn{background:none;border:2px solid #0f0;color:#0f0;font-family:'M PLUS Rounded 1c',sans-serif;font-size:14px;padding:6px 14px;border-radius:6px;min-width:48px;min-height:44px;cursor:pointer}
+#pauseBtn:active{background:rgba(0,255,0,0.2)}
+#tempControls{position:absolute;bottom:0;left:0;right:0;display:flex;align-items:center;padding:8px 12px;background:rgba(0,0,0,0.8);z-index:10;gap:8px}
+#tempSlider{-webkit-appearance:none;appearance:none;flex:1;height:28px;border-radius:14px;outline:none;background:linear-gradient(90deg,#2244ff 0%,#22aa44 35%,#22aa44 65%,#ff3333 100%);cursor:pointer}
+#tempSlider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:36px;height:36px;border-radius:50%;background:#fff;border:3px solid #333;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.5)}
+#tempSlider::-moz-range-thumb{width:36px;height:36px;border-radius:50%;background:#fff;border:3px solid #333;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.5)}
+#tempDisplay{font-family:'Orbitron',sans-serif;font-size:18px;font-weight:700;min-width:75px;text-align:center;padding:4px 8px;border-radius:6px;border:2px solid #444;background:#000}
+#progressBar{position:absolute;top:42px;left:10px;right:10px;height:6px;background:rgba(255,255,255,0.15);border-radius:3px;z-index:10}
+#progressFill{height:100%;background:linear-gradient(90deg,#0f0,#0fa);border-radius:3px;transition:width 0.3s}
+#overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.85);z-index:100;padding:20px}
+#overlayContent{background:#1a2a1a;border:2px solid #1a5c2a;border-radius:16px;padding:28px 24px;max-width:380px;width:100%;text-align:center;color:#ddd;max-height:90vh;overflow-y:auto}
+#overlayContent h1{font-size:24px;color:#0f0;margin-bottom:8px;font-family:'M PLUS Rounded 1c',sans-serif}
+#overlayContent h2{font-size:18px;color:#b87333;margin-bottom:14px}
+#overlayContent p{font-size:14px;line-height:1.6;margin-bottom:10px;text-align:left}
+.btn{display:inline-block;min-width:180px;min-height:48px;padding:12px 28px;border:none;border-radius:10px;font-family:'M PLUS Rounded 1c',sans-serif;font-size:16px;font-weight:700;cursor:pointer;margin:6px}
+.btn-primary{background:linear-gradient(135deg,#1a5c2a,#2a8c3a);color:#fff;border:2px solid #3a6}
+.btn-primary:active{background:#1a5c2a}
+.btn-danger{background:linear-gradient(135deg,#8c2a2a,#cc3333);color:#fff;border:2px solid #f66}
+.guide-item{display:flex;align-items:flex-start;gap:10px;text-align:left;margin:8px 0;padding:8px;background:rgba(255,255,255,0.05);border-radius:8px}
+.guide-icon{width:36px;height:36px;flex-shrink:0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#fff}
+.stamp-overlay{position:absolute;inset:0;display:none;align-items:center;justify-content:center;z-index:90;pointer-events:none}
+#stamp{transform:scale(3) rotate(-15deg);opacity:0;transition:transform 0.25s cubic-bezier(0.2,1.5,0.4,1),opacity 0.15s}
+#stamp.show{transform:scale(1) rotate(-5deg);opacity:1}
+.score-row{display:flex;justify-content:space-between;padding:4px 0;font-size:14px;border-bottom:1px solid rgba(255,255,255,0.1)}
+.score-val{font-family:'Orbitron',sans-serif;color:#0f0}
+#damageIndicator{position:absolute;top:52px;right:10px;display:flex;gap:4px;z-index:10}
+.dmg-dot{width:14px;height:14px;border-radius:50%;border:2px solid #ff3333;background:transparent;transition:background 0.3s}
+.dmg-dot.active{background:#ff3333;box-shadow:0 0 8px #ff3333}
+</style>
+</head>
+<body>
+<div id="gameContainer">
+<canvas id="gameCanvas"></canvas>
+<div id="hud">
+<div><span class="hud-label">LEVEL</span><span class="hud-text" id="levelText">1</span></div>
+<div><span class="hud-label">SCORE</span><span class="hud-text" id="scoreText">0</span></div>
+<div><span class="hud-label">PADS</span><span class="hud-text" id="padText">0/5</span></div>
+<button id="pauseBtn">||</button>
+</div>
+<div id="progressBar"><div id="progressFill" style="width:0%"></div></div>
+<div id="damageIndicator">
+<div class="dmg-dot" id="dmg0"></div>
+<div class="dmg-dot" id="dmg1"></div>
+<div class="dmg-dot" id="dmg2"></div>
+</div>
+<div id="tempControls">
+<span style="color:#88f;font-size:12px;font-weight:700">LOW</span>
+<input type="range" id="tempSlider" min="250" max="400" value="340" step="5">
+<span style="color:#f88;font-size:12px;font-weight:700">HIGH</span>
+<div id="tempDisplay">340&#8451;</div>
+</div>
+<div class="stamp-overlay" id="stampOverlay">
+<svg id="stamp" width="260" height="120" viewBox="0 0 260 120">
+<rect x="5" y="5" width="250" height="110" rx="12" fill="none" stroke="#ff3333" stroke-width="5"/>
+<text x="130" y="50" text-anchor="middle" font-family="'M PLUS Rounded 1c',sans-serif" font-size="26" font-weight="900" fill="#ff3333">&#x5148;&#x751F;&#x306E;&#x691C;&#x54C1;</text>
+<text x="130" y="90" text-anchor="middle" font-family="'M PLUS Rounded 1c',sans-serif" font-size="36" font-weight="900" fill="#ff3333">&#x5408;&#x683C;!</text>
+</svg>
+</div>
+<div id="overlay"><div id="overlayContent"></div></div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+const canvas=document.getElementById('gameCanvas');
+const ctx=canvas.getContext('2d');
+const overlay=document.getElementById('overlay');
+const overlayContent=document.getElementById('overlayContent');
+const tempSlider=document.getElementById('tempSlider');
+const tempDisplay=document.getElementById('tempDisplay');
+const levelText=document.getElementById('levelText');
+const scoreText=document.getElementById('scoreText');
+const padText=document.getElementById('padText');
+const progressFill=document.getElementById('progressFill');
+const pauseBtn=document.getElementById('pauseBtn');
+const stampOverlay=document.getElementById('stampOverlay');
+const stamp=document.getElementById('stamp');
+
+let W,H,dpr;
+let gameState='menu';
+let currentLevel=1;
+let totalScore=0;
+let levelScore=0;
+let damages=0;
+let maxDamages=3;
+let pads=[];
+let components=[];
+let traces=[];
+let soldered=[];
+let burnMarks=[];
+let particles=[];
+let smokeParticles=[];
+let ironX=-100,ironY=-100;
+let tremX=0,tremY=0;
+let isHolding=false;
+let holdTime=0;
+let holdPadIdx=-1;
+let holdOffPad=false;
+let offPadTime=0;
+let temperature=340;
+let paused=false;
+let lastTime=0;
+let noiseT=0;
+let guideShown=localStorage.getItem('solder_guide_shown')==='1';
+let audioCtx=null;
+let levelStartTime=0;
+let pcbTextureCanvas=null;
+
+function initAudio(){
+if(audioCtx)return;
+try{audioCtx=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}
+}
+
+function playSizzle(){
+if(!audioCtx)return;
+try{
+const dur=0.15;
+const buf=audioCtx.createBuffer(1,audioCtx.sampleRate*dur,audioCtx.sampleRate);
+const d=buf.getChannelData(0);
+for(let i=0;i<d.length;i++){
+const t=i/audioCtx.sampleRate;
+d[i]=(Math.random()*2-1)*Math.exp(-t*25)*0.4;
+}
+const src=audioCtx.createBufferSource();
+src.buffer=buf;
+const filt=audioCtx.createBiquadFilter();
+filt.type='bandpass';filt.frequency.value=3000;filt.Q.value=1.5;
+src.connect(filt);filt.connect(audioCtx.destination);
+src.start();
+}catch(e){}
+}
+
+function playBurn(){
+if(!audioCtx)return;
+try{
+const dur=0.3;
+const buf=audioCtx.createBuffer(1,audioCtx.sampleRate*dur,audioCtx.sampleRate);
+const d=buf.getChannelData(0);
+for(let i=0;i<d.length;i++){
+const t=i/audioCtx.sampleRate;
+d[i]=(Math.random()*2-1)*Math.exp(-t*10)*0.3*Math.sin(t*200);
+}
+const src=audioCtx.createBufferSource();
+src.buffer=buf;
+src.connect(audioCtx.destination);
+src.start();
+}catch(e){}
+}
+
+function playStamp(){
+if(!audioCtx)return;
+try{
+const osc=audioCtx.createOscillator();
+const gain=audioCtx.createGain();
+osc.type='square';osc.frequency.value=150;
+gain.gain.setValueAtTime(0.3,audioCtx.currentTime);
+gain.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+0.2);
+osc.connect(gain);gain.connect(audioCtx.destination);
+osc.start();osc.stop(audioCtx.currentTime+0.2);
+}catch(e){}
+}
+
+function resize(){
+dpr=window.devicePixelRatio||1;
+const rect=canvas.getBoundingClientRect();
+W=rect.width;H=rect.height;
+canvas.width=W*dpr;canvas.height=H*dpr;
+ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+window.addEventListener('resize',resize);
+
+function noise(t){
+return Math.sin(t*1.7)*0.3+Math.sin(t*3.1+1.3)*0.25+Math.sin(t*7.9+0.7)*0.2+Math.sin(t*13.3+2.1)*0.15+Math.sin(t*23.7+0.3)*0.1;
+}
+
+function getTremor(){
+const levels=[0,3,6,10,14,18];
+const amp=levels[Math.min(currentLevel,5)]||3;
+noiseT+=0.06;
+tremX=noise(noiseT)*amp+noise(noiseT*1.3+50)*amp*0.5;
+tremY=noise(noiseT*0.9+100)*amp+noise(noiseT*1.1+150)*amp*0.5;
+}
+
+const LEVELS=[
+null,
+{name:"Level 1: はじめてのはんだ付け",padCount:5,padRadius:18,tremor:1,
+ layoutFn:function(w,h){
+  const pads=[];const cx=w/2,cy=h/2;
+  const positions=[[cx-60,cy-40],[cx+60,cy-40],[cx,cy],[cx-60,cy+40],[cx+60,cy+40]];
+  positions.forEach(p=>{pads.push({x:p[0],y:p[1],r:18,done:false});});
+  const comps=[
+   {type:'resistor',x:cx-60,y:cy-40,x2:cx+60,y2:cy-40},
+   {type:'resistor',x:cx-60,y:cy+40,x2:cx+60,y2:cy+40},
+   {type:'cap',x:cx,y:cy,r:12}
+  ];
+  const traces=[
+   {x1:cx-60,y1:cy-40,x2:cx,y2:cy},
+   {x1:cx+60,y1:cy-40,x2:cx,y2:cy},
+   {x1:cx,y1:cy,x2:cx-60,y2:cy+40},
+   {x1:cx,y1:cy,x2:cx+60,y2:cy+40}
+  ];
+  return{pads,comps,traces};
+ }
+},
+{name:"Level 2: LED回路",padCount:8,padRadius:14,tremor:2,
+ layoutFn:function(w,h){
+  const pads=[];const cx=w/2,cy=h/2;
+  for(let i=0;i<4;i++){
+   pads.push({x:cx-80+i*55,y:cy-30,r:14,done:false});
+   pads.push({x:cx-80+i*55,y:cy+30,r:14,done:false});
+  }
+  const comps=[
+   {type:'ic',x:cx-30,y:cy-8,w:60,h:16},
+   {type:'resistor',x:cx-80,y:cy-30,x2:cx-80,y2:cy+30},
+   {type:'led',x:cx+85,y:cy,r:8}
+  ];
+  const traces=[];
+  for(let i=0;i<3;i++){
+   traces.push({x1:cx-80+i*55,y1:cy-30,x2:cx-80+(i+1)*55,y2:cy-30});
+   traces.push({x1:cx-80+i*55,y1:cy+30,x2:cx-80+(i+1)*55,y2:cy+30});
+  }
+  for(let i=0;i<4;i++){
+   traces.push({x1:cx-80+i*55,y1:cy-30,x2:cx-80+i*55,y2:cy+30});
+  }
+  return{pads,comps,traces};
+ }
+},
+{name:"Level 3: マイコン基板",padCount:12,padRadius:11,tremor:3,
+ layoutFn:function(w,h){
+  const pads=[];const cx=w/2,cy=h/2;
+  for(let i=0;i<4;i++){
+   pads.push({x:cx-70+i*47,y:cy-50,r:11,done:false});
+   pads.push({x:cx-70+i*47,y:cy,r:11,done:false});
+   pads.push({x:cx-70+i*47,y:cy+50,r:11,done:false});
+  }
+  const comps=[
+   {type:'ic',x:cx-40,y:cy-28,w:80,h:20},
+   {type:'cap',x:cx-80,y:cy+25,r:10},
+   {type:'cap',x:cx+80,y:cy+25,r:10},
+   {type:'resistor',x:cx-70,y:cy+50,x2:cx+70,y2:cy+50},
+   {type:'crystal',x:cx+60,y:cy-50,w:16,h:8}
+  ];
+  const traces=[];
+  for(let i=0;i<3;i++){
+   traces.push({x1:cx-70+i*47,y1:cy-50,x2:cx-70+(i+1)*47,y2:cy-50});
+   traces.push({x1:cx-70+i*47,y1:cy,x2:cx-70+(i+1)*47,y2:cy});
+   traces.push({x1:cx-70+i*47,y1:cy+50,x2:cx-70+(i+1)*47,y2:cy+50});
+  }
+  for(let i=0;i<4;i++){
+   traces.push({x1:cx-70+i*47,y1:cy-50,x2:cx-70+i*47,y2:cy});
+   traces.push({x1:cx-70+i*47,y1:cy,x2:cx-70+i*47,y2:cy+50});
+  }
+  return{pads,comps,traces};
+ }
+},
+{name:"Level 4: QFP ICパッケージ",padCount:16,padRadius:8,tremor:4,
+ layoutFn:function(w,h){
+  const pads=[];const cx=w/2,cy=h/2;const sp=22;
+  for(let i=0;i<4;i++){pads.push({x:cx-33+i*sp,y:cy-55,r:8,done:false});}
+  for(let i=0;i<4;i++){pads.push({x:cx+55,y:cy-33+i*sp,r:8,done:false});}
+  for(let i=0;i<4;i++){pads.push({x:cx+33-i*sp,y:cy+55,r:8,done:false});}
+  for(let i=0;i<4;i++){pads.push({x:cx-55,y:cy+33-i*sp,r:8,done:false});}
+  const comps=[
+   {type:'qfp',x:cx-35,y:cy-35,w:70,h:70}
+  ];
+  const traces=[];
+  for(let i=0;i<4;i++){
+   traces.push({x1:cx-33+i*sp,y1:cy-55,x2:cx-33+i*sp,y2:cy-35});
+   traces.push({x1:cx+55,y1:cy-33+i*sp,x2:cx+35,y2:cy-33+i*sp});
+   traces.push({x1:cx+33-i*sp,y1:cy+55,x2:cx+33-i*sp,y2:cy+35});
+   traces.push({x1:cx-55,y1:cy+33-i*sp,x2:cx-35,y2:cy+33-i*sp});
+  }
+  return{pads,comps,traces};
+ }
+},
+{name:"Level 5: Arduino風ボード",padCount:20,padRadius:7,tremor:5,
+ layoutFn:function(w,h){
+  const pads=[];const cx=w/2,cy=h/2;
+  // Header pins top
+  for(let i=0;i<6;i++){pads.push({x:cx-65+i*26,y:cy-65,r:7,done:false});}
+  // Header pins bottom
+  for(let i=0;i<6;i++){pads.push({x:cx-65+i*26,y:cy+65,r:7,done:false});}
+  // IC pins
+  for(let i=0;i<4;i++){pads.push({x:cx-30+i*20,y:cy-15,r:7,done:false});}
+  for(let i=0;i<4;i++){pads.push({x:cx-30+i*20,y:cy+15,r:7,done:false});}
+  const comps=[
+   {type:'ic',x:cx-40,y:cy-8,w:80,h:16},
+   {type:'cap',x:cx-70,y:cy,r:8},
+   {type:'cap',x:cx+70,y:cy,r:8},
+   {type:'crystal',x:cx+55,y:cy-30,w:14,h:7},
+   {type:'resistor',x:cx-60,y:cy+35,x2:cx-20,y2:cy+35},
+   {type:'resistor',x:cx+20,y:cy+35,x2:cx+60,y2:cy+35},
+   {type:'led',x:cx+70,y:cy-55,r:6},
+   {type:'usb',x:cx-85,y:cy-20,w:20,h:40}
+  ];
+  const traces=[];
+  for(let i=0;i<5;i++){
+   traces.push({x1:cx-65+i*26,y1:cy-65,x2:cx-65+(i+1)*26,y2:cy-65});
+   traces.push({x1:cx-65+i*26,y1:cy+65,x2:cx-65+(i+1)*26,y2:cy+65});
+  }
+  for(let i=0;i<6;i++){
+   traces.push({x1:cx-65+i*26,y1:cy-65,x2:cx-65+i*26,y2:cy-35});
+  }
+  for(let i=0;i<3;i++){
+   traces.push({x1:cx-30+i*20,y1:cy-15,x2:cx-30+(i+1)*20,y2:cy-15});
+   traces.push({x1:cx-30+i*20,y1:cy+15,x2:cx-30+(i+1)*20,y2:cy+15});
+  }
+  for(let i=0;i<4;i++){
+   traces.push({x1:cx-30+i*20,y1:cy-15,x2:cx-30+i*20,y2:cy+15});
+  }
+  for(let i=0;i<6;i++){
+   traces.push({x1:cx-65+i*26,y1:cy+65,x2:cx-65+i*26,y2:cy+35});
+  }
+  return{pads,comps,traces};
+ }
+}
+];
+
+function setupLevel(lvl){
+ resize();
+ const level=LEVELS[lvl];
+ if(!level)return;
+ const boardW=W;const boardH=H;
+ const layout=level.layoutFn(boardW,boardH);
+ pads=layout.pads;
+ components=layout.comps;
+ traces=layout.traces;
+ soldered=[];
+ burnMarks=[];
+ particles=[];
+ smokeParticles=[];
+ damages=0;
+ holdTime=0;
+ holdPadIdx=-1;
+ holdOffPad=false;
+ offPadTime=0;
+ levelScore=0;
+ levelStartTime=performance.now();
+ pcbTextureCanvas=null;
+ generatePCBTexture();
+ updateDamageUI();
+ updateHUD();
+}
+
+function updateDamageUI(){
+ for(let i=0;i<3;i++){
+  document.getElementById('dmg'+i).classList.toggle('active',i<damages);
+ }
+}
+
+function updateHUD(){
+ levelText.textContent=currentLevel;
+ scoreText.textContent=totalScore+levelScore;
+ const done=pads.filter(p=>p.done).length;
+ padText.textContent=done+'/'+pads.length;
+ progressFill.style.width=(done/pads.length*100)+'%';
+}
+
+function showOverlay(html){
+ overlayContent.innerHTML=html;
+ overlay.style.display='flex';
+}
+
+function hideOverlay(){
+ overlay.style.display='none';
+}
+
+function showGuide(){
+ showOverlay(`
+  <h1>Soldering Survival</h1>
+  <h2>-- &#x9AD8;&#x5C02;&#x5DE5;&#x623F; --</h2>
+  <div class="guide-item">
+   <div class="guide-icon" style="background:#b87333">1</div>
+   <div><strong>&#x30BF;&#x30C3;&#x30C1;/&#x30AF;&#x30EA;&#x30C3;&#x30AF;</strong>&#x3067;&#x306F;&#x3093;&#x3060;&#x3054;&#x3066;&#x3092;&#x64CD;&#x4F5C;&#x3002;&#x6307;&#x5148;&#x304C;&#x3053;&#x3066;&#x5148;&#x3067;&#x3059;&#x3002;</div>
+  </div>
+  <div class="guide-item">
+   <div class="guide-icon" style="background:#c0c0c0;color:#333">2</div>
+   <div><strong>&#x9285;&#x8272;&#x306E;&#x30D1;&#x30C3;&#x30C9;</strong>&#x306E;&#x4E0A;&#x3067;1.5&#x79D2;&#x30DB;&#x30FC;&#x30EB;&#x30C9;&#x3059;&#x308B;&#x3068;&#x306F;&#x3093;&#x3060;&#x4ED8;&#x3051;&#x6210;&#x529F;!</div>
+  </div>
+  <div class="guide-item">
+   <div class="guide-icon" style="background:#1a5c2a">3</div>
+   <div><strong>&#x6E29;&#x5EA6;</strong>&#x3092;320-360&#x2103;&#x306B;&#x4FDD;&#x3064;&#x3068;&#x6700;&#x9069;&#x3002;&#x4F4E;&#x3059;&#x304E;&#x308B;&#x3068;&#x9045;&#x3044;&#x3001;&#x9AD8;&#x3059;&#x304E;&#x308B;&#x3068;&#x7126;&#x3052;&#x3084;&#x3059;&#x3044;!</div>
+  </div>
+  <div class="guide-item">
+   <div class="guide-icon" style="background:#ff3333">!</div>
+   <div><strong>&#x30D1;&#x30C3;&#x30C9;&#x5916;</strong>&#x3067;&#x9577;&#x62BC;&#x3057;&#x3059;&#x308B;&#x3068;&#x57FA;&#x677F;&#x304C;&#x7126;&#x3052;&#x307E;&#x3059;&#x3002;3&#x56DE;&#x3067;&#x30B2;&#x30FC;&#x30E0;&#x30AA;&#x30FC;&#x30D0;&#x30FC;!</div>
+  </div>
+  <button class="btn btn-primary" onclick="window._startGame()">&#x306F;&#x3093;&#x3060;&#x4ED8;&#x3051;&#x958B;&#x59CB;!</button>
+ `);
+}
+
+function showMenu(){
+ gameState='menu';
+ showOverlay(`
+  <h1>Soldering Survival</h1>
+  <h2>-- &#x9AD8;&#x5C02;&#x5DE5;&#x623F;&#x30B7;&#x30DF;&#x30E5;&#x30EC;&#x30FC;&#x30BF;&#x30FC; --</h2>
+  <svg width="120" height="80" viewBox="0 0 120 80" style="margin:10px auto;display:block">
+   <rect x="20" y="10" width="80" height="60" rx="4" fill="#1a5c2a" stroke="#0d3318" stroke-width="2"/>
+   <line x1="30" y1="30" x2="90" y2="30" stroke="#b87333" stroke-width="2"/>
+   <line x1="30" y1="50" x2="90" y2="50" stroke="#b87333" stroke-width="2"/>
+   <circle cx="40" cy="30" r="5" fill="#b87333" stroke="#8a5a25" stroke-width="1"/>
+   <circle cx="70" cy="30" r="5" fill="#c0c0c0" stroke="#888" stroke-width="1"/>
+   <circle cx="55" cy="50" r="5" fill="#b87333" stroke="#8a5a25" stroke-width="1"/>
+   <rect x="50" y="20" width="20" height="8" rx="1" fill="#333" stroke="#555" stroke-width="0.5"/>
+   <line x1="5" y1="75" x2="35" y2="40" stroke="#888" stroke-width="3" stroke-linecap="round"/>
+   <circle cx="35" cy="40" r="3" fill="#ff6600"/>
+  </svg>
+  <p style="text-align:center;color:#aaa;font-size:13px">&#x57FA;&#x677F;&#x306B;&#x306F;&#x3093;&#x3060;&#x4ED8;&#x3051;&#x3057;&#x3066;&#x5148;&#x751F;&#x306E;&#x691C;&#x54C1;&#x306B;&#x5408;&#x683C;&#x3057;&#x3088;&#x3046;!</p>
+  <button class="btn btn-primary" onclick="window._startGame()">&#x30B9;&#x30BF;&#x30FC;&#x30C8;</button>
+ `);
+}
+
+window._startGame=function(){
+ initAudio();
+ hideOverlay();
+ if(!guideShown){
+  guideShown=true;
+  localStorage.setItem('solder_guide_shown','1');
+  showGuide();
+  return;
+ }
+ currentLevel=1;
+ totalScore=0;
+ gameState='playing';
+ setupLevel(currentLevel);
+};
+
+window._nextLevel=function(){
+ hideOverlay();
+ stampOverlay.style.display='none';
+ stamp.classList.remove('show');
+ currentLevel++;
+ if(currentLevel>5){
+  showOverlay(`
+   <h1>&#x5168;&#x30EC;&#x30D9;&#x30EB;&#x30AF;&#x30EA;&#x30A2;!</h1>
+   <h2>&#x5148;&#x751F;: "&#x7D20;&#x6674;&#x3089;&#x3057;&#x3044;&#x51FA;&#x6765;&#x3060;!"</h2>
+   <p style="text-align:center;font-size:20px;color:#0f0;font-family:'Orbitron',sans-serif">${totalScore} pts</p>
+   <p style="text-align:center;color:#aaa">&#x5168;&#x3066;&#x306E;&#x57FA;&#x677F;&#x3092;&#x5B8C;&#x6210;&#x3055;&#x305B;&#x307E;&#x3057;&#x305F;!</p>
+   <button class="btn btn-primary" onclick="window._backToMenu()">&#x30E1;&#x30CB;&#x30E5;&#x30FC;&#x306B;&#x623B;&#x308B;</button>
+  `);
+  return;
+ }
+ gameState='playing';
+ setupLevel(currentLevel);
+};
+
+window._retry=function(){
+ hideOverlay();
+ totalScore=0;
+ currentLevel=1;
+ gameState='playing';
+ setupLevel(currentLevel);
+};
+
+window._backToMenu=function(){
+ hideOverlay();
+ stampOverlay.style.display='none';
+ stamp.classList.remove('show');
+ showMenu();
+};
+
+function showLevelClear(){
+ gameState='levelclear';
+ const done=pads.length;
+ const elapsed=(performance.now()-levelStartTime)/1000;
+ let accScore=0;
+ soldered.forEach(s=>{
+  const acc=Math.max(0,100-s.dist*5);
+  accScore+=Math.round(acc);
+ });
+ const speedBonus=Math.max(0,Math.round((60-elapsed)*5));
+ const noDmgBonus=damages===0?200:0;
+ levelScore=accScore+speedBonus+noDmgBonus;
+ totalScore+=levelScore;
+ updateHUD();
+ playStamp();
+ stampOverlay.style.display='flex';
+ setTimeout(()=>{stamp.classList.add('show');},50);
+ setTimeout(()=>{
+  showOverlay(`
+   <h1>Level ${currentLevel} &#x30AF;&#x30EA;&#x30A2;!</h1>
+   <h2>&#x5148;&#x751F;&#x306E;&#x691C;&#x54C1;: &#x5408;&#x683C;!</h2>
+   <div style="margin:12px 0">
+    <div class="score-row"><span>&#x7CBE;&#x5EA6;&#x30B9;&#x30B3;&#x30A2;</span><span class="score-val">${accScore}</span></div>
+    <div class="score-row"><span>&#x30B9;&#x30D4;&#x30FC;&#x30C9;&#x30DC;&#x30FC;&#x30CA;&#x30B9;</span><span class="score-val">${speedBonus}</span></div>
+    <div class="score-row"><span>&#x30CE;&#x30FC;&#x30C0;&#x30E1;&#x30FC;&#x30B8;</span><span class="score-val">${noDmgBonus}</span></div>
+    <div class="score-row" style="border-top:2px solid #0f0;padding-top:8px;font-weight:700"><span>&#x5408;&#x8A08;</span><span class="score-val" style="font-size:18px">${levelScore}</span></div>
+   </div>
+   <p style="text-align:center;font-family:'Orbitron',sans-serif;color:#0fa;font-size:14px">TOTAL: ${totalScore}</p>
+   <button class="btn btn-primary" onclick="window._nextLevel()">${currentLevel<5?'&#x6B21;&#x306E;&#x30EC;&#x30D9;&#x30EB;&#x3078;':'&#x7D50;&#x679C;&#x3092;&#x898B;&#x308B;'}</button>
+  `);
+ },1200);
+}
+
+function showGameOver(){
+ gameState='gameover';
+ playBurn();
+ setTimeout(()=>{
+  showOverlay(`
+   <h1 style="color:#ff3333">&#x30B2;&#x30FC;&#x30E0;&#x30AA;&#x30FC;&#x30D0;&#x30FC;</h1>
+   <h2>&#x57FA;&#x677F;&#x304C;&#x7126;&#x3052;&#x307E;&#x3057;&#x305F;...</h2>
+   <svg width="100" height="80" viewBox="0 0 100 80" style="margin:10px auto;display:block">
+    <rect x="10" y="20" width="80" height="50" rx="4" fill="#1a5c2a"/>
+    <circle cx="35" cy="40" r="12" fill="#333" opacity="0.7"/>
+    <circle cx="65" cy="50" r="10" fill="#333" opacity="0.6"/>
+    <circle cx="50" cy="35" r="8" fill="#333" opacity="0.5"/>
+    <path d="M40 25 Q42 15 44 25 Q46 10 48 25 Q50 12 52 25" fill="none" stroke="#888" stroke-width="1.5" opacity="0.6"/>
+    <path d="M55 30 Q57 20 59 30 Q61 15 63 30" fill="none" stroke="#888" stroke-width="1.5" opacity="0.5"/>
+   </svg>
+   <p style="text-align:center;color:#aaa;font-size:14px">&#x30B9;&#x30B3;&#x30A2;: <span style="font-family:'Orbitron',sans-serif;color:#ff6">${totalScore+levelScore}</span></p>
+   <button class="btn btn-danger" onclick="window._retry()">&#x6700;&#x521D;&#x304B;&#x3089;</button>
+   <button class="btn btn-primary" onclick="window._backToMenu()">&#x30E1;&#x30CB;&#x30E5;&#x30FC;</button>
+  `);
+ },1500);
+}
+
+// Temperature effects
+function getSolderTime(){
+ const t=temperature;
+ if(t>=320&&t<=360)return 1.5;
+ if(t<320)return 1.5+(320-t)*0.02;
+ return 1.5;
+}
+function getDamageThreshold(){
+ const t=temperature;
+ if(t>=320&&t<=360)return 1.2;
+ if(t>360)return 1.2-(t-360)*0.015;
+ return 1.2;
+}
+
+// Input
+let pointerDown=false;
+function getPos(e){
+ const r=canvas.getBoundingClientRect();
+ const ev=e.touches?e.touches[0]:e;
+ return{x:ev.clientX-r.left,y:ev.clientY-r.top};
+}
+
+canvas.addEventListener('mousedown',e=>{if(gameState==='playing'){pointerDown=true;const p=getPos(e);ironX=p.x;ironY=p.y;isHolding=true;holdTime=0;offPadTime=0;holdOffPad=false;initAudio();}});
+canvas.addEventListener('mousemove',e=>{if(gameState==='playing'||gameState==='menu'){const p=getPos(e);ironX=p.x;ironY=p.y;}});
+canvas.addEventListener('mouseup',()=>{pointerDown=false;isHolding=false;holdTime=0;holdPadIdx=-1;holdOffPad=false;offPadTime=0;});
+canvas.addEventListener('mouseleave',()=>{pointerDown=false;isHolding=false;holdTime=0;holdPadIdx=-1;holdOffPad=false;offPadTime=0;ironX=-200;ironY=-200;});
+
+canvas.addEventListener('touchstart',e=>{e.preventDefault();if(gameState==='playing'){pointerDown=true;const p=getPos(e);ironX=p.x;ironY=p.y;isHolding=true;holdTime=0;offPadTime=0;initAudio();}},{passive:false});
+canvas.addEventListener('touchmove',e=>{e.preventDefault();if(gameState==='playing'&&e.touches.length>0){const p=getPos(e);ironX=p.x;ironY=p.y;}},{passive:false});
+canvas.addEventListener('touchend',e=>{e.preventDefault();pointerDown=false;isHolding=false;holdTime=0;holdPadIdx=-1;holdOffPad=false;offPadTime=0;ironX=-200;ironY=-200;},{passive:false});
+canvas.addEventListener('touchcancel',e=>{pointerDown=false;isHolding=false;holdTime=0;holdPadIdx=-1;holdOffPad=false;offPadTime=0;ironX=-200;ironY=-200;});
+
+tempSlider.addEventListener('input',()=>{
+ temperature=parseInt(tempSlider.value);
+ tempDisplay.textContent=temperature+'\u2103';
+ if(temperature<310)tempDisplay.style.color='#4488ff';
+ else if(temperature<=370)tempDisplay.style.color='#44ff44';
+ else tempDisplay.style.color='#ff4444';
+});
+
+pauseBtn.addEventListener('click',()=>{
+ if(gameState==='playing'){
+  paused=!paused;
+  pauseBtn.textContent=paused?'>':'||';
+  if(paused){
+   showOverlay(`
+    <h1>&#x4E00;&#x6642;&#x505C;&#x6B62;</h1>
+    <p style="text-align:center">Level ${currentLevel} - ${LEVELS[currentLevel].name}</p>
+    <button class="btn btn-primary" onclick="window._resume()">&#x518D;&#x958B;</button>
+    <button class="btn btn-danger" onclick="window._backToMenu()">&#x3084;&#x3081;&#x308B;</button>
+   `);
+  }else{
+   hideOverlay();
+  }
+ }
+});
+
+window._resume=function(){
+ paused=false;
+ pauseBtn.textContent='||';
+ hideOverlay();
+};
+
+// Pre-render PCB texture for performance
+function generatePCBTexture(){
+ pcbTextureCanvas=document.createElement('canvas');
+ pcbTextureCanvas.width=W*dpr;pcbTextureCanvas.height=H*dpr;
+ const tc=pcbTextureCanvas.getContext('2d');
+ tc.setTransform(dpr,0,0,dpr,0,0);
+ tc.fillStyle='#1a5c2a';tc.fillRect(0,0,W,H);
+ tc.globalAlpha=0.06;
+ for(let y=0;y<H;y+=3){
+  for(let x=0;x<W;x+=3){
+   if(Math.random()>0.55){
+    tc.fillStyle=Math.random()>0.5?'#0d3318':'#2a7a3a';
+    tc.fillRect(x,y,2,2);
+   }
+  }
+ }
+ tc.globalAlpha=0.03;
+ // Grid lines like real PCB
+ tc.strokeStyle='#2a8040';tc.lineWidth=0.5;
+ for(let y=0;y<H;y+=12){tc.beginPath();tc.moveTo(0,y);tc.lineTo(W,y);tc.stroke();}
+ for(let x=0;x<W;x+=12){tc.beginPath();tc.moveTo(x,0);tc.lineTo(x,H);tc.stroke();}
+ tc.globalAlpha=1;
+ // Silkscreen border
+ tc.strokeStyle='rgba(255,255,255,0.15)';tc.lineWidth=1;
+ tc.setLineDash([4,4]);tc.strokeRect(15,15,W-30,H-30);tc.setLineDash([]);
+ // Corner marks
+ const cm=8;
+ tc.strokeStyle='rgba(255,255,255,0.2)';tc.lineWidth=1.5;tc.setLineDash([]);
+ [[20,20,1,1],[W-20,20,-1,1],[20,H-20,1,-1],[W-20,H-20,-1,-1]].forEach(([x,y,dx,dy])=>{
+  tc.beginPath();tc.moveTo(x,y);tc.lineTo(x+cm*dx,y);tc.stroke();
+  tc.beginPath();tc.moveTo(x,y);tc.lineTo(x,y+cm*dy);tc.stroke();
+ });
+ // Mounting holes
+ [[25,25],[W-25,25],[25,H-25],[W-25,H-25]].forEach(([x,y])=>{
+  tc.fillStyle='rgba(0,0,0,0.3)';tc.beginPath();tc.arc(x,y,4,0,Math.PI*2);tc.fill();
+  tc.strokeStyle='rgba(180,160,100,0.3)';tc.lineWidth=1.5;tc.beginPath();tc.arc(x,y,6,0,Math.PI*2);tc.stroke();
+ });
+}
+
+// Drawing functions
+function drawPCBBackground(){
+ if(!pcbTextureCanvas||pcbTextureCanvas.width!==W*dpr){generatePCBTexture();}
+ ctx.drawImage(pcbTextureCanvas,0,0,W*dpr,H*dpr,0,0,W,H);
+ // Silkscreen text (level-dependent so drawn each frame)
+ ctx.fillStyle='rgba(255,255,255,0.15)';
+ ctx.font='bold 9px sans-serif';
+ ctx.fillText('KOSEN TECH v'+currentLevel+'.0',22,H-10);
+ ctx.fillText('REV.A  '+pads.length+' PADS',W-100,H-10);
+ ctx.fillText('PCB-'+String(currentLevel).padStart(3,'0'),W/2-20,22);
+}
+
+function drawTraces(){
+ ctx.strokeStyle='#b87333';
+ ctx.lineWidth=3;
+ ctx.lineCap='round';
+ traces.forEach(t=>{
+  ctx.beginPath();
+  ctx.moveTo(t.x1,t.y1);
+  ctx.lineTo(t.x2,t.y2);
+  ctx.stroke();
+ });
+}
+
+function drawComponents(){
+ components.forEach(c=>{
+  switch(c.type){
+   case 'resistor':
+    ctx.strokeStyle='#b87333';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(c.x,c.y);ctx.lineTo(c.x2,c.y2);ctx.stroke();
+    const mx=(c.x+c.x2)/2,my=(c.y+c.y2)/2;
+    const dx=c.x2-c.x,dy=c.y2-c.y;
+    const len=Math.sqrt(dx*dx+dy*dy);
+    const angle=Math.atan2(dy,dx);
+    ctx.save();ctx.translate(mx,my);ctx.rotate(angle);
+    ctx.fillStyle='#d4a574';ctx.fillRect(-len*0.25,-5,len*0.5,10);
+    ctx.strokeStyle='#333';ctx.lineWidth=1;ctx.strokeRect(-len*0.25,-5,len*0.5,10);
+    // Color bands
+    const bw=3;const bx=-len*0.2;
+    ['#ff0000','#ffa500','#8b4513','#ffd700'].forEach((col,i)=>{
+     ctx.fillStyle=col;ctx.fillRect(bx+i*7,  -5,bw,10);
+    });
+    ctx.restore();
+    break;
+   case 'cap':
+    ctx.fillStyle='#3a3a5a';
+    ctx.beginPath();ctx.arc(c.x,c.y,c.r,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='#555';ctx.lineWidth=1;ctx.stroke();
+    ctx.fillStyle='#666';
+    ctx.beginPath();ctx.arc(c.x,c.y,c.r*0.6,0,Math.PI*2);ctx.fill();
+    break;
+   case 'ic':
+    ctx.fillStyle='#1a1a2e';
+    ctx.fillRect(c.x,c.y,c.w,c.h);
+    ctx.strokeStyle='#333';ctx.lineWidth=1;ctx.strokeRect(c.x,c.y,c.w,c.h);
+    // Pin 1 dot
+    ctx.fillStyle='#555';
+    ctx.beginPath();ctx.arc(c.x+5,c.y+c.h/2,2,0,Math.PI*2);ctx.fill();
+    // Label
+    ctx.fillStyle='#888';ctx.font='bold 6px sans-serif';ctx.textAlign='center';
+    ctx.fillText('IC'+currentLevel,c.x+c.w/2,c.y+c.h/2+2);ctx.textAlign='start';
+    break;
+   case 'qfp':
+    ctx.fillStyle='#1a1a2e';
+    ctx.fillRect(c.x,c.y,c.w,c.h);
+    ctx.strokeStyle='#444';ctx.lineWidth=1;ctx.strokeRect(c.x,c.y,c.w,c.h);
+    ctx.fillStyle='#555';
+    ctx.beginPath();ctx.arc(c.x+8,c.y+8,3,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#777';ctx.font='bold 8px sans-serif';ctx.textAlign='center';
+    ctx.fillText('ATmega',c.x+c.w/2,c.y+c.h/2-2);
+    ctx.fillText('328P',c.x+c.w/2,c.y+c.h/2+8);ctx.textAlign='start';
+    break;
+   case 'led':
+    ctx.fillStyle='rgba(255,50,50,0.4)';
+    ctx.beginPath();ctx.arc(c.x,c.y,c.r+2,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#ff4444';
+    ctx.beginPath();ctx.arc(c.x,c.y,c.r,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,0.3)';
+    ctx.beginPath();ctx.arc(c.x-c.r*0.3,c.y-c.r*0.3,c.r*0.3,0,Math.PI*2);ctx.fill();
+    break;
+   case 'crystal':
+    ctx.fillStyle='#c0c0c0';
+    ctx.fillRect(c.x-c.w/2,c.y-c.h/2,c.w,c.h);
+    ctx.strokeStyle='#999';ctx.lineWidth=1;
+    ctx.strokeRect(c.x-c.w/2,c.y-c.h/2,c.w,c.h);
+    ctx.fillStyle='#888';ctx.font='5px sans-serif';ctx.textAlign='center';
+    ctx.fillText('16M',c.x,c.y+2);ctx.textAlign='start';
+    break;
+   case 'usb':
+    ctx.fillStyle='#aaa';
+    ctx.fillRect(c.x,c.y,c.w,c.h);
+    ctx.strokeStyle='#888';ctx.lineWidth=1;ctx.strokeRect(c.x,c.y,c.w,c.h);
+    ctx.fillStyle='#666';ctx.fillRect(c.x+3,c.y+5,c.w-6,c.h-10);
+    break;
+  }
+ });
+}
+
+function drawPads(){
+ pads.forEach((p,i)=>{
+  if(p.done)return;
+  // Copper pad
+  ctx.fillStyle='#b87333';
+  ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#8a5a25';ctx.lineWidth=1.5;ctx.stroke();
+  // Inner highlight
+  ctx.fillStyle='rgba(255,200,150,0.3)';
+  ctx.beginPath();ctx.arc(p.x-p.r*0.2,p.y-p.r*0.2,p.r*0.5,0,Math.PI*2);ctx.fill();
+  // Hold progress
+  if(holdPadIdx===i&&holdTime>0){
+   const prog=Math.min(holdTime/getSolderTime(),1);
+   ctx.strokeStyle='#ffff00';ctx.lineWidth=3;
+   ctx.beginPath();
+   ctx.arc(p.x,p.y,p.r+4,-Math.PI/2,-Math.PI/2+prog*Math.PI*2);
+   ctx.stroke();
+  }
+ });
+}
+
+function drawSoldered(){
+ soldered.forEach(s=>{
+  // Silver solder blob
+  const grd=ctx.createRadialGradient(s.x-s.r*0.3,s.y-s.r*0.3,0,s.x,s.y,s.r);
+  grd.addColorStop(0,'#e8e8e8');
+  grd.addColorStop(0.5,'#c0c0c0');
+  grd.addColorStop(1,'#909090');
+  ctx.fillStyle=grd;
+  ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#777';ctx.lineWidth=0.5;ctx.stroke();
+  // Highlight
+  ctx.fillStyle='rgba(255,255,255,0.5)';
+  ctx.beginPath();ctx.arc(s.x-s.r*0.25,s.y-s.r*0.25,s.r*0.25,0,Math.PI*2);ctx.fill();
+ });
+}
+
+function drawBurnMarks(){
+ burnMarks.forEach(b=>{
+  ctx.fillStyle='rgba(40,20,5,0.7)';
+  ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='rgba(30,10,0,0.4)';
+  ctx.beginPath();ctx.arc(b.x+2,b.y+1,b.r*0.7,0,Math.PI*2);ctx.fill();
+ });
+}
+
+function drawIron(x,y){
+ if(x<-100)return;
+ const tipX=x+tremX;
+ const tipY=y+tremY;
+ // Glow
+ const glowR=15+Math.sin(performance.now()*0.01)*3;
+ const glow=ctx.createRadialGradient(tipX,tipY,0,tipX,tipY,glowR);
+ const heatColor=temperature>360?'rgba(255,80,0,':'rgba(255,160,50,';
+ glow.addColorStop(0,heatColor+'0.5)');
+ glow.addColorStop(1,heatColor+'0)');
+ ctx.fillStyle=glow;
+ ctx.beginPath();ctx.arc(tipX,tipY,glowR,0,Math.PI*2);ctx.fill();
+ // Iron body
+ ctx.save();
+ ctx.translate(tipX,tipY);
+ ctx.rotate(Math.PI*0.75);
+ // Tip
+ ctx.beginPath();
+ ctx.moveTo(0,0);
+ ctx.lineTo(-4,-20);
+ ctx.lineTo(4,-20);
+ ctx.closePath();
+ const tipGrd=ctx.createLinearGradient(0,0,0,-20);
+ tipGrd.addColorStop(0,temperature>360?'#ff4400':'#ff8800');
+ tipGrd.addColorStop(0.3,'#aaa');
+ tipGrd.addColorStop(1,'#888');
+ ctx.fillStyle=tipGrd;
+ ctx.fill();
+ // Handle
+ ctx.fillStyle='#555';
+ ctx.fillRect(-5,-50,10,32);
+ ctx.fillStyle='#333';
+ ctx.fillRect(-6,-52,12,5);
+ // Grip
+ ctx.fillStyle='#c4a030';
+ ctx.fillRect(-6,-48,12,4);
+ ctx.fillStyle='#c4a030';
+ ctx.fillRect(-6,-40,12,4);
+ ctx.restore();
+ // Hold indicator on pad
+ if(isHolding&&holdPadIdx>=0){
+  ctx.fillStyle='rgba(255,255,0,0.15)';
+  ctx.beginPath();ctx.arc(tipX,tipY,20,0,Math.PI*2);ctx.fill();
+ }
+}
+
+function drawParticles(){
+ particles=particles.filter(p=>{
+  p.x+=p.vx;p.y+=p.vy;p.vy-=0.05;p.life-=0.02;
+  if(p.life<=0)return false;
+  ctx.globalAlpha=p.life;
+  ctx.fillStyle=p.color;
+  ctx.beginPath();ctx.arc(p.x,p.y,p.size*p.life,0,Math.PI*2);ctx.fill();
+  ctx.globalAlpha=1;
+  return true;
+ });
+}
+
+function drawSmoke(){
+ smokeParticles=smokeParticles.filter(p=>{
+  p.x+=p.vx;p.y+=p.vy;p.life-=0.005;p.size+=0.3;
+  if(p.life<=0)return false;
+  ctx.globalAlpha=p.life*0.4;
+  ctx.fillStyle='#555';
+  ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fill();
+  ctx.globalAlpha=1;
+  return true;
+ });
+}
+
+function spawnSparkles(x,y){
+ for(let i=0;i<20;i++){
+  const angle=Math.random()*Math.PI*2;
+  const speed=1+Math.random()*3;
+  particles.push({
+   x,y,
+   vx:Math.cos(angle)*speed,
+   vy:Math.sin(angle)*speed,
+   life:0.6+Math.random()*0.4,
+   size:1.5+Math.random()*2,
+   color:Math.random()>0.5?'#ffe066':'#ffffff'
+  });
+ }
+}
+
+function spawnSmoke(x,y){
+ for(let i=0;i<30;i++){
+  smokeParticles.push({
+   x:x+Math.random()*20-10,
+   y:y+Math.random()*10,
+   vx:(Math.random()-0.5)*0.5,
+   vy:-0.5-Math.random()*1.5,
+   life:0.8+Math.random()*0.5,
+   size:3+Math.random()*5
+  });
+ }
+}
+
+function drawOffPadWarning(){
+ if(holdOffPad&&isHolding){
+  const tipX=ironX+tremX;
+  const tipY=ironY+tremY;
+  const warn=offPadTime/getDamageThreshold();
+  ctx.strokeStyle=`rgba(255,50,0,${0.3+warn*0.5})`;
+  ctx.lineWidth=2+warn*2;
+  ctx.beginPath();
+  ctx.arc(tipX,tipY,12+warn*5,0,Math.PI*2);
+  ctx.stroke();
+ }
+}
+
+// Game loop
+function update(dt){
+ if(gameState!=='playing'||paused)return;
+ getTremor();
+ temperature=parseInt(tempSlider.value);
+
+ if(isHolding&&ironX>-100){
+  const tipX=ironX+tremX;
+  const tipY=ironY+tremY;
+  // Check if on any pad
+  let onPad=-1;
+  for(let i=0;i<pads.length;i++){
+   if(pads[i].done)continue;
+   const dx=tipX-pads[i].x;
+   const dy=tipY-pads[i].y;
+   const dist=Math.sqrt(dx*dx+dy*dy);
+   if(dist<pads[i].r+5){
+    onPad=i;
+    break;
+   }
+  }
+  if(onPad>=0){
+   holdOffPad=false;
+   offPadTime=0;
+   if(holdPadIdx!==onPad){
+    holdPadIdx=onPad;
+    holdTime=0;
+   }
+   holdTime+=dt;
+   if(holdTime>=getSolderTime()){
+    // Solder success!
+    const pad=pads[onPad];
+    pad.done=true;
+    const dx=tipX-pad.x;const dy=tipY-pad.y;
+    const dist=Math.sqrt(dx*dx+dy*dy);
+    soldered.push({x:pad.x,y:pad.y,r:pad.r*0.9,dist:dist});
+    spawnSparkles(pad.x,pad.y);
+    playSizzle();
+    holdTime=0;holdPadIdx=-1;
+    updateHUD();
+    // Check level clear
+    if(pads.every(p=>p.done)){
+     setTimeout(showLevelClear,500);
+    }
+   }
+  }else{
+   holdPadIdx=-1;
+   holdTime=0;
+   holdOffPad=true;
+   offPadTime+=dt;
+   if(offPadTime>=getDamageThreshold()){
+    // Damage!
+    damages++;
+    burnMarks.push({x:tipX,y:tipY,r:8+Math.random()*5});
+    playBurn();
+    spawnSmoke(tipX,tipY);
+    offPadTime=0;
+    holdOffPad=false;
+    updateDamageUI();
+    if(damages>=maxDamages){
+     // Generate lots of smoke for game over
+     for(let i=0;i<5;i++){
+      setTimeout(()=>spawnSmoke(W/2+Math.random()*100-50,H/2+Math.random()*60-30),i*200);
+     }
+     setTimeout(showGameOver,300);
+    }
+   }
+  }
+ }
+}
+
+function draw(){
+ ctx.clearRect(0,0,W,H);
+ drawPCBBackground();
+ drawTraces();
+ drawComponents();
+ drawBurnMarks();
+ drawPads();
+ drawSoldered();
+ drawParticles();
+ drawSmoke();
+ drawOffPadWarning();
+ drawIron(ironX,ironY);
+ // Level name
+ if(gameState==='playing'){
+  ctx.fillStyle='rgba(255,255,255,0.08)';
+  ctx.font='bold 11px "M PLUS Rounded 1c",sans-serif';
+  ctx.textAlign='center';
+  ctx.fillText(LEVELS[currentLevel]?LEVELS[currentLevel].name:'',W/2,H-55);
+  ctx.textAlign='start';
+ }
+}
+
+function loop(ts){
+ requestAnimationFrame(loop);
+ const dt=Math.min((ts-(lastTime||ts))/1000,0.1);
+ lastTime=ts;
+ if(gameState==='playing'&&!paused){
+  update(dt);
+ }
+ if(gameState==='playing'||gameState==='gameover'||gameState==='levelclear'){
+  draw();
+ }
+ // Keep smoke/particles updating even during gameover
+ if(gameState==='gameover'){
+  drawSmoke();
+  drawParticles();
+ }
+}
+
+// Init
+resize();
+showMenu();
+requestAnimationFrame(loop);
+
+})();
+</script>
+</body>
+</html>

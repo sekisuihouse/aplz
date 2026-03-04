@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Kosen Quiz Show</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+--bg:#1a1a2e;--bg2:#16213e;--bg3:#0f3460;
+--correct:#00cc66;--incorrect:#ff4444;--accent:#ffd700;
+--text:#f0f0f0;--text2:#b0b0c0;
+--btn-bg:#2a2a4a;--btn-hover:#3a3a6a;
+}
+html{font-size:16px;-webkit-text-size-adjust:100%;}
+body{
+font-family:'Zen Kaku Gothic New','Hiragino Kaku Gothic ProN',sans-serif;
+background:var(--bg);color:var(--text);
+min-height:100dvh;overflow-x:hidden;
+-webkit-tap-highlight-color:transparent;
+user-select:none;-webkit-user-select:none;
+}
+button{
+font-family:inherit;cursor:pointer;
+border:none;outline:none;
+-webkit-tap-highlight-color:transparent;
+touch-action:manipulation;
+}
+
+/* ========== Overlay Guide ========== */
+#guide-overlay{
+position:fixed;inset:0;z-index:1000;
+background:rgba(10,10,20,0.92);
+display:flex;align-items:center;justify-content:center;
+padding:20px;
+animation:fadeIn .4s ease;
+}
+#guide-overlay.hidden{display:none;}
+.guide-card{
+background:linear-gradient(135deg,#1e1e3a,#2a2a5a);
+border:2px solid var(--accent);border-radius:20px;
+padding:32px 24px;max-width:420px;width:100%;
+text-align:center;
+box-shadow:0 0 40px rgba(255,215,0,0.15);
+}
+.guide-card h2{
+font-size:1.6rem;font-weight:900;
+color:var(--accent);margin-bottom:16px;
+text-shadow:0 0 20px rgba(255,215,0,0.3);
+}
+.guide-card p{
+font-size:0.95rem;line-height:1.7;
+color:var(--text2);margin-bottom:12px;
+}
+.guide-card ul{
+text-align:left;list-style:none;
+margin:16px 0;padding:0;
+}
+.guide-card ul li{
+padding:6px 0;font-size:0.9rem;color:var(--text);
+}
+.guide-card ul li::before{content:">> ";color:var(--accent);}
+.guide-dismiss{
+background:var(--accent);color:#1a1a2e;
+font-size:1.1rem;font-weight:700;
+padding:14px 40px;border-radius:12px;
+margin-top:16px;
+min-height:48px;min-width:48px;
+transition:transform .15s,box-shadow .15s;
+}
+.guide-dismiss:active{transform:scale(0.95);}
+
+/* ========== Screen containers ========== */
+.screen{
+display:none;flex-direction:column;
+min-height:100dvh;padding:16px;
+animation:fadeIn .35s ease;
+}
+.screen.active{display:flex;}
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+
+/* ========== Category Screen ========== */
+#category-screen{
+align-items:center;justify-content:center;
+padding:24px 16px;
+}
+.logo-area{text-align:center;margin-bottom:32px;}
+.logo-title{
+font-size:2rem;font-weight:900;
+color:var(--accent);
+text-shadow:0 0 30px rgba(255,215,0,0.3),0 2px 4px rgba(0,0,0,0.5);
+letter-spacing:0.05em;
+}
+.logo-sub{
+font-size:0.9rem;color:var(--text2);
+margin-top:6px;
+}
+.cat-grid{
+display:grid;grid-template-columns:1fr 1fr;
+gap:12px;width:100%;max-width:480px;
+}
+.cat-btn{
+background:linear-gradient(135deg,var(--btn-bg),#1e1e3e);
+border:2px solid rgba(255,255,255,0.08);
+border-radius:14px;padding:18px 12px;
+min-height:80px;
+display:flex;flex-direction:column;
+align-items:center;justify-content:center;gap:6px;
+color:var(--text);font-size:0.95rem;font-weight:700;
+transition:transform .15s,border-color .2s,box-shadow .2s;
+}
+.cat-btn:active{transform:scale(0.95);}
+.cat-btn:hover{border-color:var(--accent);box-shadow:0 0 16px rgba(255,215,0,0.15);}
+.cat-btn .cat-icon{width:32px;height:32px;}
+.cat-btn.random-btn{
+grid-column:1/-1;
+background:linear-gradient(135deg,#2a1a4a,#3a2a6a);
+border-color:var(--accent);
+}
+.cat-label{font-size:0.8rem;color:var(--text2);font-weight:400;}
+
+/* ========== Quiz Screen ========== */
+#quiz-screen{
+justify-content:space-between;
+padding:12px 16px 20px;
+max-width:640px;margin:0 auto;width:100%;
+}
+.quiz-header{
+display:flex;align-items:center;
+justify-content:space-between;
+gap:8px;margin-bottom:8px;flex-wrap:wrap;
+}
+.q-number{
+font-size:0.85rem;font-weight:700;
+color:var(--accent);white-space:nowrap;
+}
+.cat-badge{
+font-size:0.7rem;font-weight:500;
+background:var(--bg3);color:var(--text2);
+padding:4px 10px;border-radius:20px;
+white-space:nowrap;
+}
+.score-display{
+font-size:0.85rem;font-weight:700;
+color:var(--correct);white-space:nowrap;
+}
+.timer-wrap{
+width:100%;height:8px;
+background:rgba(255,255,255,0.08);
+border-radius:4px;overflow:hidden;
+margin-bottom:12px;
+}
+.timer-bar{
+height:100%;width:100%;
+background:linear-gradient(90deg,var(--correct),var(--accent));
+border-radius:4px;
+transition:width .3s linear;
+transform-origin:left;
+}
+.timer-bar.warn{background:linear-gradient(90deg,var(--incorrect),#ff8800);}
+
+.question-area{
+flex:1;display:flex;align-items:center;
+justify-content:center;
+padding:16px 0;
+}
+.question-text{
+font-size:1.25rem;font-weight:700;
+line-height:1.6;text-align:center;
+word-break:break-word;
+}
+
+.answers-grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+}
+.answer-btn{
+background:linear-gradient(135deg,var(--btn-bg),#222244);
+border:2px solid rgba(255,255,255,0.1);
+border-radius:14px;
+padding:16px 12px;
+min-height:56px;
+font-size:0.95rem;font-weight:600;
+color:var(--text);
+line-height:1.4;
+transition:transform .1s,border-color .15s,background .15s;
+display:flex;align-items:center;justify-content:center;
+text-align:center;word-break:break-word;
+}
+.answer-btn:active:not(.locked){transform:scale(0.96);}
+.answer-btn:hover:not(.locked){border-color:rgba(255,215,0,0.4);}
+.answer-btn.correct{
+background:linear-gradient(135deg,#006633,#00aa55)!important;
+border-color:var(--correct)!important;
+color:#fff!important;
+}
+.answer-btn.incorrect{
+background:linear-gradient(135deg,#661111,#cc3333)!important;
+border-color:var(--incorrect)!important;
+color:#fff!important;
+}
+.answer-btn.locked{pointer-events:none;opacity:0.7;}
+.answer-btn.correct.locked{opacity:1;}
+.answer-btn.show-correct{
+border-color:var(--correct)!important;
+opacity:1!important;
+animation:pulseCorrect .6s ease 2;
+}
+@keyframes pulseCorrect{
+0%,100%{box-shadow:0 0 0 0 rgba(0,204,102,0.4);}
+50%{box-shadow:0 0 16px 4px rgba(0,204,102,0.3);}
+}
+
+.feedback-area{
+text-align:center;
+margin-top:12px;
+min-height:24px;
+font-size:0.85rem;
+color:var(--text2);
+line-height:1.5;
+}
+
+/* ========== Flash overlay ========== */
+.flash-overlay{
+position:fixed;inset:0;z-index:500;
+pointer-events:none;opacity:0;
+transition:opacity .15s;
+}
+.flash-overlay.flash-correct{
+background:rgba(0,204,102,0.15);
+opacity:1;
+}
+.flash-overlay.flash-incorrect{
+background:rgba(255,68,68,0.15);
+opacity:1;
+}
+
+/* ========== Results Screen ========== */
+#result-screen{
+align-items:center;justify-content:center;
+padding:24px 16px;
+text-align:center;
+}
+.result-score{
+font-size:3.5rem;font-weight:900;
+color:var(--accent);
+text-shadow:0 0 30px rgba(255,215,0,0.3);
+margin-bottom:8px;
+}
+.result-rank{
+font-size:1.4rem;font-weight:700;
+margin-bottom:24px;
+}
+.result-rank.rank-s{color:var(--accent);}
+.result-rank.rank-a{color:var(--correct);}
+.result-rank.rank-b{color:#ff8800;}
+.result-rank.rank-c{color:var(--incorrect);}
+
+.result-details{
+width:100%;max-width:480px;
+margin-bottom:24px;text-align:left;
+}
+.result-item{
+display:flex;gap:8px;
+padding:10px 12px;
+border-bottom:1px solid rgba(255,255,255,0.06);
+font-size:0.85rem;line-height:1.5;
+align-items:flex-start;
+}
+.result-icon{
+flex-shrink:0;width:20px;height:20px;
+margin-top:2px;
+}
+.result-q{flex:1;}
+.result-q .rq-question{color:var(--text2);margin-bottom:2px;}
+.result-q .rq-answer{font-weight:600;}
+.result-q .rq-answer.rq-correct{color:var(--correct);}
+.result-q .rq-answer.rq-wrong{color:var(--incorrect);}
+.result-q .rq-actual{color:var(--correct);font-size:0.8rem;}
+
+.result-actions{
+display:flex;gap:12px;flex-wrap:wrap;
+justify-content:center;
+}
+.result-btn{
+padding:14px 28px;border-radius:12px;
+font-size:1rem;font-weight:700;
+min-height:48px;min-width:48px;
+transition:transform .15s;
+}
+.result-btn:active{transform:scale(0.95);}
+.result-btn.primary{background:var(--accent);color:#1a1a2e;}
+.result-btn.secondary{background:var(--btn-bg);color:var(--text);border:2px solid rgba(255,255,255,0.1);}
+
+/* ========== Sparkle particles ========== */
+.sparkle-container{
+position:fixed;inset:0;pointer-events:none;z-index:100;
+overflow:hidden;
+}
+.sparkle{
+position:absolute;border-radius:50%;
+background:var(--accent);
+animation:sparkleAnim 1s ease-out forwards;
+}
+@keyframes sparkleAnim{
+0%{opacity:1;transform:scale(1) translateY(0);}
+100%{opacity:0;transform:scale(0) translateY(-60px);}
+}
+
+/* ========== Responsive ========== */
+@media(max-width:359px){
+.answers-grid{grid-template-columns:1fr;}
+.answer-btn{min-height:48px;font-size:0.88rem;}
+.question-text{font-size:1.1rem;}
+.cat-grid{grid-template-columns:1fr;}
+}
+@media(min-width:360px) and (max-width:479px){
+.answer-btn{font-size:0.9rem;padding:14px 10px;}
+}
+@media(min-width:640px){
+.question-text{font-size:1.5rem;}
+.answer-btn{font-size:1.05rem;padding:20px 16px;min-height:64px;}
+.cat-btn{padding:24px 16px;min-height:100px;font-size:1.05rem;}
+}
+</style>
+</head>
+<body>
+
+<!-- Flash overlay -->
+<div class="flash-overlay" id="flash-overlay"></div>
+
+<!-- Sparkle container -->
+<div class="sparkle-container" id="sparkle-container"></div>
+
+<!-- ========== Guide Overlay ========== -->
+<div id="guide-overlay" class="hidden">
+<div class="guide-card">
+<h2>KOSEN QUIZ SHOW</h2>
+<p>高専生のための本格クイズゲームへようこそ!</p>
+<ul>
+<li>5つのカテゴリから選択</li>
+<li>各カテゴリ10問出題</li>
+<li>15秒以内に回答</li>
+<li>ラスト5秒は警告音が鳴ります</li>
+<li>ボスステージは超難問!</li>
+</ul>
+<p style="font-size:0.8rem;color:var(--text2);">タップで閉じます</p>
+<button class="guide-dismiss" id="guide-dismiss-btn">START</button>
+</div>
+</div>
+
+<!-- ========== Category Screen ========== -->
+<div class="screen active" id="category-screen">
+<div class="logo-area">
+<!-- SVG Logo -->
+<svg width="80" height="80" viewBox="0 0 80 80" fill="none" style="margin-bottom:8px;">
+<rect x="4" y="4" width="72" height="72" rx="16" fill="#2a2a5a" stroke="#ffd700" stroke-width="3"/>
+<text x="40" y="36" text-anchor="middle" font-size="14" font-weight="900" fill="#ffd700" font-family="sans-serif">KOSEN</text>
+<text x="40" y="54" text-anchor="middle" font-size="12" font-weight="700" fill="#f0f0f0" font-family="sans-serif">QUIZ</text>
+<polygon points="40,62 36,68 44,68" fill="#ffd700"/>
+</svg>
+<div class="logo-title">KOSEN QUIZ SHOW</div>
+<div class="logo-sub">高専クイズ - カテゴリを選んでください</div>
+</div>
+<div class="cat-grid" id="cat-grid">
+<!-- Buttons injected by JS -->
+</div>
+</div>
+
+<!-- ========== Quiz Screen ========== -->
+<div class="screen" id="quiz-screen">
+<div>
+<div class="quiz-header">
+<span class="q-number" id="q-number">Q1 / 10</span>
+<span class="cat-badge" id="cat-badge">カテゴリ</span>
+<span class="score-display" id="score-display">0 / 0</span>
+</div>
+<div class="timer-wrap">
+<div class="timer-bar" id="timer-bar"></div>
+</div>
+</div>
+
+<div class="question-area">
+<div class="question-text" id="question-text">問題がここに表示されます</div>
+</div>
+
+<div>
+<div class="answers-grid" id="answers-grid">
+<button class="answer-btn" data-idx="0"></button>
+<button class="answer-btn" data-idx="1"></button>
+<button class="answer-btn" data-idx="2"></button>
+<button class="answer-btn" data-idx="3"></button>
+</div>
+<div class="feedback-area" id="feedback-area"></div>
+</div>
+</div>
+
+<!-- ========== Result Screen ========== -->
+<div class="screen" id="result-screen">
+<div class="result-score" id="result-score">0 / 10</div>
+<div class="result-rank" id="result-rank"></div>
+<div class="result-details" id="result-details"></div>
+<div class="result-actions">
+<button class="result-btn primary" id="retry-btn">もう一度</button>
+<button class="result-btn secondary" id="back-cat-btn">カテゴリ選択</button>
+</div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+// ============ QUIZ DATA ============
+const categories = [
+{
+id:"kosen",name:"高専あるある",
+icon:'<svg viewBox="0 0 32 32" width="32" height="32"><rect x="4" y="8" width="24" height="18" rx="3" fill="none" stroke="#ffd700" stroke-width="2"/><line x1="10" y1="13" x2="22" y2="13" stroke="#ffd700" stroke-width="1.5"/><line x1="10" y1="17" x2="22" y2="17" stroke="#ffd700" stroke-width="1.5"/><line x1="10" y1="21" x2="18" y2="21" stroke="#ffd700" stroke-width="1.5"/><polygon points="16,3 13,8 19,8" fill="#ffd700"/></svg>',
+questions:[
+{q:"高専の正式名称は？",a:"高等専門学校",w:["高等専門大学","高度専門学校","高等技術学校"]},
+{q:"高専は本科何年制？",a:"5年制",w:["4年制","6年制","3年制"]},
+{q:"高専ロボコンの正式名称に含まれる言葉は？",a:"アイデア対決",w:["技術対決","ロボット対決","頭脳対決"]},
+{q:"留年率が高いと言われる学年は？",a:"3年",w:["1年","2年","4年"]},
+{q:"高専の入学は何歳から？",a:"15歳（中学卒業後）",w:["16歳","18歳","17歳"]},
+{q:"専攻科を修了すると得られる学位は？",a:"学士",w:["修士","準学士","博士"]},
+{q:"全国の国立高専の数は約？",a:"51校",w:["30校","75校","100校"]},
+{q:"高専プロコンの正式名称は？",a:"全国高等専門学校プログラミングコンテスト",w:["全国高専技術コンテスト","高専情報処理コンテスト","全国高専ICTコンテスト"]},
+{q:"高専の校長の一般的な呼び方は？",a:"校長先生",w:["学長","理事長","総長"]},
+{q:"高専機構の本部がある都市は？",a:"東京（八王子）",w:["大阪","名古屋","仙台"]}
+]
+},
+{
+id:"ee",name:"電気・電子",
+icon:'<svg viewBox="0 0 32 32" width="32" height="32"><path d="M16 4 L20 12 L14 16 L20 20 L16 28" fill="none" stroke="#ffd700" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="16" cy="4" r="2" fill="#ffd700"/><circle cx="16" cy="28" r="2" fill="#ffd700"/></svg>',
+questions:[
+{q:"オームの法則 V = ?",a:"IR",w:["I/R","R/I","I+R"]},
+{q:"シリコンダイオードの順方向電圧降下は約？",a:"0.6V",w:["0.3V","1.2V","0.1V"]},
+{q:"共晶はんだの融点は約？",a:"183\u00B0C",w:["100\u00B0C","250\u00B0C","350\u00B0C"]},
+{q:"抵抗カラーコード 茶黒赤金 は？",a:"1k\u03A9",w:["100\u03A9","10k\u03A9","10\u03A9"]},
+{q:"コンデンサの単位は？",a:"ファラド(F)",w:["ヘンリー(H)","オーム(\u03A9)","ボルト(V)"]},
+{q:"NPNトランジスタで電流が流れる端子は？",a:"コレクタからエミッタ",w:["エミッタからコレクタ","ベースからコレクタ","エミッタからベース"]},
+{q:"交流の周波数、東日本は？",a:"50Hz",w:["60Hz","100Hz","40Hz"]},
+{q:"LEDの正式名称は？",a:"Light Emitting Diode",w:["Light Electronic Device","Laser Emitting Diode","Low Energy Diode"]},
+{q:"キルヒホッフの電流則（KCL）とは？",a:"節点に流入する電流の和 = 0",w:["閉回路の電圧の和 = 0","電力の保存則","抵抗と電流の比例則"]},
+{q:"テスターで抵抗を測る時のモードは？",a:"\u03A9（オーム）",w:["V","A","Hz"]}
+]
+},
+{
+id:"prog",name:"プログラミング",
+icon:'<svg viewBox="0 0 32 32" width="32" height="32"><polyline points="8,10 4,16 8,22" fill="none" stroke="#ffd700" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><polyline points="24,10 28,16 24,22" fill="none" stroke="#ffd700" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><line x1="18" y1="6" x2="14" y2="26" stroke="#ffd700" stroke-width="2" stroke-linecap="round"/></svg>',
+questions:[
+{q:"HTTPステータスコード404は？",a:"Not Found",w:["Server Error","Forbidden","OK"]},
+{q:"Gitで直前のコミットを修正するコマンドは？",a:"git commit --amend",w:["git revert HEAD","git reset --soft","git fix --last"]},
+{q:"O(n log n)のソートアルゴリズムは？",a:"マージソート",w:["バブルソート","選択ソート","挿入ソート"]},
+{q:"HTMLで段落を表すタグは？",a:"<p>",w:["<br>","<div>","<span>"]},
+{q:"CSSでフレックスボックスを有効にするプロパティは？",a:"display: flex",w:["flex: enable","layout: flex","position: flex"]},
+{q:"Pythonでリストの長さを取得する関数は？",a:"len()",w:["size()","length()","count()"]},
+{q:"JavaScriptで非同期処理に使うキーワードは？",a:"async/await",w:["sync/wait","defer/resolve","thread/join"]},
+{q:"SQLで重複を除くキーワードは？",a:"DISTINCT",w:["UNIQUE","DIFFERENT","SINGLE"]},
+{q:"HTTPのPOSTメソッドの主な用途は？",a:"データの送信・作成",w:["データの取得","データの削除","ページの表示"]},
+{q:"バージョン管理で「ブランチ」とは？",a:"開発の分岐",w:["バグの修正","コードの削除","ファイルの圧縮"]}
+]
+},
+{
+id:"math",name:"数学・物理",
+icon:'<svg viewBox="0 0 32 32" width="32" height="32"><text x="16" y="14" text-anchor="middle" font-size="10" font-weight="900" fill="#ffd700" font-family="serif">&#x222B;</text><text x="16" y="26" text-anchor="middle" font-size="9" font-weight="700" fill="#ffd700" font-family="serif">dx</text></svg>',
+questions:[
+{q:"e^(i\u03C0) + 1 = ?",a:"0",w:["1","-1","\u03C0"]},
+{q:"微分方程式 y' = ky の一般解は？",a:"y = Ce^(kx)",w:["y = Cx+k","y = C sin(kx)","y = C/x"]},
+{q:"sin(\u03C0/6) の値は？",a:"1/2",w:["\u221A2/2","\u221A3/2","1"]},
+{q:"ベクトルの外積の結果は？",a:"ベクトル",w:["スカラー","行列","テンソル"]},
+{q:"標準重力加速度 g は約？",a:"9.8 m/s\u00B2",w:["10.2 m/s\u00B2","8.5 m/s\u00B2","11.0 m/s\u00B2"]},
+{q:"フーリエ変換で時間領域を変換する先は？",a:"周波数領域",w:["空間領域","ラプラス領域","Z領域"]},
+{q:"行列式が0の行列は？",a:"特異行列",w:["正則行列","対角行列","単位行列"]},
+{q:"ニュートンの第二法則 F = ?",a:"ma",w:["mv","mgh","1/2mv\u00B2"]},
+{q:"log\u2082(8) = ?",a:"3",w:["2","4","8"]},
+{q:"テイラー展開で e^x の第3項は？",a:"x\u00B2/2!",w:["x\u00B3/3!","x/1!","x\u2074/4!"]}
+]
+},
+{
+id:"boss",name:"ボスステージ",
+icon:'<svg viewBox="0 0 32 32" width="32" height="32"><polygon points="16,2 20,11 30,11 22,17 25,27 16,21 7,27 10,17 2,11 12,11" fill="none" stroke="#ffd700" stroke-width="2" stroke-linejoin="round"/><circle cx="16" cy="14" r="3" fill="#ffd700"/></svg>',
+questions:[
+{q:"ラプラス変換の変数 s の意味は？",a:"複素周波数",w:["サンプリング周波数","角周波数","実周波数"]},
+{q:"MOSFET の正式名称は？",a:"Metal-Oxide-Semiconductor Field-Effect Transistor",w:["Metal-Output-Signal Field-Effect Transistor","Micro-Oxide-Silicon Field-Emitting Transistor","Multi-Oscillation-Semiconductor Frequency-Effect Transistor"]},
+{q:"TCP/IPの4層モデルで最上位は？",a:"アプリケーション層",w:["トランスポート層","インターネット層","ネットワークインターフェース層"]},
+{q:"シャノンの定理で通信路容量を決める要素は？",a:"帯域幅とS/N比",w:["電圧と電流","周波数と位相","ビット数とパリティ"]},
+{q:"Z変換はどの領域の解析に使う？",a:"離散時間",w:["連続時間","周波数","空間"]},
+{q:"ナイキスト周波数とは？",a:"サンプリング周波数の半分",w:["サンプリング周波数の2倍","信号の最大周波数","帯域幅の逆数"]},
+{q:"P=NPが成り立つかは？",a:"未解決問題",w:["証明済み(成り立つ)","証明済み(成り立たない)","数学的に無意味"]},
+{q:"マクスウェル方程式は何本？",a:"4本",w:["2本","6本","3本"]},
+{q:"高専出身の著名な起業家は？",a:"まつもとゆきひろ（Ruby開発者）",w:["田中太郎（架空）","山田花子（架空）","佐藤一郎（架空）"]},
+{q:"制御工学のボード線図で位相余裕が負だと？",a:"不安定",w:["安定","振動","臨界安定"]}
+]
+}
+];
+
+// ============ AUDIO ENGINE ============
+let audioCtx = null;
+function ensureAudioCtx(){
+if(!audioCtx){
+audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+if(audioCtx.state === "suspended") audioCtx.resume();
+return audioCtx;
+}
+
+function playCorrectSound(){
+try{
+const ctx = ensureAudioCtx();
+const t = ctx.currentTime;
+// Ascending chime: C5 -> E5 -> G5
+const freqs = [523.25, 659.25, 783.99];
+freqs.forEach((f,i)=>{
+const osc = ctx.createOscillator();
+const gain = ctx.createGain();
+osc.type = "sine";
+osc.frequency.value = f;
+gain.gain.setValueAtTime(0, t + i*0.08);
+gain.gain.linearRampToValueAtTime(0.18, t + i*0.08 + 0.03);
+gain.gain.exponentialRampToValueAtTime(0.001, t + i*0.08 + 0.3);
+osc.connect(gain);
+gain.connect(ctx.destination);
+osc.start(t + i*0.08);
+osc.stop(t + i*0.08 + 0.35);
+});
+}catch(e){}
+}
+
+function playIncorrectSound(){
+try{
+const ctx = ensureAudioCtx();
+const t = ctx.currentTime;
+// Descending buzz
+const osc = ctx.createOscillator();
+const gain = ctx.createGain();
+osc.type = "square";
+osc.frequency.setValueAtTime(300, t);
+osc.frequency.linearRampToValueAtTime(100, t + 0.3);
+gain.gain.setValueAtTime(0.12, t);
+gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+osc.connect(gain);
+gain.connect(ctx.destination);
+osc.start(t);
+osc.stop(t + 0.4);
+}catch(e){}
+}
+
+let tickInterval = null;
+function startTickSound(){
+stopTickSound();
+tickInterval = setInterval(()=>{
+try{
+const ctx = ensureAudioCtx();
+const t = ctx.currentTime;
+const osc = ctx.createOscillator();
+const gain = ctx.createGain();
+osc.type = "sine";
+osc.frequency.value = 880;
+gain.gain.setValueAtTime(0.08, t);
+gain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+osc.connect(gain);
+gain.connect(ctx.destination);
+osc.start(t);
+osc.stop(t + 0.06);
+}catch(e){}
+}, 500);
+}
+
+function stopTickSound(){
+if(tickInterval){clearInterval(tickInterval);tickInterval=null;}
+}
+
+// ============ SPARKLE EFFECT ============
+function spawnSparkles(x, y, count){
+const container = document.getElementById("sparkle-container");
+for(let i=0;i<count;i++){
+const s = document.createElement("div");
+s.className = "sparkle";
+const size = 4 + Math.random()*6;
+s.style.width = size+"px";
+s.style.height = size+"px";
+s.style.left = (x + (Math.random()-0.5)*80)+"px";
+s.style.top = (y + (Math.random()-0.5)*40)+"px";
+s.style.animationDuration = (0.6 + Math.random()*0.6)+"s";
+container.appendChild(s);
+s.addEventListener("animationend",()=>s.remove());
+}
+}
+
+// ============ FLASH ============
+function flashScreen(type){
+const el = document.getElementById("flash-overlay");
+el.className = "flash-overlay flash-"+type;
+setTimeout(()=>{el.className="flash-overlay";}, 300);
+}
+
+// ============ STATE ============
+let currentCategoryIdx = -1;
+let currentQuestions = [];
+let currentQuestionIdx = 0;
+let score = 0;
+let results = []; // {q, correct, userAnswer, correctAnswer}
+let timerValue = 15;
+let timerInterval = null;
+let answered = false;
+let ticking = false;
+
+// ============ SCREENS ============
+function showScreen(id){
+document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+document.getElementById(id).classList.add("active");
+}
+
+// ============ GUIDE ============
+function checkGuide(){
+if(!localStorage.getItem("kosen-quiz-guide-seen")){
+document.getElementById("guide-overlay").classList.remove("hidden");
+}
+}
+document.getElementById("guide-dismiss-btn").addEventListener("click",()=>{
+document.getElementById("guide-overlay").classList.add("hidden");
+localStorage.setItem("kosen-quiz-guide-seen","1");
+});
+document.getElementById("guide-overlay").addEventListener("click",(e)=>{
+if(e.target === document.getElementById("guide-overlay")){
+document.getElementById("guide-overlay").classList.add("hidden");
+localStorage.setItem("kosen-quiz-guide-seen","1");
+}
+});
+
+// ============ CATEGORY SCREEN ============
+function buildCategoryScreen(){
+const grid = document.getElementById("cat-grid");
+grid.innerHTML = "";
+categories.forEach((cat, idx)=>{
+const btn = document.createElement("button");
+btn.className = "cat-btn";
+btn.innerHTML = '<div class="cat-icon">'+cat.icon+'</div><div>'+cat.name+'</div><div class="cat-label">10問</div>';
+btn.addEventListener("click",()=>startQuiz(idx));
+grid.appendChild(btn);
+});
+// Random button
+const rbtn = document.createElement("button");
+rbtn.className = "cat-btn random-btn";
+rbtn.innerHTML = '<div class="cat-icon"><svg viewBox="0 0 32 32" width="32" height="32"><rect x="6" y="6" width="20" height="20" rx="4" fill="none" stroke="#ffd700" stroke-width="2"/><circle cx="12" cy="12" r="2" fill="#ffd700"/><circle cx="20" cy="12" r="2" fill="#ffd700"/><circle cx="16" cy="16" r="2" fill="#ffd700"/><circle cx="12" cy="20" r="2" fill="#ffd700"/><circle cx="20" cy="20" r="2" fill="#ffd700"/></svg></div><div>ランダム</div><div class="cat-label">全カテゴリからランダム10問</div>';
+rbtn.addEventListener("click",()=>startQuiz(-1));
+grid.appendChild(rbtn);
+}
+
+// ============ SHUFFLE ============
+function shuffle(arr){
+const a=[...arr];
+for(let i=a.length-1;i>0;i--){
+const j=Math.floor(Math.random()*(i+1));
+[a[i],a[j]]=[a[j],a[i]];
+}
+return a;
+}
+
+// ============ START QUIZ ============
+function startQuiz(catIdx){
+ensureAudioCtx();
+currentCategoryIdx = catIdx;
+score = 0;
+currentQuestionIdx = 0;
+results = [];
+
+if(catIdx === -1){
+// Random: pick 10 from all
+let allQ = [];
+categories.forEach((cat,ci)=>{
+cat.questions.forEach(q=>{
+allQ.push({...q, catName:cat.name, catId:cat.id});
+});
+});
+currentQuestions = shuffle(allQ).slice(0,10);
+} else {
+currentQuestions = shuffle(categories[catIdx].questions).slice(0,10).map(q=>({
+...q, catName:categories[catIdx].name, catId:categories[catIdx].id
+}));
+}
+
+showScreen("quiz-screen");
+showQuestion();
+}
+
+// ============ SHOW QUESTION ============
+function showQuestion(){
+answered = false;
+ticking = false;
+stopTickSound();
+
+const q = currentQuestions[currentQuestionIdx];
+document.getElementById("q-number").textContent = "Q"+(currentQuestionIdx+1)+" / 10";
+document.getElementById("cat-badge").textContent = q.catName;
+document.getElementById("score-display").textContent = score+" / "+(currentQuestionIdx);
+document.getElementById("question-text").textContent = q.q;
+document.getElementById("feedback-area").textContent = "";
+
+// Build shuffled answers
+const answers = shuffle([q.a, ...q.w]);
+const btns = document.querySelectorAll(".answer-btn");
+btns.forEach((btn, i)=>{
+btn.textContent = answers[i];
+btn.className = "answer-btn";
+btn.dataset.value = answers[i];
+});
+
+// Timer
+startTimer();
+}
+
+// ============ TIMER ============
+function startTimer(){
+timerValue = 15;
+const bar = document.getElementById("timer-bar");
+bar.style.width = "100%";
+bar.classList.remove("warn");
+
+if(timerInterval) clearInterval(timerInterval);
+const startTime = Date.now();
+const duration = 15000;
+
+timerInterval = setInterval(()=>{
+const elapsed = Date.now() - startTime;
+const remaining = Math.max(0, duration - elapsed);
+const pct = (remaining / duration)*100;
+bar.style.width = pct + "%";
+
+if(remaining <= 5000 && !ticking && !answered){
+ticking = true;
+bar.classList.add("warn");
+startTickSound();
+}
+
+if(remaining <= 0){
+clearInterval(timerInterval);
+timerInterval = null;
+stopTickSound();
+if(!answered) handleTimeout();
+}
+}, 50);
+}
+
+function stopTimer(){
+if(timerInterval){clearInterval(timerInterval);timerInterval=null;}
+stopTickSound();
+}
+
+// ============ HANDLE ANSWER ============
+function handleAnswer(selectedValue){
+if(answered) return;
+answered = true;
+stopTimer();
+
+const q = currentQuestions[currentQuestionIdx];
+const isCorrect = selectedValue === q.a;
+
+const btns = document.querySelectorAll(".answer-btn");
+btns.forEach(btn=>{
+btn.classList.add("locked");
+if(btn.dataset.value === q.a){
+btn.classList.add("correct");
+if(!isCorrect) btn.classList.add("show-correct");
+}
+if(btn.dataset.value === selectedValue && !isCorrect){
+btn.classList.add("incorrect");
+}
+});
+
+if(isCorrect){
+score++;
+flashScreen("correct");
+playCorrectSound();
+const clickedBtn = document.querySelector('.answer-btn[data-value="'+CSS.escape(selectedValue)+'"]');
+if(clickedBtn){
+const r = clickedBtn.getBoundingClientRect();
+spawnSparkles(r.left + r.width/2, r.top + r.height/2, 12);
+}
+document.getElementById("feedback-area").innerHTML = '<span style="color:var(--correct);font-weight:700;">正解!</span>';
+} else {
+flashScreen("incorrect");
+playIncorrectSound();
+document.getElementById("feedback-area").innerHTML =
+'<span style="color:var(--incorrect);font-weight:700;">不正解</span> - 正解: <span style="color:var(--correct);font-weight:600;">'+escapeHtml(q.a)+'</span>';
+}
+
+results.push({
+q: q.q,
+correct: isCorrect,
+userAnswer: selectedValue,
+correctAnswer: q.a
+});
+
+document.getElementById("score-display").textContent = score+" / "+(currentQuestionIdx+1);
+
+setTimeout(()=>nextQuestion(), isCorrect ? 1200 : 2200);
+}
+
+function handleTimeout(){
+answered = true;
+stopTimer();
+
+const q = currentQuestions[currentQuestionIdx];
+const btns = document.querySelectorAll(".answer-btn");
+btns.forEach(btn=>{
+btn.classList.add("locked");
+if(btn.dataset.value === q.a){
+btn.classList.add("correct","show-correct");
+}
+});
+
+flashScreen("incorrect");
+playIncorrectSound();
+document.getElementById("feedback-area").innerHTML =
+'<span style="color:var(--incorrect);font-weight:700;">時間切れ!</span> - 正解: <span style="color:var(--correct);font-weight:600;">'+escapeHtml(q.a)+'</span>';
+
+results.push({
+q: q.q,
+correct: false,
+userAnswer: "(時間切れ)",
+correctAnswer: q.a
+});
+
+document.getElementById("score-display").textContent = score+" / "+(currentQuestionIdx+1);
+
+setTimeout(()=>nextQuestion(), 2200);
+}
+
+function nextQuestion(){
+currentQuestionIdx++;
+if(currentQuestionIdx >= 10){
+showResults();
+} else {
+showQuestion();
+}
+}
+
+// ============ ANSWER BUTTON EVENTS ============
+document.querySelectorAll(".answer-btn").forEach(btn=>{
+btn.addEventListener("click",function(){
+handleAnswer(this.dataset.value);
+});
+});
+
+// ============ RESULTS ============
+function showResults(){
+stopTimer();
+stopTickSound();
+showScreen("result-screen");
+
+document.getElementById("result-score").textContent = score + " / 10";
+
+const rankEl = document.getElementById("result-rank");
+if(score === 10){
+rankEl.textContent = "教授レベル";
+rankEl.className = "result-rank rank-s";
+} else if(score >= 7){
+rankEl.textContent = "優秀な高専生";
+rankEl.className = "result-rank rank-a";
+} else if(score >= 4){
+rankEl.textContent = "まだまだこれから";
+rankEl.className = "result-rank rank-b";
+} else {
+rankEl.textContent = "再履修";
+rankEl.className = "result-rank rank-c";
+}
+
+// Sparkles for perfect score
+if(score === 10){
+for(let i=0;i<5;i++){
+setTimeout(()=>{
+spawnSparkles(
+Math.random()*window.innerWidth,
+100+Math.random()*200, 8
+);
+}, i*200);
+}
+}
+
+const detailsEl = document.getElementById("result-details");
+detailsEl.innerHTML = "";
+results.forEach((r, i)=>{
+const item = document.createElement("div");
+item.className = "result-item";
+
+const iconSvg = r.correct
+? '<svg class="result-icon" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9" fill="none" stroke="#00cc66" stroke-width="2"/><polyline points="6,10 9,14 14,7" fill="none" stroke="#00cc66" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+: '<svg class="result-icon" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9" fill="none" stroke="#ff4444" stroke-width="2"/><line x1="7" y1="7" x2="13" y2="13" stroke="#ff4444" stroke-width="2" stroke-linecap="round"/><line x1="13" y1="7" x2="7" y2="13" stroke="#ff4444" stroke-width="2" stroke-linecap="round"/></svg>';
+
+let detailHtml = '<div class="result-q"><div class="rq-question">Q'+(i+1)+'. '+escapeHtml(r.q)+'</div>';
+if(r.correct){
+detailHtml += '<div class="rq-answer rq-correct">'+escapeHtml(r.correctAnswer)+'</div>';
+} else {
+detailHtml += '<div class="rq-answer rq-wrong">'+escapeHtml(r.userAnswer)+'</div>';
+detailHtml += '<div class="rq-actual">正解: '+escapeHtml(r.correctAnswer)+'</div>';
+}
+detailHtml += '</div>';
+
+item.innerHTML = iconSvg + detailHtml;
+detailsEl.appendChild(item);
+});
+}
+
+// ============ RESULT BUTTONS ============
+document.getElementById("retry-btn").addEventListener("click",()=>{
+startQuiz(currentCategoryIdx);
+});
+document.getElementById("back-cat-btn").addEventListener("click",()=>{
+showScreen("category-screen");
+});
+
+// ============ UTILS ============
+function escapeHtml(str){
+const d=document.createElement("div");
+d.textContent=str;
+return d.innerHTML;
+}
+
+// ============ INIT ============
+buildCategoryScreen();
+checkGuide();
+
+})();
+</script>
+</body>
+</html>

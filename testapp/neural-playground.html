@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>ニューラルネット実験室</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:#0d1117;color:#c9d1d9;font-family:'Noto Sans JP','JetBrains Mono',sans-serif;overflow-x:hidden;min-height:100vh}
+.container{max-width:960px;margin:0 auto;padding:12px}
+h1{font-family:'JetBrains Mono',monospace;font-size:clamp(16px,4vw,24px);text-align:center;padding:10px 0;background:linear-gradient(90deg,#00d4ff,#ff00ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.top-controls{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:12px}
+.btn{padding:8px 16px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.06);color:#c9d1d9;font-family:'JetBrains Mono',monospace;font-size:12px;cursor:pointer;min-height:44px;min-width:44px;display:flex;align-items:center;justify-content:center}
+.btn:active{background:rgba(0,212,255,0.2)}
+.btn.active{border-color:#00d4ff;color:#00d4ff}
+.network-area{position:relative;width:100%;aspect-ratio:16/9;min-height:200px;max-height:50vh;background:rgba(0,0,0,0.3);border-radius:12px;border:1px solid rgba(255,255,255,0.08);overflow:hidden;margin-bottom:12px}
+#net-canvas{width:100%;height:100%;display:block}
+.controls-row{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:12px}
+.control-group{flex:1;min-width:140px;background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;border:1px solid rgba(255,255,255,0.08)}
+.control-group label{font-size:11px;color:#8b949e;font-family:'JetBrains Mono',monospace;display:block;margin-bottom:4px}
+.slider-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.slider-row input[type=range]{flex:1;accent-color:#00d4ff;height:20px}
+.slider-row .val{font-family:'JetBrains Mono',monospace;font-size:12px;color:#00d4ff;min-width:36px;text-align:right}
+.heatmap-area{width:100%;aspect-ratio:2/1;min-height:120px;max-height:30vh;background:rgba(0,0,0,0.3);border-radius:12px;border:1px solid rgba(255,255,255,0.08);overflow:hidden;position:relative}
+#heat-canvas{width:100%;height:100%;display:block}
+.act-select{background:#161b22;border:1px solid rgba(255,255,255,0.15);color:#c9d1d9;padding:6px 10px;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:12px;min-height:44px}
+.tooltip{position:fixed;background:#1c2128;border:1px solid #00d4ff;border-radius:6px;padding:6px 10px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#00d4ff;pointer-events:none;z-index:100;display:none}
+#overlay{position:fixed;inset:0;background:rgba(0,0,0,0.88);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:200;padding:20px}
+#overlay h2{font-size:clamp(18px,4vw,28px);margin-bottom:12px;background:linear-gradient(90deg,#00d4ff,#ff00ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-family:'JetBrains Mono',monospace}
+#overlay p{color:#8b949e;font-size:13px;max-width:360px;text-align:center;line-height:1.7;margin-bottom:6px}
+#overlay .start-btn{margin-top:16px;padding:12px 36px;border-radius:10px;border:none;background:linear-gradient(135deg,#00d4ff,#7c3aed);color:#fff;font-size:16px;font-weight:700;cursor:pointer;min-height:48px;font-family:'Noto Sans JP',sans-serif}
+</style>
+</head>
+<body>
+<div id="overlay">
+  <h2>Neural Playground</h2>
+  <p>ニューラルネットワークの仕組みを<br>インタラクティブに体験しよう</p>
+  <p style="font-size:11px;color:#484f58">ノードの値や接続の重みを変えて<br>ネットワークの出力がどう変わるか観察できます</p>
+  <button class="start-btn" id="start-btn">はじめる</button>
+</div>
+<div class="container">
+  <h1>// Neural Playground</h1>
+  <div class="top-controls">
+    <button class="btn" id="btn-and">AND</button>
+    <button class="btn" id="btn-or">OR</button>
+    <button class="btn" id="btn-xor">XOR</button>
+    <button class="btn" id="btn-random">ランダム</button>
+    <select class="act-select" id="activation">
+      <option value="sigmoid">sigmoid</option>
+      <option value="relu">ReLU</option>
+      <option value="tanh">tanh</option>
+    </select>
+  </div>
+  <div class="controls-row">
+    <div class="control-group">
+      <label>入力1 (x1)</label>
+      <div class="slider-row"><input type="range" id="in1" min="0" max="1" step="0.01" value="0.5"><span class="val" id="in1-val">0.50</span></div>
+      <label>入力2 (x2)</label>
+      <div class="slider-row"><input type="range" id="in2" min="0" max="1" step="0.01" value="0.5"><span class="val" id="in2-val">0.50</span></div>
+    </div>
+    <div class="control-group">
+      <label>隠れ層1 ノード数</label>
+      <div class="slider-row"><input type="range" id="h1" min="1" max="8" step="1" value="4"><span class="val" id="h1-val">4</span></div>
+      <label>隠れ層2 ノード数</label>
+      <div class="slider-row"><input type="range" id="h2" min="0" max="8" step="1" value="4"><span class="val" id="h2-val">4</span></div>
+    </div>
+  </div>
+  <div class="network-area"><canvas id="net-canvas"></canvas></div>
+  <div class="heatmap-area"><canvas id="heat-canvas"></canvas></div>
+</div>
+<div class="tooltip" id="tooltip"></div>
+<script>
+(function(){
+const netCanvas=document.getElementById('net-canvas');
+const netCtx=netCanvas.getContext('2d');
+const heatCanvas=document.getElementById('heat-canvas');
+const heatCtx=heatCanvas.getContext('2d');
+const tooltip=document.getElementById('tooltip');
+
+let layers=[];// layers[i]={size,values}
+let weights=[];// weights[i]= 2d array [from][to]
+let biases=[];// biases[i]= array per layer (except input)
+let activation='sigmoid';
+let input1=0.5,input2=0.5;
+
+function act(x){
+  if(activation==='sigmoid')return 1/(1+Math.exp(-x));
+  if(activation==='relu')return Math.max(0,x);
+  if(activation==='tanh')return Math.tanh(x);
+  return x;
+}
+
+function buildNetwork(){
+  const h1=parseInt(document.getElementById('h1').value);
+  const h2=parseInt(document.getElementById('h2').value);
+  const sizes=[2];
+  if(h1>0)sizes.push(h1);
+  if(h2>0)sizes.push(h2);
+  sizes.push(1);
+  layers=sizes.map(s=>({size:s,values:new Array(s).fill(0)}));
+  weights=[];biases=[];
+  for(let i=1;i<sizes.length;i++){
+    const w=[];
+    for(let f=0;f<sizes[i-1];f++){
+      w[f]=[];
+      for(let t=0;t<sizes[i];t++)w[f][t]=(Math.random()-0.5)*2;
+    }
+    weights.push(w);
+    biases.push(new Array(sizes[i]).fill(0).map(()=>(Math.random()-0.5)));
+  }
+}
+
+function forward(x1,x2){
+  layers[0].values=[x1,x2];
+  for(let i=1;i<layers.length;i++){
+    for(let j=0;j<layers[i].size;j++){
+      let sum=biases[i-1][j];
+      for(let k=0;k<layers[i-1].size;k++){
+        sum+=layers[i-1].values[k]*weights[i-1][k][j];
+      }
+      layers[i].values[j]=act(sum);
+    }
+  }
+  return layers[layers.length-1].values[0];
+}
+
+function forwardOnly(x1,x2){
+  const vals=[{size:layers[0].size,values:[x1,x2]}];
+  for(let i=1;i<layers.length;i++){
+    const v=[];
+    for(let j=0;j<layers[i].size;j++){
+      let sum=biases[i-1][j];
+      for(let k=0;k<vals[i-1].size;k++)sum+=vals[i-1].values[k]*weights[i-1][k][j];
+      v.push(act(sum));
+    }
+    vals.push({size:layers[i].size,values:v});
+  }
+  return vals[vals.length-1].values[0];
+}
+
+function setPreset(name){
+  buildNetwork();
+  // Force 2-4-1 for presets
+  document.getElementById('h1').value=4;document.getElementById('h1-val').textContent='4';
+  document.getElementById('h2').value=0;document.getElementById('h2-val').textContent='0';
+  buildNetwork();
+  const w=weights[0];const b=biases[0];
+  const w2=weights[1];const b2=biases[1];
+  if(name==='and'){
+    w[0]=[5,5,0,0];w[1]=[5,5,0,0];b.fill(-7);b[2]=0;b[3]=0;
+    w2[0]=[5];w2[1]=[5];w2[2]=[0];w2[3]=[0];b2[0]=-7;
+  }else if(name==='or'){
+    w[0]=[5,5,0,0];w[1]=[5,5,0,0];b.fill(-2);b[2]=0;b[3]=0;
+    w2[0]=[5];w2[1]=[5];w2[2]=[0];w2[3]=[0];b2[0]=-2;
+  }else if(name==='xor'){
+    w[0]=[5,-5,0,0];w[1]=[5,-5,0,0];b[0]=-2;b[1]=7;b[2]=0;b[3]=0;
+    w2[0]=[5];w2[1]=[5];w2[2]=[0];w2[3]=[0];b2[0]=-2;
+  }
+  update();
+}
+
+function getNodePositions(){
+  const w=netCanvas.width,h=netCanvas.height;
+  const n=layers.length;
+  const positions=[];
+  for(let i=0;i<n;i++){
+    const x=w*0.12+i*(w*0.76)/(n-1);
+    const layerPos=[];
+    for(let j=0;j<layers[i].size;j++){
+      const spacing=Math.min(h*0.8/(layers[i].size+1),60);
+      const totalH=spacing*(layers[i].size-1);
+      const y=h/2-totalH/2+j*spacing;
+      layerPos.push({x,y});
+    }
+    positions.push(layerPos);
+  }
+  return positions;
+}
+
+function drawNetwork(){
+  const w=netCanvas.width=netCanvas.parentElement.clientWidth;
+  const h=netCanvas.height=netCanvas.parentElement.clientHeight;
+  netCtx.clearRect(0,0,w,h);
+  forward(input1,input2);
+  const pos=getNodePositions();
+  const nodeRadius=Math.min(18,w*0.025,h*0.06);
+  // Draw connections
+  for(let i=0;i<weights.length;i++){
+    for(let f=0;f<layers[i].size;f++){
+      for(let t=0;t<layers[i+1].size;t++){
+        const wt=weights[i][f][t];
+        const absW=Math.min(Math.abs(wt),2);
+        const lw=1+absW*3;
+        const alpha=0.2+absW*0.3;
+        netCtx.strokeStyle=wt>=0?`rgba(0,212,255,${alpha})`:`rgba(255,0,255,${alpha})`;
+        netCtx.lineWidth=lw;
+        netCtx.beginPath();
+        netCtx.moveTo(pos[i][f].x,pos[i][f].y);
+        netCtx.lineTo(pos[i+1][t].x,pos[i+1][t].y);
+        netCtx.stroke();
+      }
+    }
+  }
+  // Draw nodes
+  for(let i=0;i<layers.length;i++){
+    for(let j=0;j<layers[i].size;j++){
+      const p=pos[i][j];
+      const v=layers[i].values[j];
+      const brightness=Math.min(1,Math.abs(v));
+      const grd=netCtx.createRadialGradient(p.x,p.y,0,p.x,p.y,nodeRadius*2);
+      grd.addColorStop(0,`rgba(0,212,255,${brightness*0.3})`);
+      grd.addColorStop(1,'rgba(0,212,255,0)');
+      netCtx.fillStyle=grd;
+      netCtx.fillRect(p.x-nodeRadius*2,p.y-nodeRadius*2,nodeRadius*4,nodeRadius*4);
+      netCtx.beginPath();
+      netCtx.arc(p.x,p.y,nodeRadius,0,Math.PI*2);
+      netCtx.fillStyle=`rgba(0,212,255,${0.15+brightness*0.4})`;
+      netCtx.fill();
+      netCtx.strokeStyle=`rgba(0,212,255,${0.4+brightness*0.6})`;
+      netCtx.lineWidth=2;
+      netCtx.stroke();
+      netCtx.fillStyle='#c9d1d9';
+      netCtx.font=`${Math.max(9,nodeRadius*0.7)}px 'JetBrains Mono'`;
+      netCtx.textAlign='center';netCtx.textBaseline='middle';
+      netCtx.fillText(v.toFixed(2),p.x,p.y);
+    }
+  }
+  // Labels
+  netCtx.fillStyle='#484f58';netCtx.font="11px 'JetBrains Mono'";netCtx.textAlign='center';
+  const labels=[['x1','x2']];
+  for(let i=1;i<layers.length-1;i++)labels.push([`H${i}`]);
+  labels.push(['out']);
+  for(let i=0;i<pos.length;i++){
+    const lx=pos[i][0].x;
+    const ly=Math.min(...pos[i].map(p=>p.y))-nodeRadius-12;
+    const txt=i===0?'入力':i===pos.length-1?'出力':`隠れ層${i}`;
+    netCtx.fillText(txt,lx,ly);
+  }
+}
+
+function drawHeatmap(){
+  const w=heatCanvas.width=heatCanvas.parentElement.clientWidth;
+  const h=heatCanvas.height=heatCanvas.parentElement.clientHeight;
+  const res=Math.max(2,Math.floor(Math.min(w,h)/40));
+  const cols=Math.floor(w/res);
+  const rows=Math.floor(h/res);
+  for(let r=0;r<rows;r++){
+    for(let c=0;c<cols;c++){
+      const x1=c/cols;
+      const x2=1-r/rows;
+      const out=forwardOnly(x1,x2);
+      const v=Math.max(0,Math.min(1,out));
+      const cr=Math.floor(v*0+(1-v)*13);
+      const cg=Math.floor(v*212+(1-v)*17);
+      const cb=Math.floor(v*255+(1-v)*23);
+      heatCtx.fillStyle=`rgb(${cr},${cg},${cb})`;
+      heatCtx.fillRect(c*res,r*res,res,res);
+    }
+  }
+  // Axes labels
+  heatCtx.fillStyle='rgba(255,255,255,0.5)';
+  heatCtx.font="10px 'JetBrains Mono'";
+  heatCtx.textAlign='left';heatCtx.fillText('x1 ->',4,h-4);
+  heatCtx.save();heatCtx.translate(12,h-4);heatCtx.rotate(-Math.PI/2);
+  heatCtx.fillText('x2 ->',0,0);heatCtx.restore();
+  // Output value
+  const outVal=forward(input1,input2);
+  heatCtx.fillStyle='#fff';heatCtx.font="bold 13px 'JetBrains Mono'";
+  heatCtx.textAlign='right';
+  heatCtx.fillText(`output: ${outVal.toFixed(4)}`,w-8,16);
+  // Input marker
+  const mx=input1*w;
+  const my=(1-input2)*h;
+  heatCtx.beginPath();heatCtx.arc(mx,my,6,0,Math.PI*2);
+  heatCtx.strokeStyle='#fff';heatCtx.lineWidth=2;heatCtx.stroke();
+  heatCtx.beginPath();heatCtx.arc(mx,my,2,0,Math.PI*2);
+  heatCtx.fillStyle='#fff';heatCtx.fill();
+}
+
+function update(){
+  activation=document.getElementById('activation').value;
+  input1=parseFloat(document.getElementById('in1').value);
+  input2=parseFloat(document.getElementById('in2').value);
+  document.getElementById('in1-val').textContent=input1.toFixed(2);
+  document.getElementById('in2-val').textContent=input2.toFixed(2);
+  drawNetwork();
+  drawHeatmap();
+}
+
+// Tooltip on hover
+netCanvas.addEventListener('mousemove',e=>{
+  const rect=netCanvas.getBoundingClientRect();
+  const mx=(e.clientX-rect.left)*(netCanvas.width/rect.width);
+  const my=(e.clientY-rect.top)*(netCanvas.height/rect.height);
+  const pos=getNodePositions();
+  const nr=Math.min(18,netCanvas.width*0.025);
+  let found=false;
+  for(let i=0;i<pos.length;i++){
+    for(let j=0;j<pos[i].length;j++){
+      const dx=mx-pos[i][j].x,dy=my-pos[i][j].y;
+      if(Math.sqrt(dx*dx+dy*dy)<nr+4){
+        tooltip.style.display='block';
+        tooltip.style.left=e.clientX+12+'px';
+        tooltip.style.top=e.clientY-30+'px';
+        tooltip.textContent=`Layer ${i} Node ${j}: ${layers[i].values[j].toFixed(4)}`;
+        found=true;break;
+      }
+    }
+    if(found)break;
+  }
+  if(!found)tooltip.style.display='none';
+});
+netCanvas.addEventListener('mouseleave',()=>tooltip.style.display='none');
+
+document.getElementById('in1').addEventListener('input',update);
+document.getElementById('in2').addEventListener('input',update);
+document.getElementById('h1').addEventListener('input',e=>{document.getElementById('h1-val').textContent=e.target.value;buildNetwork();update()});
+document.getElementById('h2').addEventListener('input',e=>{document.getElementById('h2-val').textContent=e.target.value;buildNetwork();update()});
+document.getElementById('activation').addEventListener('change',update);
+document.getElementById('btn-and').addEventListener('click',()=>setPreset('and'));
+document.getElementById('btn-or').addEventListener('click',()=>setPreset('or'));
+document.getElementById('btn-xor').addEventListener('click',()=>setPreset('xor'));
+document.getElementById('btn-random').addEventListener('click',()=>{buildNetwork();update()});
+document.getElementById('start-btn').addEventListener('click',()=>{document.getElementById('overlay').style.display='none'});
+window.addEventListener('resize',update);
+
+buildNetwork();
+update();
+})();
+</script>
+</body>
+</html>

@@ -55,15 +55,23 @@ export default async function AppDetailPage({ params }: Props) {
   const { data: { user } } = await authSupabase.auth.getUser();
   const isOwner = user && app.user_id && user.id === app.user_id;
 
-  // Fetch community name if app belongs to one
+  // Fetch community name only if user is a member
   let communityName: string | null = null;
-  if (app.community_id) {
-    const { data: community } = await supabase
-      .from("communities")
-      .select("name")
-      .eq("id", app.community_id)
+  if (app.community_id && user) {
+    const { data: membership } = await supabase
+      .from("community_members")
+      .select("id")
+      .eq("community_id", app.community_id)
+      .eq("user_id", user.id)
       .single();
-    communityName = community?.name ?? null;
+    if (membership) {
+      const { data: community } = await supabase
+        .from("communities")
+        .select("name")
+        .eq("id", app.community_id)
+        .single();
+      communityName = community?.name ?? null;
+    }
   }
 
   // Fetch comments
@@ -196,7 +204,7 @@ export default async function AppDetailPage({ params }: Props) {
                 >
                   新しいタブで開く &#8599;
                 </a>
-                <QrCodeButton />
+                <QrCodeButton appUrl={iframeSrc} />
                 {isOwner && (
                   <Link
                     href={`/apps/${slug}/edit`}

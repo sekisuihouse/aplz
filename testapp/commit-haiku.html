@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>コミット俳句</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;700;900&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#f5f0e8;color:#2d2d2d;font-family:'Zen Old Mincho',serif;min-height:100vh}
+.bg-texture{position:fixed;inset:0;opacity:0.04;background-image:url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h60v60H0z' fill='none'/%3E%3Cpath d='M30 0v60M0 30h60' stroke='%23000' stroke-width='0.5'/%3E%3C/svg%3E");pointer-events:none;z-index:0}
+.container{position:relative;z-index:1;max-width:640px;margin:0 auto;padding:16px}
+header{text-align:center;padding:24px 0 16px}
+h1{font-size:clamp(24px,6vw,40px);font-weight:900;color:#2d2d2d;letter-spacing:4px}
+.subtitle{font-size:13px;color:#8a7e6f;margin-top:4px;font-family:'Noto Sans JP',sans-serif}
+.season-badge{position:absolute;top:16px;right:16px;display:flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(197,61,67,0.08);border-radius:20px;font-size:12px;color:#c53d43}
+.season-badge svg{width:18px;height:18px}
+.input-area{margin:20px 0;position:relative}
+.scroll-border{border:2px solid #c53d43;border-radius:12px;padding:2px;background:linear-gradient(135deg,rgba(197,61,67,0.05),transparent)}
+.input-inner{display:flex;align-items:center;gap:8px;padding:12px 16px;background:#faf6ef;border-radius:10px}
+.input-inner input{flex:1;border:none;background:transparent;font-size:16px;font-family:'JetBrains Mono','Noto Sans JP',monospace;color:#2d2d2d;outline:none;min-height:44px}
+.input-inner input::placeholder{color:#bfb5a3}
+.submit-btn{width:48px;height:48px;border-radius:50%;border:2px solid #c53d43;background:transparent;color:#c53d43;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.2s}
+.submit-btn:active{background:#c53d43;color:#fff}
+.haiku-card{background:#faf6ef;border-radius:16px;padding:32px 24px;text-align:center;min-height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;box-shadow:0 2px 20px rgba(0,0,0,0.06);border:1px solid rgba(197,61,67,0.1);margin-bottom:20px}
+.haiku-card .illust{margin-bottom:16px}
+.haiku-card .illust svg{width:80px;height:80px;opacity:0.4}
+.haiku-text{font-size:clamp(20px,5vw,28px);font-weight:700;line-height:2;letter-spacing:3px;color:#2d2d2d;min-height:90px}
+.haiku-text .char{display:inline-block;opacity:0;animation:charIn 0.3s forwards}
+@keyframes charIn{to{opacity:1}}
+.haiku-original{font-size:11px;color:#bfb5a3;margin-top:16px;font-family:'Noto Sans JP',monospace;word-break:break-all}
+.actions{display:flex;gap:8px;justify-content:center;margin-top:16px}
+.action-btn{padding:10px 20px;border-radius:8px;border:1px solid rgba(197,61,67,0.2);background:transparent;color:#c53d43;font-size:13px;font-family:'Zen Old Mincho',serif;cursor:pointer;min-height:44px;min-width:44px;display:flex;align-items:center;justify-content:center;gap:4px;transition:all 0.2s}
+.action-btn:active{background:rgba(197,61,67,0.08)}
+.samples{margin:24px 0}
+.samples-title{font-size:12px;color:#8a7e6f;margin-bottom:8px;font-family:'Noto Sans JP',sans-serif}
+.sample-chips{display:flex;flex-wrap:wrap;gap:6px}
+.sample-chip{padding:8px 14px;border-radius:20px;background:rgba(197,61,67,0.06);border:1px solid rgba(197,61,67,0.12);font-size:11px;color:#6b5e50;cursor:pointer;font-family:'Noto Sans JP',monospace;min-height:36px;display:flex;align-items:center;transition:all 0.2s}
+.sample-chip:active{background:rgba(197,61,67,0.15)}
+.history{margin-top:24px}
+.history-title{font-size:14px;color:#8a7e6f;border-bottom:1px solid rgba(197,61,67,0.15);padding-bottom:6px;margin-bottom:12px}
+.history-item{padding:12px 0;border-bottom:1px solid rgba(0,0,0,0.04)}
+.history-item .h-haiku{font-size:16px;line-height:1.8;letter-spacing:2px}
+.history-item .h-original{font-size:10px;color:#bfb5a3;margin-top:4px;font-family:'Noto Sans JP',monospace}
+.empty-state{text-align:center;padding:40px;color:#bfb5a3;font-size:14px}
+#overlay{position:fixed;inset:0;background:rgba(245,240,232,0.95);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:200;padding:20px}
+#overlay h2{font-size:clamp(24px,6vw,36px);font-weight:900;color:#2d2d2d;margin-bottom:8px;letter-spacing:4px}
+#overlay p{color:#8a7e6f;font-size:13px;max-width:320px;text-align:center;line-height:1.8;margin-bottom:6px}
+#overlay .start-btn{margin-top:20px;padding:14px 40px;border-radius:10px;border:2px solid #c53d43;background:transparent;color:#c53d43;font-size:16px;font-weight:700;cursor:pointer;min-height:48px;font-family:'Zen Old Mincho',serif;transition:all 0.2s}
+#overlay .start-btn:active{background:#c53d43;color:#fff}
+</style>
+</head>
+<body>
+<div class="bg-texture"></div>
+<div id="overlay">
+  <h2>コミット俳句</h2>
+  <p>Gitのコミットメッセージを<br>和風の俳句に変換します</p>
+  <p style="font-size:11px;color:#bfb5a3">ルールベースの変換 - AIは使いません</p>
+  <button class="start-btn" id="start-btn">筆をとる</button>
+</div>
+<div class="container">
+  <header>
+    <h1>コミット俳句</h1>
+    <p class="subtitle">commit messages to haiku</p>
+  </header>
+  <div class="season-badge" id="season-badge"></div>
+
+  <div class="input-area">
+    <div class="scroll-border">
+      <div class="input-inner">
+        <input type="text" id="commit-input" placeholder="fix: remove unused API calls" autocomplete="off">
+        <button class="submit-btn" id="submit-btn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="haiku-card" id="haiku-card">
+    <div class="illust" id="illust"></div>
+    <div class="haiku-text" id="haiku-text"></div>
+    <div class="haiku-original" id="haiku-original"></div>
+    <div class="actions" id="actions" style="display:none">
+      <button class="action-btn" id="copy-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+        写す
+      </button>
+      <button class="action-btn" id="another-btn">もう一句</button>
+    </div>
+  </div>
+
+  <div class="samples">
+    <div class="samples-title">サンプルで試す</div>
+    <div class="sample-chips" id="sample-chips"></div>
+  </div>
+
+  <div class="history" id="history-section" style="display:none">
+    <div class="history-title">巻物 - 詠みの記録</div>
+    <div id="history-list"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+const DICT={
+  'fix':'修す','add':'咲かす','update':'磨く','remove':'散らす','refactor':'研ぐ',
+  'bug':'虫','feature':'花','merge':'合流','deploy':'旅立つ','test':'試す',
+  'config':'調べ','style':'装い','docs':'巻物','readme':'序文','api':'橋',
+  'database':'蔵','db':'蔵','server':'山','client':'里','error':'嵐','success':'晴れ',
+  'delete':'消す','create':'生む','change':'変わる','move':'運ぶ','rename':'名を変え',
+  'import':'迎え','export':'送る','init':'始まり','build':'築く','clean':'清める',
+  'push':'押す','pull':'引く','fetch':'取る','install':'植える','upgrade':'高める',
+  'login':'入る','logout':'去る','auth':'鍵','token':'印','user':'人',
+  'image':'絵','file':'紙','data':'宝','cache':'倉','log':'記',
+  'button':'石','page':'頁','screen':'景','modal':'窓','header':'額',
+  'footer':'礎','nav':'道','link':'糸','form':'型','input':'筆',
+  'output':'墨','table':'台','list':'列','search':'探す','filter':'篩',
+  'sort':'並べる','count':'数え','check':'確かめ','validate':'正す','parse':'読み解く',
+  'render':'描く','display':'映す','show':'見せる','hide':'隠す','toggle':'切り替え',
+  'enable':'灯す','disable':'消す','start':'始める','stop':'止める','reset':'戻す',
+  'load':'積む','save':'収める','send':'送る','receive':'受ける','connect':'繋ぐ',
+  'disconnect':'離す','open':'開く','close':'閉じる','lock':'封じる','unlock':'解く',
+  'encrypt':'秘める','decrypt':'明かす','compress':'縮める','extract':'取り出す',
+  'component':'器','function':'技','method':'術','class':'流','module':'巻',
+  'package':'箱','library':'書庫','framework':'骨組み','template':'雛形',
+  'variable':'器','constant':'石','string':'糸','number':'数','boolean':'真偽',
+  'array':'並び','object':'物','null':'空','undefined':'虚','type':'型',
+  'interface':'約束','enum':'種','async':'待つ','promise':'誓い','callback':'呼び戻す',
+  'event':'事','handler':'受け手','listener':'聞き手','observer':'見守る',
+  'request':'願い','response':'応え','middleware':'仲立ち','route':'道筋',
+  'controller':'操る','service':'仕える','repository':'蔵','model':'模る',
+  'view':'景色','layout':'配り','margin':'間','padding':'綿','border':'縁',
+  'color':'色','font':'書体','size':'寸法','width':'幅','height':'丈',
+  'css':'装い','html':'骨','javascript':'技','typescript':'型の技','react':'響き',
+  'node':'節','next':'次','vue':'眺め','angular':'角','svelte':'軽やか',
+  'python':'蛇','java':'島','rust':'錆','go':'行く','ruby':'紅玉',
+  'docker':'船','kubernetes':'舵','aws':'雲','cloud':'雲','devops':'道',
+  'ci':'流れ','cd':'送り','pipeline':'水路','workflow':'流れ','action':'動き',
+  'github':'集い','git':'版','branch':'枝','commit':'刻む','tag':'札',
+  'release':'放つ','version':'版','major':'大','minor':'小','patch':'継ぎ',
+  'hotfix':'急ぎ修す','feature':'花','chore':'務め','perf':'速める','wip':'途中',
+  'draft':'下書き','review':'見直す','approve':'認める','reject':'退ける',
+  'todo':'やるべき','hack':'荒技','workaround':'回り道','deprecated':'古びた',
+  'legacy':'遺産','migration':'引越し','seed':'種まき','rollback':'巻き戻す',
+  'revert':'戻す','cherry-pick':'選ぶ','squash':'まとめる','rebase':'組み直す',
+  'stash':'仕舞う','pop':'取り出す','diff':'違い','blame':'由来','bisect':'探る',
+  'hook':'鉤','plugin':'差し物','extension':'伸ばす','addon':'添え物',
+  'test':'試す','spec':'仕様','unit':'一つ','integration':'合わせ','e2e':'端から端',
+  'mock':'模す','stub':'仮','fixture':'据え物','snapshot':'写し','coverage':'広がり',
+  'debug':'虫取り','breakpoint':'止まり','trace':'追う','profile':'測る','benchmark':'比べる',
+  'optimize':'磨く','performance':'速さ','memory':'記憶','cpu':'頭脳','disk':'盤',
+  'network':'網','socket':'口','port':'港','protocol':'約束','http':'文',
+  'https':'秘文','websocket':'繋がり','graphql':'問い','rest':'静か','grpc':'呼び',
+  'json':'形','xml':'印','yaml':'設え','toml':'調べ','env':'場',
+  'secret':'秘密','key':'鍵','password':'合言葉','credential':'証','permission':'許し',
+  'admin':'長','role':'役','policy':'掟','rule':'法','access':'通り',
+  'read':'読む','write':'書く','execute':'行う','deny':'断る','allow':'許す',
+  'unused':'使わぬ','dead':'死んだ','redundant':'余分な','duplicate':'重なる','obsolete':'古い',
+  'broken':'壊れた','failing':'落ちる','flaky':'不安定','slow':'遅い','fast':'速い',
+  'small':'小さい','large':'大きい','new':'新しい','old':'古い','temporary':'仮の',
+  'initial':'最初の','final':'最後の','main':'幹','master':'主','develop':'育てる',
+  'staging':'仮の場','production':'本番','local':'手元','remote':'遠く','origin':'源',
+  'upstream':'上流','downstream':'下流','fork':'分かれ','clone':'写す','pull':'引く',
+  'calls':'声','code':'文','codes':'文','calling':'呼ぶ','called':'呼ばれし'
+};
+
+const SEASONS={
+  spring:{name:'春',kigo:['花散る','若葉','春風','桜','霞','うぐいす','蝶','菜の花'],icon:'<svg viewBox="0 0 80 80" fill="none" stroke="#c53d43" stroke-width="1.5"><circle cx="40" cy="35" r="8"/><path d="M40 27c-3-8-12-10-14-3s5 10 14 10c9 0 17-3 14-10s-11-5-14 3z"/><path d="M40 43v20M32 55l8-8 8 8"/></svg>'},
+  summer:{name:'夏',kigo:['蝉の声','入道雲','夕立','風鈴','向日葵','涼風','打ち水','蛍'],icon:'<svg viewBox="0 0 80 80" fill="none" stroke="#c53d43" stroke-width="1.5"><circle cx="40" cy="36" r="12"/><path d="M40 18v-6M40 54v6M24 36h-6M56 36h6M28 24l-4-4M52 24l4-4M28 48l-4 4M52 48l4 4"/></svg>'},
+  autumn:{name:'秋',kigo:['紅葉','秋風','月見','虫の声','露','稲穂','鶴','星空'],icon:'<svg viewBox="0 0 80 80" fill="none" stroke="#c53d43" stroke-width="1.5"><path d="M25 55c0-15 15-30 30-35-5 15-15 25-30 35z"/><path d="M30 50c-5-10 0-25 15-30"/><path d="M28 58l4-8 4 6"/></svg>'},
+  winter:{name:'冬',kigo:['雪','枯野','木枯らし','霜','冬空','氷柱','鍋','炬燵'],icon:'<svg viewBox="0 0 80 80" fill="none" stroke="#c53d43" stroke-width="1.5"><path d="M40 15v50M25 25l15 15 15-15M25 55l15-15 15 15M15 40h50"/><circle cx="40" cy="40" r="4"/></svg>'}
+};
+
+const ILLUSTRATIONS=[
+  '<svg viewBox="0 0 80 80" fill="none" stroke="#2d2d2d" stroke-width="1.2" opacity="0.3"><path d="M15 65c10-5 15-25 25-35s20-10 25-5-5 15-15 25-25 20-35 15z"/><path d="M45 30c2-3 5-5 8-4"/></svg>',
+  '<svg viewBox="0 0 80 80" fill="none" stroke="#2d2d2d" stroke-width="1.2" opacity="0.3"><path d="M20 60l20-40 20 40"/><path d="M30 50l10-20 10 20"/><circle cx="55" cy="25" r="8"/></svg>',
+  '<svg viewBox="0 0 80 80" fill="none" stroke="#2d2d2d" stroke-width="1.2" opacity="0.3"><path d="M10 50c15 0 20-15 30-15s15 15 30 15"/><path d="M10 55c15 0 20-10 30-10s15 10 30 10"/></svg>',
+  '<svg viewBox="0 0 80 80" fill="none" stroke="#2d2d2d" stroke-width="1.2" opacity="0.3"><circle cx="40" cy="30" r="15"/><path d="M25 30c3-5 12-8 15-8s12 3 15 8"/><path d="M40 45v20"/></svg>',
+  '<svg viewBox="0 0 80 80" fill="none" stroke="#2d2d2d" stroke-width="1.2" opacity="0.3"><path d="M20 55c5-10 8-20 20-25"/><path d="M40 30c-2-5 0-10 5-12s10 2 10 8-5 10-10 10"/><path d="M45 36c3 5 15 10 15 24"/></svg>'
+];
+
+const HAIKU_TEMPLATES=[
+  ['{v}手に','{n}の声{adj}','{kigo}かな'],
+  ['{kigo}の朝','{n}を{v}て','{adj}日暮かな'],
+  ['{v}ては','{n}の{adj}なり','{kigo}の道'],
+  ['{adj}空に','{n}を{v}','{kigo}の頃'],
+  ['{kigo}来て','{v}るは{n}の','{adj}姿'],
+  ['{n}静か','{v}音だけが','{kigo}の夜'],
+  ['{v}る手に','{kigo}の風吹き','{n}光る'],
+  ['ひとひらの','{n}を{v}て','{kigo}かな'],
+];
+
+const ADJECTIVES=['静かなる','儚き','美しき','遠き','深き','清き','高き','柔らかき','穏やかなる','鮮やかなる'];
+
+let history=[];
+let lastInput='';
+let lastVariant=0;
+
+function getSeason(){
+  const m=new Date().getMonth();
+  if(m>=2&&m<=4)return SEASONS.spring;
+  if(m>=5&&m<=7)return SEASONS.summer;
+  if(m>=8&&m<=10)return SEASONS.autumn;
+  return SEASONS.winter;
+}
+
+function translateWord(w){
+  const lower=w.toLowerCase().replace(/[^a-z0-9]/g,'');
+  return DICT[lower]||null;
+}
+
+function generateHaiku(commitMsg){
+  const words=commitMsg.toLowerCase().replace(/[^a-z0-9\s]/g,' ').split(/\s+/).filter(Boolean);
+  const translated=[];
+  const verbs=[];const nouns=[];
+  words.forEach(w=>{
+    const t=translateWord(w);
+    if(t){
+      translated.push(t);
+      if(t.endsWith('す')||t.endsWith('く')||t.endsWith('る')||t.endsWith('む')||t.endsWith('ぶ')||t.endsWith('つ')||t.endsWith('ぐ'))verbs.push(t);
+      else nouns.push(t);
+    }
+  });
+
+  const season=getSeason();
+  const kigo=season.kigo[Math.floor(Math.random()*season.kigo.length)];
+  const verb=verbs.length>0?verbs[Math.floor(Math.random()*verbs.length)]:'修す';
+  const noun=nouns.length>0?nouns[Math.floor(Math.random()*nouns.length)]:'文';
+  const adj=ADJECTIVES[Math.floor(Math.random()*ADJECTIVES.length)];
+
+  const templateIdx=(lastInput===commitMsg)?(lastVariant+1)%HAIKU_TEMPLATES.length:Math.floor(Math.random()*HAIKU_TEMPLATES.length);
+  lastVariant=templateIdx;
+  lastInput=commitMsg;
+
+  const template=HAIKU_TEMPLATES[templateIdx];
+  const haiku=template.map(line=>
+    line.replace('{v}',verb).replace('{n}',noun).replace('{adj}',adj).replace('{kigo}',kigo)
+  );
+
+  return haiku.join('\n');
+}
+
+function displayHaiku(haiku,original){
+  const textEl=document.getElementById('haiku-text');
+  const origEl=document.getElementById('haiku-original');
+  const illustEl=document.getElementById('illust');
+  const actionsEl=document.getElementById('actions');
+
+  illustEl.innerHTML=ILLUSTRATIONS[Math.floor(Math.random()*ILLUSTRATIONS.length)];
+  origEl.textContent='// '+original;
+  actionsEl.style.display='flex';
+
+  textEl.innerHTML='';
+  const chars=haiku.split('');
+  chars.forEach((ch,i)=>{
+    if(ch==='\n'){
+      textEl.appendChild(document.createElement('br'));
+    }else{
+      const span=document.createElement('span');
+      span.className='char';
+      span.textContent=ch;
+      span.style.animationDelay=i*50+'ms';
+      textEl.appendChild(span);
+    }
+  });
+
+  history.unshift({haiku,original});
+  if(history.length>20)history.pop();
+  renderHistory();
+}
+
+function renderHistory(){
+  const section=document.getElementById('history-section');
+  const list=document.getElementById('history-list');
+  if(history.length===0){section.style.display='none';return;}
+  section.style.display='block';
+  list.innerHTML=history.map(h=>`
+    <div class="history-item">
+      <div class="h-haiku">${h.haiku.replace(/\n/g,' ')}</div>
+      <div class="h-original">// ${h.original}</div>
+    </div>
+  `).join('');
+}
+
+function submit(){
+  const input=document.getElementById('commit-input');
+  const msg=input.value.trim();
+  if(!msg)return;
+  const haiku=generateHaiku(msg);
+  displayHaiku(haiku,msg);
+}
+
+// Season badge
+const season=getSeason();
+document.getElementById('season-badge').innerHTML=season.icon+`<span>${season.name}</span>`;
+
+// Samples
+const SAMPLES=['fix: remove unused API calls','feat: add user authentication','refactor: clean database queries','docs: update README','chore: upgrade dependencies'];
+const chipsEl=document.getElementById('sample-chips');
+SAMPLES.forEach(s=>{
+  const chip=document.createElement('div');
+  chip.className='sample-chip';
+  chip.textContent=s;
+  chip.addEventListener('click',()=>{
+    document.getElementById('commit-input').value=s;
+    submit();
+  });
+  chipsEl.appendChild(chip);
+});
+
+document.getElementById('submit-btn').addEventListener('click',submit);
+document.getElementById('commit-input').addEventListener('keydown',e=>{if(e.key==='Enter')submit()});
+document.getElementById('another-btn').addEventListener('click',submit);
+document.getElementById('copy-btn').addEventListener('click',()=>{
+  const text=document.getElementById('haiku-text').textContent;
+  navigator.clipboard.writeText(text).then(()=>{
+    document.getElementById('copy-btn').innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg> 写しました';
+    setTimeout(()=>{
+      document.getElementById('copy-btn').innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> 写す';
+    },2000);
+  });
+});
+
+document.getElementById('start-btn').addEventListener('click',()=>{
+  document.getElementById('overlay').style.display='none';
+  document.getElementById('commit-input').focus();
+});
+
+// Initial empty state
+document.getElementById('haiku-text').innerHTML='<span style="color:#bfb5a3;font-size:14px">コミットメッセージを入力して<br>俳句に変換しましょう</span>';
+})();
+</script>
+</body>
+</html>

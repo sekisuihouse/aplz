@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Sound Scope - 音の波を見る</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:#111;color:#e0e0e0;font-family:'Space Mono',monospace;overflow:hidden;height:100vh;width:100vw}
+.app{display:flex;flex-direction:column;height:100vh}
+header{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;background:rgba(0,0,0,0.5);border-bottom:1px solid rgba(255,255,255,0.06);z-index:10}
+.logo{font-size:clamp(12px,3vw,16px);font-weight:700;background:linear-gradient(90deg,#00fff0,#ff00ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.tabs{display:flex;gap:2px}
+.tab{padding:8px 14px;border-radius:6px;background:transparent;border:1px solid transparent;color:#666;font-family:'Space Mono',monospace;font-size:11px;cursor:pointer;min-height:44px;min-width:44px;display:flex;align-items:center;justify-content:center;transition:all 0.2s}
+.tab.active{background:rgba(0,255,240,0.08);border-color:rgba(0,255,240,0.3);color:#00fff0}
+.tab:active{background:rgba(0,255,240,0.15)}
+.canvas-area{flex:1;position:relative;min-height:0}
+#viz-canvas{width:100%;height:100%;display:block}
+.controls{display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:10px 16px;background:rgba(0,0,0,0.6);border-top:1px solid rgba(255,255,255,0.06)}
+.ctrl-group{display:flex;align-items:center;gap:6px}
+.ctrl-label{font-size:10px;color:#666;white-space:nowrap}
+.ctrl-group input[type=range]{width:80px;accent-color:#00fff0;height:20px}
+.ctrl-group select{background:#1a1a1a;border:1px solid #333;color:#aaa;padding:4px 8px;border-radius:4px;font-family:'Space Mono',monospace;font-size:11px;min-height:36px}
+.mic-btn{padding:8px 16px;border-radius:8px;border:2px solid #00fff0;background:transparent;color:#00fff0;font-family:'Space Mono',monospace;font-size:12px;cursor:pointer;min-height:44px;min-width:44px;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.2s}
+.mic-btn.active{background:#00fff0;color:#111}
+.mic-btn:active{opacity:0.7}
+.meter{display:flex;align-items:center;gap:6px}
+.meter-bar{width:60px;height:8px;background:#1a1a1a;border-radius:4px;overflow:hidden}
+.meter-fill{height:100%;background:linear-gradient(90deg,#00fff0,#ff00ff);border-radius:4px;transition:width 0.1s}
+.meter-val{font-size:10px;color:#666;min-width:40px}
+.test-btn{padding:6px 12px;border-radius:6px;border:1px solid #333;background:transparent;color:#888;font-family:'Space Mono',monospace;font-size:10px;cursor:pointer;min-height:36px;transition:all 0.2s}
+.test-btn.active{border-color:#ffaa00;color:#ffaa00}
+#overlay{position:fixed;inset:0;background:rgba(17,17,17,0.95);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:200;padding:20px}
+#overlay h2{font-size:clamp(18px,5vw,28px);font-weight:700;margin-bottom:10px;background:linear-gradient(90deg,#00fff0,#ff00ff,#ffaa00);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+#overlay p{color:#666;font-size:13px;max-width:340px;text-align:center;line-height:1.7;margin-bottom:6px;font-family:'Noto Sans JP',sans-serif}
+#overlay .start-btn{margin-top:20px;padding:14px 40px;border-radius:10px;border:2px solid #00fff0;background:transparent;color:#00fff0;font-size:16px;font-weight:700;cursor:pointer;min-height:48px;font-family:'Space Mono',monospace;transition:all 0.2s}
+#overlay .start-btn:active{background:#00fff0;color:#111}
+</style>
+</head>
+<body>
+<div id="overlay">
+  <h2>Sound Scope</h2>
+  <p>マイクの音をリアルタイムで可視化<br>4つのモードで音を「見る」体験</p>
+  <p style="font-size:11px;color:#444">マイクが使えない場合はテスト音源も利用可能</p>
+  <button class="start-btn" id="start-btn">はじめる</button>
+</div>
+<div class="app">
+  <header>
+    <div class="logo">Sound Scope</div>
+    <div class="tabs">
+      <button class="tab active" data-mode="wave">波形</button>
+      <button class="tab" data-mode="spectrum">帯域</button>
+      <button class="tab" data-mode="circle">円形</button>
+      <button class="tab" data-mode="particles">粒子</button>
+    </div>
+  </header>
+  <div class="canvas-area"><canvas id="viz-canvas"></canvas></div>
+  <div class="controls">
+    <button class="mic-btn" id="mic-btn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0014 0"/><path d="M12 18v4M8 22h8"/></svg>
+      MIC
+    </button>
+    <button class="test-btn" id="test-btn">TEST</button>
+    <div class="ctrl-group">
+      <span class="ctrl-label">感度</span>
+      <input type="range" id="sensitivity" min="0.5" max="3" step="0.1" value="1.5">
+    </div>
+    <div class="ctrl-group">
+      <span class="ctrl-label">FFT</span>
+      <select id="fft-size">
+        <option value="256">256</option>
+        <option value="512">512</option>
+        <option value="1024" selected>1024</option>
+        <option value="2048">2048</option>
+      </select>
+    </div>
+    <div class="meter">
+      <span class="ctrl-label">dB</span>
+      <div class="meter-bar"><div class="meter-fill" id="meter-fill" style="width:0%"></div></div>
+      <span class="meter-val" id="meter-val">-inf</span>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+const canvas=document.getElementById('viz-canvas');
+const ctx=canvas.getContext('2d');
+let mode='wave';
+let audioCtx=null,analyser=null,source=null;
+let micActive=false,testActive=false,testOsc=null;
+let sensitivity=1.5;
+let particles=[];
+let animId=null;
+let rotation=0;
+
+function resize(){
+  canvas.width=canvas.parentElement.clientWidth*devicePixelRatio;
+  canvas.height=canvas.parentElement.clientHeight*devicePixelRatio;
+  ctx.scale(devicePixelRatio,devicePixelRatio);
+}
+resize();
+window.addEventListener('resize',resize);
+
+function initAudio(){
+  if(audioCtx)return;
+  audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  analyser=audioCtx.createAnalyser();
+  analyser.fftSize=parseInt(document.getElementById('fft-size').value);
+  analyser.smoothingTimeConstant=0.8;
+}
+
+async function startMic(){
+  initAudio();
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    if(source)source.disconnect();
+    source=audioCtx.createMediaStreamSource(stream);
+    source.connect(analyser);
+    micActive=true;
+    document.getElementById('mic-btn').classList.add('active');
+    if(testActive)stopTest();
+    if(!animId)draw();
+  }catch(e){
+    alert('マイクにアクセスできません');
+  }
+}
+
+function stopMic(){
+  if(source){source.disconnect();source=null;}
+  micActive=false;
+  document.getElementById('mic-btn').classList.remove('active');
+}
+
+function startTest(){
+  initAudio();
+  if(source)source.disconnect();
+  testOsc=audioCtx.createOscillator();
+  const gain=audioCtx.createGain();
+  gain.gain.value=0.15;
+  testOsc.type='sawtooth';
+  testOsc.frequency.value=220;
+  // LFO for interesting sound
+  const lfo=audioCtx.createOscillator();
+  lfo.frequency.value=0.5;
+  const lfoGain=audioCtx.createGain();
+  lfoGain.gain.value=100;
+  lfo.connect(lfoGain);
+  lfoGain.connect(testOsc.frequency);
+  lfo.start();
+  testOsc.connect(gain);
+  gain.connect(analyser);
+  // Also connect to destination for audio
+  gain.connect(audioCtx.destination);
+  testOsc.start();
+  testActive=true;
+  document.getElementById('test-btn').classList.add('active');
+  if(micActive)stopMic();
+  if(!animId)draw();
+}
+
+function stopTest(){
+  if(testOsc){testOsc.stop();testOsc=null;}
+  testActive=false;
+  document.getElementById('test-btn').classList.remove('active');
+}
+
+function getFreqData(){
+  if(!analyser)return new Uint8Array(64);
+  const data=new Uint8Array(analyser.frequencyBinCount);
+  analyser.getByteFrequencyData(data);
+  return data;
+}
+
+function getTimeData(){
+  if(!analyser)return new Uint8Array(256).fill(128);
+  const data=new Uint8Array(analyser.fftSize);
+  analyser.getByteTimeDomainData(data);
+  return data;
+}
+
+function getRMS(timeData){
+  let sum=0;
+  for(let i=0;i<timeData.length;i++){const v=(timeData[i]-128)/128;sum+=v*v;}
+  return Math.sqrt(sum/timeData.length);
+}
+
+function hsl(h,s,l,a){return`hsla(${h},${s}%,${l}%,${a||1})`}
+
+function drawWave(){
+  const w=canvas.width/devicePixelRatio,h=canvas.height/devicePixelRatio;
+  const data=getTimeData();
+  ctx.clearRect(0,0,w,h);
+  // Background gradient
+  const bgGrd=ctx.createLinearGradient(0,0,0,h);
+  bgGrd.addColorStop(0,'#111');bgGrd.addColorStop(1,'#0a0a0a');
+  ctx.fillStyle=bgGrd;ctx.fillRect(0,0,w,h);
+  // Center line
+  ctx.strokeStyle='rgba(255,255,255,0.04)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(0,h/2);ctx.lineTo(w,h/2);ctx.stroke();
+
+  const rms=getRMS(data)*sensitivity;
+  const lw=2+rms*6;
+
+  // Glow
+  ctx.save();
+  ctx.shadowColor='#00fff0';ctx.shadowBlur=20+rms*30;
+  ctx.lineWidth=lw;
+  const grd=ctx.createLinearGradient(0,0,w,0);
+  grd.addColorStop(0,'#00fff0');grd.addColorStop(0.5,'#ff00ff');grd.addColorStop(1,'#ffaa00');
+  ctx.strokeStyle=grd;
+  ctx.beginPath();
+  for(let i=0;i<data.length;i++){
+    const x=i/data.length*w;
+    const v=(data[i]-128)/128*sensitivity;
+    const y=h/2+v*h*0.4;
+    if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+  }
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawSpectrum(){
+  const w=canvas.width/devicePixelRatio,h=canvas.height/devicePixelRatio;
+  const data=getFreqData();
+  ctx.clearRect(0,0,w,h);
+  ctx.fillStyle='#111';ctx.fillRect(0,0,w,h);
+
+  const bars=64;
+  const step=Math.floor(data.length/bars);
+  const barW=w/bars-2;
+
+  for(let i=0;i<bars;i++){
+    let sum=0;
+    for(let j=0;j<step;j++)sum+=data[i*step+j];
+    const avg=sum/step;
+    const val=avg/255*sensitivity;
+    const barH=val*h*0.85;
+    const x=i*(w/bars)+1;
+    const y=h-barH;
+    const hue=170+i/bars*120;
+    // Glow
+    ctx.save();
+    ctx.shadowColor=hsl(hue,100,60);
+    ctx.shadowBlur=8;
+    const grd=ctx.createLinearGradient(0,y,0,h);
+    grd.addColorStop(0,hsl(hue,100,65,0.9));
+    grd.addColorStop(1,hsl(hue,100,40,0.3));
+    ctx.fillStyle=grd;
+    ctx.fillRect(x,y,barW,barH);
+    // Top dot
+    ctx.beginPath();
+    ctx.arc(x+barW/2,y,3,0,Math.PI*2);
+    ctx.fillStyle=hsl(hue,100,80);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+function drawCircle(){
+  const w=canvas.width/devicePixelRatio,h=canvas.height/devicePixelRatio;
+  const data=getFreqData();
+  const timeData=getTimeData();
+  const rms=getRMS(timeData)*sensitivity;
+  ctx.clearRect(0,0,w,h);
+  ctx.fillStyle='#111';ctx.fillRect(0,0,w,h);
+
+  const cx=w/2,cy=h/2;
+  const baseR=Math.min(w,h)*0.25;
+  const r=baseR+rms*40;
+  rotation+=0.005+rms*0.02;
+
+  const bars=64;
+  const step=Math.floor(data.length/bars);
+
+  for(let i=0;i<bars;i++){
+    let sum=0;
+    for(let j=0;j<step;j++)sum+=data[i*step+j];
+    const avg=sum/step;
+    const val=avg/255*sensitivity;
+    const angle=(i/bars)*Math.PI*2+rotation;
+    const barLen=val*baseR*0.8;
+    const x1=cx+Math.cos(angle)*r;
+    const y1=cy+Math.sin(angle)*r;
+    const x2=cx+Math.cos(angle)*(r+barLen);
+    const y2=cy+Math.sin(angle)*(r+barLen);
+    const hue=170+i/bars*120;
+
+    ctx.save();
+    ctx.shadowColor=hsl(hue,100,60);
+    ctx.shadowBlur=6;
+    ctx.strokeStyle=hsl(hue,100,60,0.8);
+    ctx.lineWidth=3;
+    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+    ctx.restore();
+  }
+  // Inner circle glow
+  ctx.save();
+  const grd=ctx.createRadialGradient(cx,cy,0,cx,cy,r);
+  grd.addColorStop(0,`rgba(0,255,240,${0.05+rms*0.1})`);
+  grd.addColorStop(1,'rgba(0,255,240,0)');
+  ctx.fillStyle=grd;
+  ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+
+  ctx.strokeStyle=`rgba(0,255,240,${0.2+rms*0.3})`;
+  ctx.lineWidth=1;
+  ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.stroke();
+}
+
+function drawParticles(){
+  const w=canvas.width/devicePixelRatio,h=canvas.height/devicePixelRatio;
+  const data=getFreqData();
+  const timeData=getTimeData();
+  const rms=getRMS(timeData)*sensitivity;
+
+  ctx.fillStyle='rgba(17,17,17,0.15)';ctx.fillRect(0,0,w,h);
+
+  // Spawn particles based on frequency
+  if(rms>0.01){
+    const bars=8;
+    const step=Math.floor(data.length/bars);
+    for(let i=0;i<bars;i++){
+      let sum=0;for(let j=0;j<step;j++)sum+=data[i*step+j];
+      const val=sum/step/255*sensitivity;
+      if(val>0.1&&Math.random()<val*0.3){
+        const hue=170+i/bars*120;
+        const speed=1+i/bars*4;
+        const size=8-i/bars*6;
+        particles.push({
+          x:w/2+(Math.random()-0.5)*w*0.3,
+          y:h/2+(Math.random()-0.5)*h*0.3,
+          vx:(Math.random()-0.5)*speed*2,
+          vy:(Math.random()-0.5)*speed*2,
+          size:size+Math.random()*3,
+          hue,life:120+Math.random()*60,
+          maxLife:180
+        });
+      }
+    }
+  }
+
+  // Update & draw
+  for(let i=particles.length-1;i>=0;i--){
+    const p=particles[i];
+    p.x+=p.vx;p.y+=p.vy;
+    p.vx*=0.99;p.vy*=0.99;
+    p.life--;
+    if(p.life<=0||p.x<-50||p.x>w+50||p.y<-50||p.y>h+50){
+      particles.splice(i,1);continue;
+    }
+    const alpha=p.life/p.maxLife;
+    ctx.save();
+    ctx.shadowColor=hsl(p.hue,100,60);
+    ctx.shadowBlur=10;
+    ctx.fillStyle=hsl(p.hue,100,60,alpha*0.8);
+    ctx.beginPath();ctx.arc(p.x,p.y,p.size*alpha,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+  }
+
+  // Connect nearby particles
+  ctx.lineWidth=0.5;
+  for(let i=0;i<particles.length;i++){
+    for(let j=i+1;j<particles.length;j++){
+      const dx=particles[i].x-particles[j].x;
+      const dy=particles[i].y-particles[j].y;
+      const dist=Math.sqrt(dx*dx+dy*dy);
+      if(dist<80){
+        const alpha=(1-dist/80)*0.15;
+        ctx.strokeStyle=`rgba(0,255,240,${alpha})`;
+        ctx.beginPath();
+        ctx.moveTo(particles[i].x,particles[i].y);
+        ctx.lineTo(particles[j].x,particles[j].y);
+        ctx.stroke();
+      }
+    }
+  }
+
+  if(particles.length>300)particles.splice(0,particles.length-300);
+}
+
+function updateMeter(){
+  const timeData=getTimeData();
+  const rms=getRMS(timeData);
+  const db=rms>0?20*Math.log10(rms):-Infinity;
+  const pct=Math.max(0,Math.min(100,(db+60)/60*100));
+  document.getElementById('meter-fill').style.width=pct+'%';
+  document.getElementById('meter-val').textContent=isFinite(db)?db.toFixed(0)+'dB':'-inf';
+}
+
+function draw(){
+  const w=canvas.width/devicePixelRatio;
+  const h=canvas.height/devicePixelRatio;
+  ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+
+  if(mode==='wave')drawWave();
+  else if(mode==='spectrum')drawSpectrum();
+  else if(mode==='circle')drawCircle();
+  else if(mode==='particles')drawParticles();
+
+  updateMeter();
+  animId=requestAnimationFrame(draw);
+}
+
+// Event listeners
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    mode=tab.dataset.mode;
+    if(mode==='particles')particles=[];
+  });
+});
+
+document.getElementById('mic-btn').addEventListener('click',()=>{
+  if(micActive)stopMic();else startMic();
+});
+
+document.getElementById('test-btn').addEventListener('click',()=>{
+  if(testActive)stopTest();else startTest();
+});
+
+document.getElementById('sensitivity').addEventListener('input',e=>{
+  sensitivity=parseFloat(e.target.value);
+});
+
+document.getElementById('fft-size').addEventListener('change',e=>{
+  if(analyser)analyser.fftSize=parseInt(e.target.value);
+});
+
+document.getElementById('start-btn').addEventListener('click',()=>{
+  document.getElementById('overlay').style.display='none';
+});
+
+// Initial idle animation
+draw();
+})();
+</script>
+</body>
+</html>

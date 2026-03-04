@@ -2,6 +2,7 @@
 
 import { Suspense, useState, useCallback, useRef, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { Upload } from "lucide-react";
 
 interface PublishResult {
@@ -174,6 +175,11 @@ function PublishForm() {
           >
             もう一つ公開する
           </button>
+          <div className="text-center">
+            <Link href="/" className="text-[#606060] underline text-sm mt-2 inline-block">
+              ホームに戻る
+            </Link>
+          </div>
         </div>
       </div>
     );

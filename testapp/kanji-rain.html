@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>漢字の雨 - Kanji Rain</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'Share Tech Mono',monospace;color:#00ff41;touch-action:none;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+canvas{display:block;position:fixed;top:0;left:0;width:100%;height:100%;z-index:1}
+
+/* Counter */
+#counter{position:fixed;top:12px;right:12px;z-index:10;font-size:14px;color:#00ff41;background:rgba(0,0,0,0.7);border:1px solid #00ff4133;border-radius:8px;padding:8px 14px;font-family:'Share Tech Mono',monospace;pointer-events:none;text-shadow:0 0 8px #00ff41}
+#counter .count-num{color:#ffd700;font-weight:bold;text-shadow:0 0 8px #ffd700}
+
+/* Kanji Card */
+#kanji-card{position:fixed;top:50%;right:-400px;transform:translateY(-50%);z-index:100;width:min(320px,85vw);background:rgba(0,0,0,0.92);border:2px solid #ffd700;border-radius:16px;padding:28px 24px;transition:right 0.4s cubic-bezier(0.22,1,0.36,1),opacity 0.3s;opacity:0;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 0 40px rgba(255,215,0,0.15),inset 0 0 30px rgba(255,215,0,0.03)}
+#kanji-card.visible{right:16px;opacity:1}
+#kanji-card .card-kanji{font-family:'Noto Serif JP',serif;font-size:96px;font-weight:900;text-align:center;color:#ffd700;text-shadow:0 0 30px rgba(255,215,0,0.5);line-height:1.2;margin-bottom:8px}
+#kanji-card .card-level{display:inline-block;padding:3px 12px;border-radius:20px;font-size:12px;font-weight:bold;margin-bottom:16px;font-family:'Share Tech Mono',monospace}
+#kanji-card .card-level.N5{background:#00ff4133;color:#00ff41;border:1px solid #00ff41}
+#kanji-card .card-level.N4{background:#00bfff33;color:#00bfff;border:1px solid #00bfff}
+#kanji-card .card-level.N3{background:#ff8c0033;color:#ff8c00;border:1px solid #ff8c00}
+#kanji-card .card-level.N2{background:#ff00ff33;color:#ff00ff;border:1px solid #ff00ff}
+#kanji-card .card-level.N1{background:#ff000033;color:#ff4444;border:1px solid #ff4444}
+#kanji-card .card-row{display:flex;align-items:baseline;margin-bottom:10px;font-size:15px}
+#kanji-card .card-label{color:#888;min-width:70px;font-family:'Share Tech Mono',monospace;font-size:12px}
+#kanji-card .card-value{color:#e0e0e0;font-family:'Noto Serif JP',serif;font-size:18px}
+#kanji-card .card-meaning{color:#ffd700;font-family:'Noto Serif JP',serif;font-size:22px;font-weight:700}
+#kanji-card .card-close{position:absolute;top:10px;right:14px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#666;font-size:20px;border:none;background:none;font-family:'Share Tech Mono',monospace}
+#kanji-card .card-close:hover{color:#ffd700}
+#kanji-card .card-strokes-visual{display:flex;gap:3px;align-items:center;margin-top:2px}
+#kanji-card .stroke-dot{width:6px;height:6px;border-radius:50%;background:#ffd700}
+
+/* Bottom Controls */
+#controls{position:fixed;bottom:0;left:0;right:0;z-index:50;background:linear-gradient(transparent,rgba(0,0,0,0.95) 30%);padding:16px 12px 20px;display:flex;flex-direction:column;gap:10px}
+#controls .filter-row{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+#controls .filter-btn{min-width:52px;height:44px;border-radius:8px;border:1px solid #00ff4155;background:rgba(0,0,0,0.6);color:#00ff41;font-family:'Share Tech Mono',monospace;font-size:14px;font-weight:bold;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;padding:0 10px}
+#controls .filter-btn:hover,#controls .filter-btn.active{background:#00ff4122;border-color:#00ff41;box-shadow:0 0 12px #00ff4133}
+#controls .filter-btn.active{color:#fff;text-shadow:0 0 8px #00ff41}
+#controls .filter-btn[data-level="ALL"]{color:#ffd700;border-color:#ffd70055}
+#controls .filter-btn[data-level="ALL"]:hover,#controls .filter-btn[data-level="ALL"].active{border-color:#ffd700;background:#ffd70022}
+#controls .bottom-row{display:flex;align-items:center;gap:12px;justify-content:center}
+#controls .speed-group{display:flex;align-items:center;gap:8px;flex:1;max-width:200px}
+#controls .speed-label{font-size:11px;color:#00ff41aa;white-space:nowrap}
+#controls input[type="range"]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:3px;background:linear-gradient(90deg,#004400,#00ff41);outline:none;cursor:pointer}
+#controls input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:#00ff41;box-shadow:0 0 10px #00ff41;cursor:pointer}
+#controls input[type="range"]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:#00ff41;box-shadow:0 0 10px #00ff41;cursor:pointer;border:none}
+#controls .pause-btn{min-width:100px;height:44px;border-radius:8px;border:1px solid #ffd700;background:rgba(0,0,0,0.6);color:#ffd700;font-family:'Share Tech Mono',monospace;font-size:14px;font-weight:bold;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.2s;padding:0 16px}
+#controls .pause-btn:hover{background:#ffd70022;box-shadow:0 0 12px #ffd70033}
+#controls .pause-btn .pause-icon{display:inline-block;width:14px;height:14px}
+
+/* Overlay Guide */
+#guide-overlay{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.92);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);transition:opacity 0.4s}
+#guide-overlay.hidden{opacity:0;pointer-events:none}
+#guide-content{max-width:min(400px,90vw);padding:32px 28px;text-align:center}
+#guide-content h1{font-family:'Noto Serif JP',serif;font-size:36px;color:#ffd700;margin-bottom:6px;text-shadow:0 0 20px rgba(255,215,0,0.4)}
+#guide-content .subtitle{font-size:14px;color:#00ff41;margin-bottom:28px;opacity:0.8}
+#guide-content .guide-item{display:flex;align-items:flex-start;gap:14px;margin-bottom:18px;text-align:left}
+#guide-content .guide-icon{width:44px;height:44px;min-width:44px;border-radius:10px;border:1px solid #00ff4144;background:rgba(0,255,65,0.06);display:flex;align-items:center;justify-content:center}
+#guide-content .guide-icon svg{width:22px;height:22px}
+#guide-content .guide-text h3{font-size:14px;color:#ffd700;margin-bottom:3px}
+#guide-content .guide-text p{font-size:13px;color:#aaa;line-height:1.5}
+#guide-content .guide-dismiss{margin-top:28px;width:100%;height:52px;border-radius:10px;border:2px solid #ffd700;background:transparent;color:#ffd700;font-family:'Share Tech Mono',monospace;font-size:16px;font-weight:bold;cursor:pointer;transition:all 0.2s;letter-spacing:1px}
+#guide-content .guide-dismiss:hover{background:#ffd70022;box-shadow:0 0 20px #ffd70033}
+
+/* Floating pause indicator */
+#pause-indicator{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:30;font-family:'Noto Serif JP',serif;font-size:48px;color:#ffd700;text-shadow:0 0 30px rgba(255,215,0,0.5);opacity:0;transition:opacity 0.3s;pointer-events:none}
+#pause-indicator.visible{opacity:1}
+
+@media(max-width:380px){
+  #controls .filter-btn{min-width:44px;font-size:12px;padding:0 7px}
+  #kanji-card .card-kanji{font-size:72px}
+  #kanji-card{padding:22px 18px}
+}
+</style>
+</head>
+<body>
+
+<div id="counter">発見した漢字: <span class="count-num" id="found-count">0</span> / <span id="total-count">0</span></div>
+
+<canvas id="rain-canvas"></canvas>
+
+<div id="kanji-card">
+  <button class="card-close" aria-label="閉じる">x</button>
+  <div class="card-kanji" id="card-char"></div>
+  <div style="text-align:center;margin-bottom:14px"><span class="card-level" id="card-level"></span></div>
+  <div class="card-row"><span class="card-label">音読み</span><span class="card-value" id="card-on"></span></div>
+  <div class="card-row"><span class="card-label">訓読み</span><span class="card-value" id="card-kun"></span></div>
+  <div class="card-row"><span class="card-label">意味</span><span class="card-value card-meaning" id="card-meaning"></span></div>
+  <div class="card-row"><span class="card-label">画数</span><span class="card-value" id="card-strokes"></span></div>
+</div>
+
+<div id="pause-indicator">一時停止</div>
+
+<div id="controls">
+  <div class="filter-row">
+    <button class="filter-btn active" data-level="ALL">ALL</button>
+    <button class="filter-btn" data-level="N5">N5</button>
+    <button class="filter-btn" data-level="N4">N4</button>
+    <button class="filter-btn" data-level="N3">N3</button>
+    <button class="filter-btn" data-level="N2">N2</button>
+    <button class="filter-btn" data-level="N1">N1</button>
+  </div>
+  <div class="bottom-row">
+    <div class="speed-group">
+      <span class="speed-label">速度</span>
+      <input type="range" id="speed-slider" min="0.3" max="3" step="0.1" value="1">
+    </div>
+    <button class="pause-btn" id="pause-btn">
+      <span class="pause-icon"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="3" width="5" height="18" rx="1"/><rect x="14" y="3" width="5" height="18" rx="1"/></svg></span>
+      <span id="pause-text">停止</span>
+    </button>
+  </div>
+</div>
+
+<div id="guide-overlay">
+  <div id="guide-content">
+    <h1>漢字の雨</h1>
+    <p class="subtitle">Kanji Rain - Matrix Edition</p>
+    <div class="guide-item">
+      <div class="guide-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#00ff41" stroke-width="2"><path d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5"/></svg>
+      </div>
+      <div class="guide-text">
+        <h3>タップで学習</h3>
+        <p>流れる漢字をタップすると、読み方や意味を確認できます</p>
+      </div>
+    </div>
+    <div class="guide-item">
+      <div class="guide-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#00ff41" stroke-width="2"><path d="M12 3C7 3 2.7 6.1 1 10.5 2.7 14.9 7 18 12 18s9.3-3.1 11-7.5C21.3 6.1 17 3 12 3z"/><circle cx="12" cy="10.5" r="3.5"/></svg>
+      </div>
+      <div class="guide-text">
+        <h3>レベル別フィルター</h3>
+        <p>N5からN1まで、JLPTレベル別に漢字を絞り込めます</p>
+      </div>
+    </div>
+    <div class="guide-item">
+      <div class="guide-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#00ff41" stroke-width="2"><rect x="5" y="3" width="5" height="18" rx="1"/><rect x="14" y="3" width="5" height="18" rx="1"/></svg>
+      </div>
+      <div class="guide-text">
+        <h3>一時停止モード</h3>
+        <p>停止ボタンで雨を止め、じっくり漢字を観察できます</p>
+      </div>
+    </div>
+    <button class="guide-dismiss" id="guide-dismiss">始める</button>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// KANJI DATA - 120 entries across JLPT N5-N1
+// ============================================================
+const kanjiData = [
+  // === N5 (25 kanji) ===
+  { char:'山', on:'サン', kun:'やま', meaning:'山', strokes:3, level:'N5' },
+  { char:'川', on:'セン', kun:'かわ', meaning:'川', strokes:3, level:'N5' },
+  { char:'火', on:'カ', kun:'ひ', meaning:'火', strokes:4, level:'N5' },
+  { char:'水', on:'スイ', kun:'みず', meaning:'水', strokes:4, level:'N5' },
+  { char:'木', on:'モク・ボク', kun:'き', meaning:'木', strokes:4, level:'N5' },
+  { char:'金', on:'キン・コン', kun:'かね', meaning:'金・お金', strokes:8, level:'N5' },
+  { char:'土', on:'ド・ト', kun:'つち', meaning:'土', strokes:3, level:'N5' },
+  { char:'日', on:'ニチ・ジツ', kun:'ひ・か', meaning:'日・太陽', strokes:4, level:'N5' },
+  { char:'月', on:'ゲツ・ガツ', kun:'つき', meaning:'月', strokes:4, level:'N5' },
+  { char:'人', on:'ジン・ニン', kun:'ひと', meaning:'人', strokes:2, level:'N5' },
+  { char:'大', on:'ダイ・タイ', kun:'おお(きい)', meaning:'大きい', strokes:3, level:'N5' },
+  { char:'小', on:'ショウ', kun:'ちい(さい)・こ', meaning:'小さい', strokes:3, level:'N5' },
+  { char:'上', on:'ジョウ', kun:'うえ・あ(げる)', meaning:'上', strokes:3, level:'N5' },
+  { char:'下', on:'カ・ゲ', kun:'した・さ(げる)', meaning:'下', strokes:3, level:'N5' },
+  { char:'中', on:'チュウ', kun:'なか', meaning:'中・真ん中', strokes:4, level:'N5' },
+  { char:'一', on:'イチ', kun:'ひと(つ)', meaning:'一つ', strokes:1, level:'N5' },
+  { char:'二', on:'ニ', kun:'ふた(つ)', meaning:'二つ', strokes:2, level:'N5' },
+  { char:'三', on:'サン', kun:'み(つ)', meaning:'三つ', strokes:3, level:'N5' },
+  { char:'四', on:'シ', kun:'よ(つ)・よん', meaning:'四つ', strokes:5, level:'N5' },
+  { char:'五', on:'ゴ', kun:'いつ(つ)', meaning:'五つ', strokes:4, level:'N5' },
+  { char:'百', on:'ヒャク', kun:'', meaning:'百', strokes:6, level:'N5' },
+  { char:'千', on:'セン', kun:'ち', meaning:'千', strokes:3, level:'N5' },
+  { char:'万', on:'マン・バン', kun:'', meaning:'万', strokes:3, level:'N5' },
+  { char:'円', on:'エン', kun:'まる', meaning:'円・丸い', strokes:4, level:'N5' },
+  { char:'年', on:'ネン', kun:'とし', meaning:'年', strokes:6, level:'N5' },
+
+  // === N4 (25 kanji) ===
+  { char:'花', on:'カ', kun:'はな', meaning:'花', strokes:7, level:'N4' },
+  { char:'雨', on:'ウ', kun:'あめ', meaning:'雨', strokes:8, level:'N4' },
+  { char:'風', on:'フウ・フ', kun:'かぜ', meaning:'風', strokes:9, level:'N4' },
+  { char:'雪', on:'セツ', kun:'ゆき', meaning:'雪', strokes:11, level:'N4' },
+  { char:'空', on:'クウ', kun:'そら・あ(く)', meaning:'空', strokes:8, level:'N4' },
+  { char:'海', on:'カイ', kun:'うみ', meaning:'海', strokes:9, level:'N4' },
+  { char:'春', on:'シュン', kun:'はる', meaning:'春', strokes:9, level:'N4' },
+  { char:'夏', on:'カ', kun:'なつ', meaning:'夏', strokes:10, level:'N4' },
+  { char:'秋', on:'シュウ', kun:'あき', meaning:'秋', strokes:9, level:'N4' },
+  { char:'冬', on:'トウ', kun:'ふゆ', meaning:'冬', strokes:5, level:'N4' },
+  { char:'朝', on:'チョウ', kun:'あさ', meaning:'朝', strokes:12, level:'N4' },
+  { char:'夜', on:'ヤ', kun:'よる', meaning:'夜', strokes:8, level:'N4' },
+  { char:'色', on:'ショク・シキ', kun:'いろ', meaning:'色', strokes:6, level:'N4' },
+  { char:'音', on:'オン・イン', kun:'おと', meaning:'音', strokes:9, level:'N4' },
+  { char:'力', on:'リョク・リキ', kun:'ちから', meaning:'力', strokes:2, level:'N4' },
+  { char:'光', on:'コウ', kun:'ひかり', meaning:'光', strokes:6, level:'N4' },
+  { char:'森', on:'シン', kun:'もり', meaning:'森', strokes:12, level:'N4' },
+  { char:'林', on:'リン', kun:'はやし', meaning:'林', strokes:8, level:'N4' },
+  { char:'石', on:'セキ・シャク', kun:'いし', meaning:'石', strokes:5, level:'N4' },
+  { char:'竹', on:'チク', kun:'たけ', meaning:'竹', strokes:6, level:'N4' },
+  { char:'糸', on:'シ', kun:'いと', meaning:'糸', strokes:6, level:'N4' },
+  { char:'貝', on:'バイ', kun:'かい', meaning:'貝', strokes:7, level:'N4' },
+  { char:'鳥', on:'チョウ', kun:'とり', meaning:'鳥', strokes:11, level:'N4' },
+  { char:'魚', on:'ギョ', kun:'さかな・うお', meaning:'魚', strokes:11, level:'N4' },
+  { char:'馬', on:'バ', kun:'うま', meaning:'馬', strokes:10, level:'N4' },
+
+  // === N3 (25 kanji) ===
+  { char:'夢', on:'ム', kun:'ゆめ', meaning:'夢', strokes:13, level:'N3' },
+  { char:'愛', on:'アイ', kun:'', meaning:'愛', strokes:13, level:'N3' },
+  { char:'心', on:'シン', kun:'こころ', meaning:'心', strokes:4, level:'N3' },
+  { char:'命', on:'メイ・ミョウ', kun:'いのち', meaning:'命', strokes:8, level:'N3' },
+  { char:'運', on:'ウン', kun:'はこ(ぶ)', meaning:'運ぶ・運命', strokes:12, level:'N3' },
+  { char:'世', on:'セ・セイ', kun:'よ', meaning:'世・世界', strokes:5, level:'N3' },
+  { char:'界', on:'カイ', kun:'', meaning:'世界・境界', strokes:9, level:'N3' },
+  { char:'神', on:'シン・ジン', kun:'かみ', meaning:'神', strokes:9, level:'N3' },
+  { char:'鬼', on:'キ', kun:'おに', meaning:'鬼', strokes:10, level:'N3' },
+  { char:'刀', on:'トウ', kun:'かたな', meaning:'刀', strokes:2, level:'N3' },
+  { char:'剣', on:'ケン', kun:'つるぎ', meaning:'剣', strokes:10, level:'N3' },
+  { char:'戦', on:'セン', kun:'たたか(う)', meaning:'戦い', strokes:13, level:'N3' },
+  { char:'勝', on:'ショウ', kun:'か(つ)', meaning:'勝つ', strokes:12, level:'N3' },
+  { char:'負', on:'フ', kun:'ま(ける)', meaning:'負ける', strokes:9, level:'N3' },
+  { char:'血', on:'ケツ', kun:'ち', meaning:'血', strokes:6, level:'N3' },
+  { char:'涙', on:'ルイ', kun:'なみだ', meaning:'涙', strokes:10, level:'N3' },
+  { char:'笑', on:'ショウ', kun:'わら(う)', meaning:'笑う', strokes:10, level:'N3' },
+  { char:'泣', on:'キュウ', kun:'な(く)', meaning:'泣く', strokes:8, level:'N3' },
+  { char:'怒', on:'ド', kun:'いか(る)・おこ(る)', meaning:'怒る', strokes:9, level:'N3' },
+  { char:'悲', on:'ヒ', kun:'かな(しい)', meaning:'悲しい', strokes:12, level:'N3' },
+  { char:'苦', on:'ク', kun:'くる(しい)・にが(い)', meaning:'苦しい', strokes:8, level:'N3' },
+  { char:'楽', on:'ガク・ラク', kun:'たの(しい)', meaning:'楽しい', strokes:13, level:'N3' },
+  { char:'美', on:'ビ', kun:'うつく(しい)', meaning:'美しい', strokes:9, level:'N3' },
+  { char:'若', on:'ジャク', kun:'わか(い)', meaning:'若い', strokes:8, level:'N3' },
+  { char:'強', on:'キョウ・ゴウ', kun:'つよ(い)', meaning:'強い', strokes:11, level:'N3' },
+
+  // === N2 (25 kanji) ===
+  { char:'龍', on:'リュウ', kun:'たつ', meaning:'龍・竜', strokes:16, level:'N2' },
+  { char:'虎', on:'コ', kun:'とら', meaning:'虎', strokes:8, level:'N2' },
+  { char:'鷹', on:'オウ・ヨウ', kun:'たか', meaning:'鷹', strokes:24, level:'N2' },
+  { char:'狼', on:'ロウ', kun:'おおかみ', meaning:'狼', strokes:10, level:'N2' },
+  { char:'蛇', on:'ジャ・ダ', kun:'へび', meaning:'蛇', strokes:11, level:'N2' },
+  { char:'影', on:'エイ', kun:'かげ', meaning:'影', strokes:15, level:'N2' },
+  { char:'闇', on:'アン', kun:'やみ', meaning:'闇・暗闇', strokes:17, level:'N2' },
+  { char:'霧', on:'ム', kun:'きり', meaning:'霧', strokes:19, level:'N2' },
+  { char:'雷', on:'ライ', kun:'かみなり', meaning:'雷', strokes:13, level:'N2' },
+  { char:'炎', on:'エン', kun:'ほのお', meaning:'炎', strokes:8, level:'N2' },
+  { char:'氷', on:'ヒョウ', kun:'こおり', meaning:'氷', strokes:5, level:'N2' },
+  { char:'嵐', on:'ラン', kun:'あらし', meaning:'嵐', strokes:11, level:'N2' },
+  { char:'霜', on:'ソウ', kun:'しも', meaning:'霜', strokes:17, level:'N2' },
+  { char:'魂', on:'コン', kun:'たましい', meaning:'魂', strokes:14, level:'N2' },
+  { char:'姫', on:'キ', kun:'ひめ', meaning:'姫・お姫様', strokes:10, level:'N2' },
+  { char:'侍', on:'ジ', kun:'さむらい', meaning:'侍', strokes:8, level:'N2' },
+  { char:'忍', on:'ニン', kun:'しの(ぶ)', meaning:'忍ぶ・忍者', strokes:7, level:'N2' },
+  { char:'武', on:'ブ・ム', kun:'', meaning:'武・武士', strokes:8, level:'N2' },
+  { char:'鎧', on:'ガイ', kun:'よろい', meaning:'鎧', strokes:18, level:'N2' },
+  { char:'盾', on:'ジュン', kun:'たて', meaning:'盾', strokes:9, level:'N2' },
+  { char:'弓', on:'キュウ', kun:'ゆみ', meaning:'弓', strokes:3, level:'N2' },
+  { char:'矢', on:'シ', kun:'や', meaning:'矢', strokes:5, level:'N2' },
+  { char:'槍', on:'ソウ', kun:'やり', meaning:'槍', strokes:14, level:'N2' },
+  { char:'塔', on:'トウ', kun:'', meaning:'塔', strokes:12, level:'N2' },
+  { char:'城', on:'ジョウ', kun:'しろ', meaning:'城', strokes:9, level:'N2' },
+
+  // === N1 (20 kanji) ===
+  { char:'儚', on:'ボウ', kun:'はかな(い)', meaning:'儚い・はかない', strokes:16, level:'N1' },
+  { char:'憂', on:'ユウ', kun:'うれ(い)・う(い)', meaning:'憂い・心配', strokes:15, level:'N1' },
+  { char:'朧', on:'ロウ', kun:'おぼろ', meaning:'朧・おぼろげ', strokes:16, level:'N1' },
+  { char:'幽', on:'ユウ', kun:'', meaning:'幽か・幽霊', strokes:9, level:'N1' },
+  { char:'凛', on:'リン', kun:'', meaning:'凛とした', strokes:15, level:'N1' },
+  { char:'燦', on:'サン', kun:'', meaning:'燦然・輝く', strokes:17, level:'N1' },
+  { char:'轟', on:'ゴウ', kun:'とどろ(く)', meaning:'轟く・響く', strokes:21, level:'N1' },
+  { char:'蒼', on:'ソウ', kun:'あお(い)', meaning:'蒼い・青い', strokes:13, level:'N1' },
+  { char:'紫', on:'シ', kun:'むらさき', meaning:'紫', strokes:12, level:'N1' },
+  { char:'翠', on:'スイ', kun:'みどり', meaning:'翠・緑', strokes:14, level:'N1' },
+  { char:'暁', on:'ギョウ', kun:'あかつき', meaning:'暁・夜明け', strokes:12, level:'N1' },
+  { char:'曙', on:'ショ', kun:'あけぼの', meaning:'曙・夜明け', strokes:17, level:'N1' },
+  { char:'黄昏', on:'コウ', kun:'たそがれ', meaning:'黄昏・夕暮れ', strokes:11, level:'N1' },
+  { char:'絆', on:'ハン・バン', kun:'きずな', meaning:'絆・つながり', strokes:11, level:'N1' },
+  { char:'誇', on:'コ', kun:'ほこ(る)', meaning:'誇り', strokes:13, level:'N1' },
+  { char:'禅', on:'ゼン', kun:'', meaning:'禅', strokes:13, level:'N1' },
+  { char:'叡', on:'エイ', kun:'', meaning:'叡智・聡明', strokes:16, level:'N1' },
+  { char:'煌', on:'コウ', kun:'きらめ(く)', meaning:'煌めく・輝く', strokes:13, level:'N1' },
+  { char:'麗', on:'レイ', kun:'うるわ(しい)', meaning:'麗しい・美しい', strokes:19, level:'N1' },
+  { char:'響', on:'キョウ', kun:'ひび(く)', meaning:'響く', strokes:20, level:'N1' }
+];
+
+// Fix multi-char entry
+kanjiData[kanjiData.findIndex(k => k.char === '黄昏')] = { char:'黄', on:'コウ・オウ', kun:'き・こ', meaning:'黄色', strokes:11, level:'N1' };
+
+// ============================================================
+// STATE
+// ============================================================
+let currentFilter = 'ALL';
+let speedMultiplier = 1;
+let isPaused = false;
+let foundKanji = new Set();
+let activeKanji = kanjiData.slice();
+let cardTimeout = null;
+let columns = [];
+let animFrameId = null;
+
+// ============================================================
+// CANVAS SETUP
+// ============================================================
+const canvas = document.getElementById('rain-canvas');
+const ctx = canvas.getContext('2d');
+let W, H, colCount, cellSize;
+
+function resize() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+  cellSize = Math.max(18, Math.min(28, Math.floor(W / 40)));
+  colCount = Math.floor(W / cellSize);
+  if (colCount < 30) colCount = Math.max(15, colCount);
+  if (colCount > 60) colCount = 60;
+  // Reinitialize columns preserving what we can
+  initColumns();
+}
+
+function initColumns() {
+  const oldCols = columns.length;
+  const newColumns = [];
+  for (let i = 0; i < colCount; i++) {
+    if (i < oldCols && columns[i]) {
+      newColumns.push(columns[i]);
+      newColumns[i].x = (i + 0.5) * (W / colCount);
+    } else {
+      newColumns.push(createColumn(i));
+    }
+  }
+  columns = newColumns;
+}
+
+function createColumn(index) {
+  const speed = (1.5 + Math.random() * 2.5);
+  const length = 8 + Math.floor(Math.random() * 18);
+  const chars = [];
+  for (let j = 0; j < length; j++) {
+    chars.push(pickRandomKanji());
+  }
+  return {
+    x: (index + 0.5) * (W / colCount),
+    y: -Math.random() * H * 1.5,
+    speed: speed,
+    chars: chars,
+    length: length,
+    changeTimer: 0,
+    changeInterval: 3 + Math.random() * 8
+  };
+}
+
+function pickRandomKanji() {
+  if (activeKanji.length === 0) return kanjiData[Math.floor(Math.random() * kanjiData.length)];
+  return activeKanji[Math.floor(Math.random() * activeKanji.length)];
+}
+
+// ============================================================
+// DRAWING
+// ============================================================
+let lastTime = 0;
+
+function draw(timestamp) {
+  if (!lastTime) lastTime = timestamp;
+  const dt = Math.min((timestamp - lastTime) / 1000, 0.1);
+  lastTime = timestamp;
+
+  // Semi-transparent black overlay for trail effect
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.12)';
+  ctx.fillRect(0, 0, W, H);
+
+  const fontSize = cellSize;
+  ctx.font = `${fontSize}px "Noto Serif JP", serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+
+  for (let c = 0; c < columns.length; c++) {
+    const col = columns[c];
+    if (!isPaused) {
+      col.y += col.speed * speedMultiplier * 60 * dt;
+      col.changeTimer += dt;
+      // Randomly change some characters for "digital rain" feel
+      if (col.changeTimer > col.changeInterval) {
+        col.changeTimer = 0;
+        col.changeInterval = 3 + Math.random() * 8;
+        const idx = Math.floor(Math.random() * col.chars.length);
+        col.chars[idx] = pickRandomKanji();
+      }
+    }
+
+    for (let j = 0; j < col.chars.length; j++) {
+      const charY = col.y - j * fontSize;
+      if (charY < -fontSize || charY > H + fontSize) continue;
+
+      const fadeFactor = 1 - (j / col.chars.length);
+      let alpha, r, g, b;
+
+      if (j === 0) {
+        // Leading character: bright white-green
+        r = 180; g = 255; b = 200;
+        alpha = 0.95;
+      } else if (j < 3) {
+        // Near-head characters
+        r = 0; g = 255; b = 65;
+        alpha = 0.85 * fadeFactor;
+      } else {
+        // Trailing characters fade
+        r = 0;
+        g = Math.floor(143 + 112 * fadeFactor);
+        b = Math.floor(17 + 48 * fadeFactor);
+        alpha = Math.max(0.08, 0.7 * fadeFactor);
+      }
+
+      ctx.fillStyle = `rgba(${r},${g},${b},${alpha})`;
+
+      // Add glow to leading characters
+      if (j < 2) {
+        ctx.shadowColor = '#00ff41';
+        ctx.shadowBlur = 12;
+      } else {
+        ctx.shadowBlur = 0;
+      }
+
+      ctx.fillText(col.chars[j].char, col.x, charY);
+    }
+
+    ctx.shadowBlur = 0;
+
+    // Reset column when fully off screen
+    if (!isPaused && col.y - col.chars.length * fontSize > H) {
+      const newCol = createColumn(c);
+      newCol.y = -Math.random() * fontSize * 5;
+      columns[c] = newCol;
+      columns[c].x = (c + 0.5) * (W / colCount);
+    }
+  }
+
+  animFrameId = requestAnimationFrame(draw);
+}
+
+// ============================================================
+// HIT DETECTION
+// ============================================================
+function findKanjiAt(px, py) {
+  const fontSize = cellSize;
+  let best = null;
+  let bestDist = Infinity;
+
+  for (let c = 0; c < columns.length; c++) {
+    const col = columns[c];
+    const dx = Math.abs(px - col.x);
+    if (dx > fontSize) continue;
+
+    for (let j = 0; j < col.chars.length; j++) {
+      const charY = col.y - j * fontSize;
+      if (charY < -fontSize || charY > H + fontSize) continue;
+      const dy = Math.abs(py - charY - fontSize / 2);
+      if (dy > fontSize) continue;
+      const dist = dx + dy;
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = col.chars[j];
+      }
+    }
+  }
+  return best;
+}
+
+// ============================================================
+// CARD POPUP
+// ============================================================
+const cardEl = document.getElementById('kanji-card');
+const cardChar = document.getElementById('card-char');
+const cardLevel = document.getElementById('card-level');
+const cardOn = document.getElementById('card-on');
+const cardKun = document.getElementById('card-kun');
+const cardMeaning = document.getElementById('card-meaning');
+const cardStrokes = document.getElementById('card-strokes');
+const foundCountEl = document.getElementById('found-count');
+const totalCountEl = document.getElementById('total-count');
+
+function showCard(kanji) {
+  if (!kanji) return;
+
+  // Track found kanji
+  foundKanji.add(kanji.char);
+  updateCounter();
+
+  cardChar.textContent = kanji.char;
+  cardLevel.textContent = kanji.level;
+  cardLevel.className = 'card-level ' + kanji.level;
+  cardOn.textContent = kanji.on || '--';
+  cardKun.textContent = kanji.kun || '--';
+  cardMeaning.textContent = kanji.meaning;
+
+  // Strokes with visual dots
+  let strokesHTML = kanji.strokes + '画 ';
+  const dotCount = Math.min(kanji.strokes, 20);
+  for (let i = 0; i < dotCount; i++) {
+    strokesHTML += '<span class="stroke-dot" style="opacity:' + (0.4 + 0.6 * (i / dotCount)) + '"></span>';
+  }
+  cardStrokes.innerHTML = '<div class="card-strokes-visual">' + strokesHTML + '</div>';
+
+  // Position card - ensure it doesn't go off screen
+  const cardHeight = 380;
+  const maxTop = H - cardHeight - 100;
+  const topPos = Math.max(60, Math.min(maxTop, H / 2 - cardHeight / 2));
+  cardEl.style.top = topPos + 'px';
+  cardEl.style.transform = 'none';
+
+  cardEl.classList.add('visible');
+
+  if (cardTimeout) clearTimeout(cardTimeout);
+  cardTimeout = setTimeout(() => {
+    cardEl.classList.remove('visible');
+  }, 4000);
+}
+
+function hideCard() {
+  cardEl.classList.remove('visible');
+  if (cardTimeout) clearTimeout(cardTimeout);
+}
+
+function updateCounter() {
+  foundCountEl.textContent = foundKanji.size;
+  totalCountEl.textContent = activeKanji.length;
+}
+
+// ============================================================
+// EVENT HANDLERS
+// ============================================================
+function handleTap(x, y) {
+  // Ignore taps on controls area
+  if (y > H - 120) return;
+
+  const kanji = findKanjiAt(x, y);
+  if (kanji) {
+    showCard(kanji);
+    // Flash effect at tap point
+    flashAt(x, y, kanji.char);
+  }
+}
+
+function flashAt(x, y, char) {
+  ctx.save();
+  ctx.font = `bold ${cellSize * 2}px "Noto Serif JP", serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#ffd700';
+  ctx.shadowColor = '#ffd700';
+  ctx.shadowBlur = 30;
+  ctx.fillText(char, x, y);
+  ctx.restore();
+}
+
+// Touch events
+let touchStartTime = 0;
+canvas.addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  touchStartTime = Date.now();
+}, { passive: false });
+
+canvas.addEventListener('touchend', (e) => {
+  e.preventDefault();
+  const elapsed = Date.now() - touchStartTime;
+  if (elapsed < 500 && e.changedTouches.length === 1) {
+    const t = e.changedTouches[0];
+    handleTap(t.clientX, t.clientY);
+  }
+}, { passive: false });
+
+// Mouse events (PC fallback)
+canvas.addEventListener('click', (e) => {
+  handleTap(e.clientX, e.clientY);
+});
+
+// Card close
+cardEl.querySelector('.card-close').addEventListener('click', hideCard);
+cardEl.querySelector('.card-close').addEventListener('touchend', (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  hideCard();
+});
+cardEl.addEventListener('click', (e) => {
+  if (e.target === cardEl || e.target.classList.contains('card-close')) hideCard();
+});
+
+// ============================================================
+// CONTROLS
+// ============================================================
+
+// Filter buttons
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter = btn.dataset.level;
+
+    if (currentFilter === 'ALL') {
+      activeKanji = kanjiData.slice();
+    } else {
+      activeKanji = kanjiData.filter(k => k.level === currentFilter);
+    }
+
+    // Refresh all column characters
+    columns.forEach(col => {
+      for (let j = 0; j < col.chars.length; j++) {
+        col.chars[j] = pickRandomKanji();
+      }
+    });
+
+    updateCounter();
+  });
+});
+
+// Speed slider
+const speedSlider = document.getElementById('speed-slider');
+speedSlider.addEventListener('input', () => {
+  speedMultiplier = parseFloat(speedSlider.value);
+});
+
+// Pause button
+const pauseBtn = document.getElementById('pause-btn');
+const pauseText = document.getElementById('pause-text');
+const pauseIndicator = document.getElementById('pause-indicator');
+
+const playIconSVG = '<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="6,3 20,12 6,21"/></svg>';
+const pauseIconSVG = '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="3" width="5" height="18" rx="1"/><rect x="14" y="3" width="5" height="18" rx="1"/></svg>';
+
+pauseBtn.addEventListener('click', () => {
+  isPaused = !isPaused;
+  if (isPaused) {
+    pauseText.textContent = '再開';
+    pauseBtn.querySelector('.pause-icon').innerHTML = playIconSVG;
+    pauseIndicator.classList.add('visible');
+  } else {
+    pauseText.textContent = '停止';
+    pauseBtn.querySelector('.pause-icon').innerHTML = pauseIconSVG;
+    pauseIndicator.classList.remove('visible');
+  }
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+  if (e.key === ' ' || e.key === 'p') {
+    e.preventDefault();
+    pauseBtn.click();
+  }
+});
+
+// ============================================================
+// GUIDE OVERLAY
+// ============================================================
+const guideOverlay = document.getElementById('guide-overlay');
+const guideDismiss = document.getElementById('guide-dismiss');
+const GUIDE_KEY = 'kanji-rain-guide-seen';
+
+if (localStorage.getItem(GUIDE_KEY)) {
+  guideOverlay.classList.add('hidden');
+  guideOverlay.style.display = 'none';
+}
+
+function dismissGuide() {
+  guideOverlay.classList.add('hidden');
+  localStorage.setItem(GUIDE_KEY, '1');
+  setTimeout(() => { guideOverlay.style.display = 'none'; }, 500);
+}
+
+guideDismiss.addEventListener('click', dismissGuide);
+guideDismiss.addEventListener('touchend', (e) => {
+  e.preventDefault();
+  dismissGuide();
+});
+guideOverlay.addEventListener('click', (e) => {
+  if (e.target === guideOverlay) dismissGuide();
+});
+
+// ============================================================
+// INIT
+// ============================================================
+function init() {
+  resize();
+  updateCounter();
+  lastTime = 0;
+  animFrameId = requestAnimationFrame(draw);
+}
+
+window.addEventListener('resize', () => {
+  resize();
+});
+
+init();
+</script>
+</body>
+</html>

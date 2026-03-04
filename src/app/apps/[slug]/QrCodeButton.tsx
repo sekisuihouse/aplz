@@ -3,11 +3,10 @@
 import { useState } from "react";
 import { QrCode, X } from "lucide-react";
 
-export default function QrCodeButton() {
+export default function QrCodeButton({ appUrl }: { appUrl: string }) {
   const [open, setOpen] = useState(false);
 
-  const pageUrl = typeof window !== "undefined" ? window.location.href : "";
-  const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(pageUrl)}`;
+  const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(appUrl)}`;
 
   return (
     <>
@@ -41,7 +40,7 @@ export default function QrCodeButton() {
                 height={200}
               />
               <p className="text-sm text-[#606060] mt-4 text-center">
-                スマホで読み取ってアプリを体験
+                スマホで読み取ってプレイ
               </p>
             </div>
           </div>
