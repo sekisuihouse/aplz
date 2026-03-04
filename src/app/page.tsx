@@ -15,6 +15,7 @@ export default async function Home() {
       ratings:ratings(count)
     `
     )
+    .eq("is_public", true)
     .order("created_at", { ascending: false })
     .limit(30);
 
@@ -62,7 +63,7 @@ export default async function Home() {
       </section>
 
       {/* App List */}
-      <section className="max-w-5xl mx-auto px-4 pb-20">
+      <section className="max-w-7xl mx-auto px-4 pb-20">
         <h2 className="text-sm font-medium text-[#909090] mb-4">
           公開されたアプリ
         </h2>
@@ -78,7 +79,7 @@ export default async function Home() {
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {list.map((app) => (
               <AppCard
                 key={app.id}

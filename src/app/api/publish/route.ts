@@ -37,6 +37,7 @@ export async function POST(req: NextRequest) {
     const description = (formData.get("description") as string) || "";
     const communityId = (formData.get("community_id") as string) || null;
     const authorName = (formData.get("author_name") as string) || "Anonymous";
+    const isPublic = formData.get("is_public") !== "false";
 
     if (!file) {
       return NextResponse.json(
@@ -124,6 +125,7 @@ export async function POST(req: NextRequest) {
         community_id: communityId,
         user_id: user?.id ?? null,
         author_name: authorName,
+        is_public: isPublic,
       })
       .select("id")
       .single();

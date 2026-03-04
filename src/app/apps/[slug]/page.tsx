@@ -107,7 +107,7 @@ export default async function AppDetailPage({ params }: Props) {
   const iframeSrc = `${process.env.R2_PUBLIC_URL}/${slug}/index.html`;
 
   return (
-    <main className="max-w-5xl mx-auto px-4 py-8">
+    <main className="max-w-6xl mx-auto px-4 py-8">
       {/* Header */}
       <div className="mb-6 animate-fade-in">
         <div className="flex items-start justify-between">

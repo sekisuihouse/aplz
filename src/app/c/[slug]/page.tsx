@@ -81,7 +81,7 @@ export default async function CommunityPage({ params }: Props) {
   const r2PublicUrl = process.env.R2_PUBLIC_URL;
 
   return (
-    <main className="max-w-5xl mx-auto px-4 py-8">
+    <main className="max-w-7xl mx-auto px-4 py-8">
       {/* Community Header */}
       <div className="mb-8">
         <h1 className="text-xl font-bold text-[#0f0f0f]">
@@ -112,7 +112,7 @@ export default async function CommunityPage({ params }: Props) {
           </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
           {list.map((app) => (
             <AppCard
               key={app.id}

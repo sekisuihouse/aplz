@@ -3,7 +3,6 @@
 import { Suspense, useState, useCallback, useRef, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { Upload } from "lucide-react";
-import { createBrowserClient } from "@/lib/supabase";
 
 interface PublishResult {
   app_id: string;
@@ -16,6 +15,11 @@ interface Community {
   id: string;
   name: string;
   slug: string;
+}
+
+interface CommunitySelection {
+  community: Community;
+  selected: boolean;
 }
 
 export default function PublishPage() {
@@ -39,20 +43,26 @@ function PublishForm() {
   const [result, setResult] = useState<PublishResult | null>(null);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState<string | null>(null);
-  const [community, setCommunity] = useState<Community | null>(null);
+  const [isPublic, setIsPublic] = useState(true);
+  const [communitySelections, setCommunitySelections] = useState<CommunitySelection[]>([]);
+  const [selectedCommunityId, setSelectedCommunityId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!communitySlug) return;
-    const supabase = createBrowserClient();
-    supabase
-      .from("communities")
-      .select("id, name, slug")
-      .eq("slug", communitySlug)
-      .single()
-      .then(({ data }) => {
-        if (data) setCommunity(data);
-      });
+    fetch("/api/communities")
+      .then((r) => r.json())
+      .then((data: Community[]) => {
+        const selections = data.map((c) => ({
+          community: c,
+          selected: c.slug === communitySlug,
+        }));
+        setCommunitySelections(selections);
+        const preselected = data.find((c) => c.slug === communitySlug);
+        if (preselected) {
+          setSelectedCommunityId(preselected.id);
+        }
+      })
+      .catch(() => {});
   }, [communitySlug]);
 
   const handleDrop = useCallback(
@@ -91,8 +101,9 @@ function PublishForm() {
       formData.append("name", name || "Untitled App");
       formData.append("description", description);
       formData.append("author_name", authorName.trim() || "Anonymous");
-      if (community) {
-        formData.append("community_id", community.id);
+      formData.append("is_public", isPublic ? "true" : "false");
+      if (selectedCommunityId) {
+        formData.append("community_id", selectedCommunityId);
       }
 
       const res = await fetch("/api/publish", {
@@ -125,6 +136,9 @@ function PublishForm() {
     setName("");
     setDescription("");
     setAuthorName("");
+    setIsPublic(true);
+    setSelectedCommunityId(null);
+    setCommunitySelections((prev) => prev.map((s) => ({ ...s, selected: false })));
     setResult(null);
     setError("");
   };
@@ -178,14 +192,49 @@ function PublishForm() {
           ZIPまたはHTMLファイルをアップロードして、すぐに公開できます。
         </p>
 
-        {community && (
-          <div className="mb-6 px-4 py-3 bg-[#f5f5f5] border border-[#e5e5e5] rounded-lg">
-            <p className="text-sm text-[#606060]">
-              <span className="text-[#0f0f0f] font-medium">
-                {community.name}
-              </span>{" "}
-              に公開
-            </p>
+        {/* Publish Targets */}
+        {communitySelections.length > 0 && (
+          <div className="mb-6 space-y-2">
+            <label className="block text-sm text-[#606060] mb-1.5">
+              公開先
+            </label>
+            <label className="flex items-center gap-3 px-4 py-3 bg-[#f5f5f5] border border-[#e5e5e5] rounded-lg cursor-pointer hover:bg-[#ebebeb] transition-colors">
+              <input
+                type="checkbox"
+                checked={isPublic}
+                onChange={(e) => setIsPublic(e.target.checked)}
+                className="w-4 h-4 accent-[#22d3ee]"
+              />
+              <span className="text-sm text-[#0f0f0f]">
+                すべてのアプリ（全体公開）
+              </span>
+            </label>
+            {communitySelections.map((cs) => (
+              <label
+                key={cs.community.id}
+                className="flex items-center gap-3 px-4 py-3 bg-[#f5f5f5] border border-[#e5e5e5] rounded-lg cursor-pointer hover:bg-[#ebebeb] transition-colors"
+              >
+                <input
+                  type="checkbox"
+                  checked={cs.selected}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setCommunitySelections((prev) =>
+                      prev.map((s) =>
+                        s.community.id === cs.community.id
+                          ? { ...s, selected: checked }
+                          : { ...s, selected: false }
+                      )
+                    );
+                    setSelectedCommunityId(checked ? cs.community.id : null);
+                  }}
+                  className="w-4 h-4 accent-[#22d3ee]"
+                />
+                <span className="text-sm text-[#0f0f0f]">
+                  {cs.community.name}
+                </span>
+              </label>
+            ))}
           </div>
         )}
 

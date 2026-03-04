@@ -50,6 +50,8 @@ export default function AppCard({
           tabIndex={-1}
           title={name}
         />
+        {/* Transparent overlay to ensure Link receives clicks */}
+        <div className="absolute inset-0 z-10" />
       </div>
 
       {/* Card body */}
