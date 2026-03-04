@@ -206,7 +206,7 @@ function PublishForm() {
                 className="w-4 h-4 accent-[#22d3ee]"
               />
               <span className="text-sm text-[#0f0f0f]">
-                すべてのアプリ（全体公開）
+                オープン（誰でも閲覧可）
               </span>
             </label>
             {communitySelections.map((cs) => (
@@ -231,7 +231,7 @@ function PublishForm() {
                   className="w-4 h-4 accent-[#22d3ee]"
                 />
                 <span className="text-sm text-[#0f0f0f]">
-                  {cs.community.name}
+                  {cs.community.name}（メンバー限定）
                 </span>
               </label>
             ))}

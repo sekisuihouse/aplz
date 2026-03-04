@@ -39,11 +39,14 @@ export default async function RootLayout({
       >
         <header className="sticky top-0 z-50 backdrop-blur-md bg-white/80 border-b border-[#e5e5e5]">
           <nav className="max-w-5xl mx-auto flex items-center justify-between px-4 h-16">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
+              <Link href="/" className="flex items-center gap-2">
+                <span className="text-xl font-bold text-[#22d3ee]">aplz</span>
+                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-[#22d3ee]/10 text-[#22d3ee] uppercase tracking-wider">
+                  beta
+                </span>
+              </Link>
               <WorkspaceSwitcher />
-              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-[#22d3ee]/10 text-[#22d3ee] uppercase tracking-wider">
-                beta
-              </span>
             </div>
             <div className="flex items-center gap-3">
               {user ? (

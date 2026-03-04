@@ -17,12 +17,11 @@ export default function WorkspaceSwitcher() {
   const pathname = usePathname();
   const ref = useRef<HTMLDivElement>(null);
 
-  // Determine active workspace from pathname
   const communitySlug = pathname.startsWith("/c/")
     ? pathname.split("/")[2]
     : null;
   const activeCommunity = communities.find((c) => c.slug === communitySlug);
-  const label = activeCommunity?.name ?? "aplz";
+  const label = activeCommunity?.name ?? "オープン";
 
   useEffect(() => {
     fetch("/api/communities")
@@ -31,7 +30,6 @@ export default function WorkspaceSwitcher() {
       .catch(() => {});
   }, []);
 
-  // Close on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) {
@@ -42,7 +40,6 @@ export default function WorkspaceSwitcher() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Close on navigation
   useEffect(() => {
     setOpen(false);
   }, [pathname]);
@@ -51,14 +48,14 @@ export default function WorkspaceSwitcher() {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 text-xl font-bold text-[#22d3ee] hover:opacity-80 transition-opacity cursor-pointer"
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-[#0f0f0f] hover:bg-[#f5f5f5] transition-colors cursor-pointer"
       >
         {label}
-        <ChevronDown size={16} className={`transition-transform ${open ? "rotate-180" : ""}`} />
+        <ChevronDown size={14} className={`text-[#909090] transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
 
       {open && (
-        <div className="absolute top-full left-0 mt-2 w-56 bg-white border border-[#e5e5e5] rounded-lg shadow-lg py-1 z-50">
+        <div className="absolute top-full left-0 mt-2 w-64 bg-white border border-[#e5e5e5] rounded-lg shadow-lg py-1 z-50">
           <Link
             href="/"
             className={`block px-4 py-2.5 text-sm transition-colors ${
@@ -67,7 +64,7 @@ export default function WorkspaceSwitcher() {
                 : "text-[#0f0f0f] hover:bg-[#f5f5f5]"
             }`}
           >
-            すべてのアプリ
+            オープン（誰でも閲覧可）
           </Link>
 
           {communities.length > 0 && (
@@ -84,7 +81,7 @@ export default function WorkspaceSwitcher() {
                   : "text-[#0f0f0f] hover:bg-[#f5f5f5]"
               }`}
             >
-              {c.name}
+              {c.name}（メンバー限定）
             </Link>
           ))}
         </div>

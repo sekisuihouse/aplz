@@ -55,3 +55,15 @@ export function formatDate(dateStr: string): string {
 }
 
 export const REACTION_EMOJIS = ["🔥", "👍", "💡", "🎨", "🚀"] as const;
+
+export const REACTION_TYPES = ["like", "want", "amazing", "feedback"] as const;
+export type ReactionType = (typeof REACTION_TYPES)[number];
+
+// Map legacy emoji reactions to new types
+export const LEGACY_EMOJI_MAP: Record<string, ReactionType> = {
+  "👍": "like",
+  "🚀": "want",
+  "🔥": "amazing",
+  "🎨": "amazing",
+  "💡": "feedback",
+};

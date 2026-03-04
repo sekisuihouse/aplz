@@ -68,40 +68,11 @@ export default function CommentSection({ appId, initialComments }: Props) {
         )}
       </h2>
 
-      {/* Comment List */}
-      {comments.length === 0 ? (
-        <div className="text-center py-12 bg-[#f5f5f5] border border-[#e5e5e5] rounded-lg mb-6">
-          <p className="text-[#909090]">
-            まだフィードバックはありません。最初の感想を書いてみましょう！
-          </p>
-        </div>
-      ) : (
-        <div className="bg-white border border-[#e5e5e5] rounded-lg divide-y divide-[#e5e5e5] mb-6">
-          {comments.map((comment) => (
-            <div key={comment.id} className="p-4 flex gap-3">
-              <div className="shrink-0 w-8 h-8 rounded-full bg-[#f5f5f5] text-[#606060] flex items-center justify-center text-sm font-semibold">
-                {comment.author_name.charAt(0).toUpperCase()}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-sm font-medium text-[#0f0f0f]">
-                    {comment.author_name}
-                  </span>
-                  <span className="text-xs text-[#909090] font-mono">
-                    {formatDate(comment.created_at)}
-                  </span>
-                </div>
-                <p className="text-sm text-[#606060] break-words">
-                  {comment.body}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
       {/* Comment Form */}
-      <div className="bg-white border border-[#e5e5e5] rounded-lg p-4">
+      <div className="bg-white border border-[#e5e5e5] rounded-lg p-4 mb-6">
+        <p className="text-xs text-[#909090] mb-3">
+          使ってみた感想や改善アイデアを共有しましょう
+        </p>
         <input
           type="text"
           value={authorName}
@@ -113,9 +84,9 @@ export default function CommentSection({ appId, initialComments }: Props) {
           value={body}
           onChange={(e) => setBody(e.target.value.slice(0, 500))}
           onKeyDown={handleKeyDown}
-          placeholder="感想を書く..."
-          rows={2}
-          className="w-full bg-[#f5f5f5] border border-[#e5e5e5] rounded-lg px-3 py-2 text-sm text-[#0f0f0f] placeholder:text-[#909090] focus:outline-none focus:border-[#909090] transition-colors resize-none"
+          placeholder="このアプリについてどう思いますか？"
+          rows={3}
+          className="w-full bg-[#f5f5f5] border border-[#e5e5e5] rounded-lg px-3 py-2 text-sm text-[#0f0f0f] placeholder:text-[#909090] focus:outline-none focus:border-[#909090] transition-colors resize-none min-h-[80px]"
         />
         <div className="flex items-center justify-between mt-2">
           <span className="text-xs text-[#909090] font-mono">
@@ -124,12 +95,49 @@ export default function CommentSection({ appId, initialComments }: Props) {
           <button
             onClick={handleSubmit}
             disabled={!canSubmit}
-            className="px-4 py-1.5 rounded-lg bg-[#f5f5f5] text-[#0f0f0f] text-sm font-medium hover:bg-[#ebebeb] transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            className="px-5 py-1.5 rounded-lg bg-[#22d3ee] text-black text-sm font-medium hover:bg-[#06b6d4] transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
           >
             {submitting ? "送信中..." : "送信"}
           </button>
         </div>
       </div>
+
+      {/* Comment List */}
+      {comments.length === 0 ? (
+        <div className="text-center py-12 bg-[#f5f5f5] border border-[#e5e5e5] rounded-lg">
+          <p className="text-[#909090]">
+            まだフィードバックはありません。最初の感想を書いてみましょう！
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-0">
+          {comments.map((comment, i) => (
+            <div
+              key={comment.id}
+              className={`flex gap-3 py-4 ${
+                i < comments.length - 1 ? "border-b border-[#f0f0f0]" : ""
+              }`}
+            >
+              <div className="shrink-0 w-8 h-8 rounded-full bg-[#f5f5f5] text-[#606060] flex items-center justify-center text-sm font-semibold">
+                {comment.author_name.charAt(0).toUpperCase()}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-sm font-medium text-[#0f0f0f]">
+                    {comment.author_name}
+                  </span>
+                  <span className="text-xs text-[#909090]">
+                    {formatDate(comment.created_at)}
+                  </span>
+                </div>
+                <p className="text-sm text-[#0f0f0f] break-words leading-relaxed">
+                  {comment.body}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

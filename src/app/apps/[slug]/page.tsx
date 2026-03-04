@@ -3,10 +3,11 @@ import Link from "next/link";
 import { Pencil } from "lucide-react";
 import { createServerClient } from "@/lib/supabase";
 import { createAuthServerClient } from "@/lib/supabase-server";
-import { REACTION_EMOJIS, formatDate } from "@/lib/utils";
+import { REACTION_TYPES, LEGACY_EMOJI_MAP, formatDate } from "@/lib/utils";
 import ReactionBar from "./ReactionBar";
 import RatingSection from "./RatingSection";
 import CommentSection from "./CommentSection";
+import RelatedApps from "./RelatedApps";
 
 export const revalidate = 10;
 
@@ -70,18 +71,23 @@ export default async function AppDetailPage({ params }: Props) {
     .eq("app_id", app.id)
     .order("created_at", { ascending: true });
 
-  // Fetch reactions
+  // Fetch reactions and map to new types
   const { data: reactionRows } = await supabase
     .from("reactions")
     .select("emoji")
     .eq("app_id", app.id);
 
   const reactions: Record<string, number> = {};
-  for (const e of REACTION_EMOJIS) {
-    reactions[e] = 0;
+  for (const t of REACTION_TYPES) {
+    reactions[t] = 0;
   }
   for (const row of reactionRows ?? []) {
-    reactions[row.emoji] = (reactions[row.emoji] || 0) + 1;
+    const mapped = LEGACY_EMOJI_MAP[row.emoji];
+    if (mapped) {
+      reactions[mapped] += 1;
+    } else if (REACTION_TYPES.includes(row.emoji as (typeof REACTION_TYPES)[number])) {
+      reactions[row.emoji] += 1;
+    }
   }
 
   // Fetch ratings
@@ -105,85 +111,103 @@ export default async function AppDetailPage({ params }: Props) {
       : { usability: 0, design: 0, idea: 0 };
 
   const iframeSrc = `${process.env.R2_PUBLIC_URL}/${slug}/index.html`;
+  const r2PublicUrl = process.env.R2_PUBLIC_URL!;
 
   return (
-    <main className="max-w-6xl mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="mb-6 animate-fade-in">
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-[#0f0f0f]">
-              {app.name}
-              {communityName && (
-                <span className="text-sm font-normal text-[#909090] ml-3">
-                  {communityName}
-                </span>
-              )}
-            </h1>
-            <div className="flex items-center gap-1.5 text-sm text-[#909090] mt-1">
-              {app.author_name && (
-                <span>作成: {app.author_name}</span>
-              )}
-              {app.version > 1 && (
-                <>
-                  <span>・</span>
-                  <span>v{app.version}</span>
-                </>
-              )}
-              {app.last_published_at && app.version > 1 && (
-                <>
-                  <span>・</span>
-                  <span>{formatDate(app.last_published_at)}に更新</span>
-                </>
-              )}
-            </div>
+    <main className="max-w-screen-xl mx-auto px-4 py-8">
+      <div className="flex gap-6">
+        {/* Main Column */}
+        <div className="flex-1 min-w-0">
+          {/* iframe */}
+          <div className="rounded-lg border border-[#e5e5e5] overflow-hidden bg-white mb-4 animate-fade-in">
+            <iframe
+              src={iframeSrc}
+              sandbox="allow-scripts allow-forms allow-popups allow-same-origin allow-modals"
+              loading="lazy"
+              className="w-full h-[500px] border-0"
+              title={app.name}
+            />
           </div>
-          {isOwner && (
-            <Link
-              href={`/apps/${slug}/edit`}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#e5e5e5] text-sm text-[#606060] hover:shadow-md transition-all"
-            >
-              <Pencil size={14} />
-              編集
-            </Link>
-          )}
+
+          {/* App Info */}
+          <div className="mb-4 animate-fade-in">
+            <div className="flex items-start justify-between">
+              <div>
+                <h1 className="text-xl font-bold text-[#0f0f0f]">
+                  {app.name}
+                  {communityName && (
+                    <span className="text-sm font-normal text-[#909090] ml-3">
+                      {communityName}
+                    </span>
+                  )}
+                </h1>
+                <div className="flex items-center gap-1.5 text-sm text-[#909090] mt-1">
+                  {app.author_name && (
+                    <span>作成: {app.author_name}</span>
+                  )}
+                  {app.version > 1 && (
+                    <>
+                      <span>・</span>
+                      <span>v{app.version}</span>
+                    </>
+                  )}
+                  {app.last_published_at && app.version > 1 && (
+                    <>
+                      <span>・</span>
+                      <span>{formatDate(app.last_published_at)}に更新</span>
+                    </>
+                  )}
+                </div>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <a
+                  href={iframeSrc}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-[#e5e5e5] text-sm text-[#606060] hover:shadow-md transition-all"
+                >
+                  新しいタブで開く &#8599;
+                </a>
+                {isOwner && (
+                  <Link
+                    href={`/apps/${slug}/edit`}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#e5e5e5] text-sm text-[#606060] hover:shadow-md transition-all"
+                  >
+                    <Pencil size={14} />
+                    編集
+                  </Link>
+                )}
+              </div>
+            </div>
+            {app.description && (
+              <p className="text-[#606060] mt-2 text-sm">{app.description}</p>
+            )}
+          </div>
+
+          {/* Reactions */}
+          <ReactionBar appId={app.id} initialReactions={reactions} />
+
+          {/* Ratings */}
+          <RatingSection
+            appId={app.id}
+            initialAverages={ratingsAverages}
+            initialCount={ratingsCount}
+          />
+
+          {/* Comments */}
+          <CommentSection appId={app.id} initialComments={comments ?? []} />
+
+          {/* Related Apps - mobile only */}
+          <div className="lg:hidden mt-8">
+            <RelatedApps currentAppId={app.id} r2PublicUrl={r2PublicUrl} />
+          </div>
         </div>
-        {app.description && (
-          <p className="text-[#606060] mt-2">{app.description}</p>
-        )}
-        <a
-          href={iframeSrc}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 text-sm text-[#065fd4] hover:underline transition-colors mt-2"
-        >
-          新しいタブで開く &#8599;
-        </a>
+
+        {/* Sidebar - desktop only */}
+        <div className="hidden lg:block w-80 shrink-0">
+          <RelatedApps currentAppId={app.id} r2PublicUrl={r2PublicUrl} />
+        </div>
       </div>
-
-      {/* iframe */}
-      <div className="rounded-lg border border-[#e5e5e5] overflow-hidden bg-white mb-6 animate-fade-in">
-        <iframe
-          src={iframeSrc}
-          sandbox="allow-scripts allow-forms allow-popups allow-same-origin allow-modals"
-          loading="lazy"
-          className="w-full h-[65vh] border-0"
-          title={app.name}
-        />
-      </div>
-
-      {/* Reactions */}
-      <ReactionBar appId={app.id} initialReactions={reactions} />
-
-      {/* Ratings */}
-      <RatingSection
-        appId={app.id}
-        initialAverages={ratingsAverages}
-        initialCount={ratingsCount}
-      />
-
-      {/* Comments */}
-      <CommentSection appId={app.id} initialComments={comments ?? []} />
     </main>
   );
 }
