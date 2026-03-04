@@ -9,6 +9,7 @@ import ReactionBar from "./ReactionBar";
 import RatingSection from "./RatingSection";
 import CommentSection from "./CommentSection";
 import RelatedApps from "./RelatedApps";
+import QrCodeButton from "./QrCodeButton";
 
 export const revalidate = 10;
 
@@ -195,6 +196,7 @@ export default async function AppDetailPage({ params }: Props) {
                 >
                   新しいタブで開く &#8599;
                 </a>
+                <QrCodeButton appUrl={iframeSrc} />
                 {isOwner && (
                   <Link
                     href={`/apps/${slug}/edit`}
