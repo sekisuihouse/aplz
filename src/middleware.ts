@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PROTECTED = ["/publish", "/apps/*/edit"];
+const PROTECTED = ["/publish", "/apps/*/edit", "/profile", "/c/join"];
 
 function isProtected(pathname: string) {
   return PROTECTED.some((p) => {
@@ -25,7 +25,7 @@ export async function middleware(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) =>
+          cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           );
           supabaseResponse = NextResponse.next({ request });
@@ -62,5 +62,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/publish", "/login", "/apps/:slug/edit"],
+  matcher: ["/publish", "/apps/:path*/edit", "/profile", "/c/join", "/login"],
 };
