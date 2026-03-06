@@ -135,7 +135,7 @@ export default async function AppDetailPage({ params }: Props) {
   const r2PublicUrl = process.env.R2_PUBLIC_URL!;
 
   return (
-    <main className="max-w-screen-xl mx-auto px-4 py-8">
+    <main className="max-w-[1800px] mx-auto px-4 py-8">
       <div className="flex gap-6">
         {/* Main Column */}
         <div className="flex-1 min-w-0">

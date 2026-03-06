@@ -36,7 +36,7 @@ export default function AppCard({
       {/* iframe thumbnail */}
       <div
         className="relative w-full overflow-hidden bg-white"
-        style={{ height: "180px" }}
+        style={{ aspectRatio: "16/10" }}
       >
         <iframe
           src={appUrl}

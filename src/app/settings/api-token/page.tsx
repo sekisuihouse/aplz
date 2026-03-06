@@ -123,7 +123,7 @@ export default function ApiTokenPage() {
       </div>
 
       <p className="text-sm text-[#606060] mb-8">
-        Claude Desktop / Claude Code などのMCPクライアントからaplzを操作するためのトークンです。
+        Claude Desktop / Claude Code / ChatGPT / Cursor / Windsurf など、MCP対応のAIツールからaplzを操作するためのトークンです。
         トークンは生成時に一度だけ表示されます。
       </p>
 

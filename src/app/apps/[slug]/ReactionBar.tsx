@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ThumbsUp, Bookmark, Sparkles, MessageSquarePlus } from "lucide-react";
 import type { ReactionType } from "@/lib/utils";
 
@@ -28,12 +28,30 @@ export default function ReactionBar({ appId, initialReactions }: Props) {
   const [clicked, setClicked] = useState<Set<string>>(new Set());
   const [sending, setSending] = useState<string | null>(null);
 
+  useEffect(() => {
+    fetch(`/api/reactions?app_id=${appId}`)
+      .then((r) => r.json())
+      .then((data: { counts: Record<string, number>; userReactions: string[] }) => {
+        if (data.counts) setReactions(data.counts);
+        if (data.userReactions) setClicked(new Set(data.userReactions));
+      })
+      .catch(() => {});
+  }, [appId]);
+
   const handleReact = async (type: string) => {
     if (sending) return;
     setSending(type);
 
-    setReactions((prev) => ({ ...prev, [type]: (prev[type] || 0) + 1 }));
-    setClicked((prev) => new Set(prev).add(type));
+    const isActive = clicked.has(type);
+
+    // Optimistic update
+    if (isActive) {
+      setReactions((prev) => ({ ...prev, [type]: Math.max(0, (prev[type] || 0) - 1) }));
+      setClicked((prev) => { const s = new Set(prev); s.delete(type); return s; });
+    } else {
+      setReactions((prev) => ({ ...prev, [type]: (prev[type] || 0) + 1 }));
+      setClicked((prev) => new Set(prev).add(type));
+    }
 
     try {
       const res = await fetch("/api/reactions", {
@@ -42,12 +60,24 @@ export default function ReactionBar({ appId, initialReactions }: Props) {
         body: JSON.stringify({ app_id: appId, emoji: type }),
       });
       if (!res.ok) {
-        setReactions((prev) => ({ ...prev, [type]: (prev[type] || 1) - 1 }));
-        setClicked((prev) => { const s = new Set(prev); s.delete(type); return s; });
+        // Rollback
+        if (isActive) {
+          setReactions((prev) => ({ ...prev, [type]: (prev[type] || 0) + 1 }));
+          setClicked((prev) => new Set(prev).add(type));
+        } else {
+          setReactions((prev) => ({ ...prev, [type]: Math.max(0, (prev[type] || 1) - 1) }));
+          setClicked((prev) => { const s = new Set(prev); s.delete(type); return s; });
+        }
       }
     } catch {
-      setReactions((prev) => ({ ...prev, [type]: (prev[type] || 1) - 1 }));
-      setClicked((prev) => { const s = new Set(prev); s.delete(type); return s; });
+      // Rollback
+      if (isActive) {
+        setReactions((prev) => ({ ...prev, [type]: (prev[type] || 0) + 1 }));
+        setClicked((prev) => new Set(prev).add(type));
+      } else {
+        setReactions((prev) => ({ ...prev, [type]: Math.max(0, (prev[type] || 1) - 1) }));
+        setClicked((prev) => { const s = new Set(prev); s.delete(type); return s; });
+      }
     } finally {
       setSending(null);
     }
