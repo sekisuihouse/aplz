@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Copy, Trash2, Plus, Key } from "lucide-react";
+import { Copy, Trash2, Plus, Key, Terminal, Check } from "lucide-react";
 
 interface Token {
   id: string;
@@ -26,6 +26,7 @@ export default function ApiTokenPage() {
   const [creating, setCreating] = useState(false);
   const [generatedToken, setGeneratedToken] = useState<NewToken | null>(null);
   const [copied, setCopied] = useState(false);
+  const [copiedSetup, setCopiedSetup] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
 
   const fetchTokens = useCallback(async () => {
@@ -129,6 +130,36 @@ export default function ApiTokenPage() {
               <Copy size={12} />
               {copied ? "コピー済" : "コピー"}
             </button>
+          </div>
+
+          {/* Easy setup */}
+          <div className="mt-5 pt-5 border-t border-amber-200">
+            <div className="flex items-center gap-2 mb-2">
+              <Terminal size={14} className="text-amber-700" />
+              <h3 className="text-sm font-semibold text-amber-800">かんたんセットアップ</h3>
+            </div>
+            <p className="text-xs text-amber-600 mb-3">
+              以下のコマンドをターミナルに貼り付けるだけで、
+              <br />
+              Claudeから直接アプリを公開できるようになります。
+            </p>
+            <div className="flex items-center gap-2 bg-[#1e1e1e] rounded-lg px-3 py-2.5">
+              <code className="flex-1 text-xs text-[#d4d4d4] font-mono break-all">
+                npx @aplz/mcp-server --setup {generatedToken.token}
+              </code>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(`npx @aplz/mcp-server --setup ${generatedToken.token}`);
+                  setCopiedSetup(true);
+                  setTimeout(() => setCopiedSetup(false), 2000);
+                }}
+                className="shrink-0 flex items-center gap-1 text-xs px-2 py-1 rounded bg-[#333] text-[#d4d4d4] hover:bg-[#444] transition-colors cursor-pointer"
+              >
+                {copiedSetup ? <Check size={12} /> : <Copy size={12} />}
+                {copiedSetup ? "コピー済" : "コピー"}
+              </button>
+            </div>
+            <p className="text-[11px] text-amber-500 mt-2">※ Node.js 18以上が必要です</p>
           </div>
         </div>
       )}
