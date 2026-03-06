@@ -1,10 +1,10 @@
 {
   "name": "@aplz/mcp-server",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Aplz MCP Server - AIからWebアプリを公開",
   "main": "dist/index.js",
   "bin": {
-    "aplz-mcp": "dist/index.js"
+    "aplz-mcp-server": "dist/index.js"
   },
   "scripts": {
     "build": "tsc",
