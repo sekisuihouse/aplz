@@ -79,6 +79,8 @@ canvas{display:block;flex:1;width:100%;cursor:none}
 <script>
 (function(){
 "use strict";
+function safeGetItem(k){try{return window.safeGetItem(k);}catch{return null;}}
+function safeSetItem(k,v){try{window.safeSetItem(k,v);}catch{}}
 
 const canvas=document.getElementById('gameCanvas');
 const ctx=canvas.getContext('2d');
@@ -119,7 +121,7 @@ let temperature=340;
 let paused=false;
 let lastTime=0;
 let noiseT=0;
-let guideShown=localStorage.getItem('solder_guide_shown')==='1';
+let guideShown=safeGetItem('solder_guide_shown')==='1';
 let audioCtx=null;
 let levelStartTime=0;
 let pcbTextureCanvas=null;
@@ -433,7 +435,7 @@ window._startGame=function(){
  hideOverlay();
  if(!guideShown){
   guideShown=true;
-  localStorage.setItem('solder_guide_shown','1');
+  safeSetItem('solder_guide_shown','1');
   showGuide();
   return;
  }

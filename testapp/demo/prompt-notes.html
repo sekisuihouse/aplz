@@ -87,6 +87,8 @@
 </div>
 <div class="toast" id="toast"></div>
 <script>
+function safeGetItem(k){try{return window.safeGetItem(k);}catch{return null;}}
+function safeSetItem(k,v){try{window.safeSetItem(k,v);}catch{}}
 const STORAGE_KEY = 'prompt-notes';
 const SAMPLES = [
   { id: '1', title: 'Code Generator', body: 'You are an expert software engineer. Given the following requirements, write clean, well-commented code.\n\nRequirements:\n- Language: [specify]\n- Framework: [specify]\n- Feature: [describe]\n\nPlease include:\n1. The main implementation\n2. Error handling\n3. Brief inline comments\n4. A usage example', ts: Date.now() - 3600000 },
@@ -94,12 +96,12 @@ const SAMPLES = [
   { id: '3', title: 'Brainstorm Partner', body: 'Act as a creative brainstorming partner. I will share a topic or problem, and you will:\n\n1. Generate 10 diverse ideas (mix conventional and unconventional)\n2. For each idea, add a one-line rationale\n3. Highlight the top 3 most promising ideas with a brief pros/cons analysis\n4. Suggest one unexpected combination of ideas\n\nTopic:\n[describe your topic]', ts: Date.now() - 10800000 }
 ];
 
-let prompts = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null') || SAMPLES;
+let prompts = JSON.parse(safeGetItem(STORAGE_KEY) || 'null') || SAMPLES;
 let activeId = null;
 let editId = null;
 let toastTimer;
 
-function persist() { localStorage.setItem(STORAGE_KEY, JSON.stringify(prompts)); }
+function persist() { safeSetItem(STORAGE_KEY, JSON.stringify(prompts)); }
 
 function renderList() {
   const q = document.getElementById('search').value.toLowerCase();

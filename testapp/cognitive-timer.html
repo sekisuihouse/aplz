@@ -232,6 +232,8 @@ body{min-height:100vh;min-height:-webkit-fill-available;width:100%;overflow:hidd
 
 <script>
 (function(){"use strict";
+function safeGetItem(k){try{return window.safeGetItem(k);}catch{return null;}}
+function safeSetItem(k,v){try{window.safeSetItem(k,v);}catch{}}
 
 /* ===== CONSTANTS ===== */
 const MODES=["Binary","Reverse","Color Temperature","Circle Area","Morse Code","Mirror Text","Constellation","Hourglass","Typography","Earth Rotation"];
@@ -268,9 +270,9 @@ const nl=$('nl'),nr=$('nr');
 const cx=cv.getContext('2d');
 
 /* ===== GUIDE ===== */
-const guided=localStorage.getItem('ct-g');
+const guided=safeGetItem('ct-g');
 if(guided)guide.classList.add('gone');
-$('g-go').onclick=()=>{guide.classList.add('out');setTimeout(()=>guide.classList.add('gone'),500);localStorage.setItem('ct-g','1');};
+$('g-go').onclick=()=>{guide.classList.add('out');setTimeout(()=>guide.classList.add('gone'),500);safeSetItem('ct-g','1');};
 
 /* ===== DONE ===== */
 $('d-ok').onclick=()=>{doneOv.classList.remove('show');reset();};

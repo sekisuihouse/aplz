@@ -444,6 +444,8 @@ Score
 
 <script>
 "use strict";
+function safeGetItem(k){try{return window.safeGetItem(k);}catch{return null;}}
+function safeSetItem(k,v){try{window.safeSetItem(k,v);}catch{}}
 
 /* ========================================
    CHALLENGES DEFINITION
@@ -604,8 +606,8 @@ const drawerList = $('#drawer-list');
    ======================================== */
 (function(){
   const overlay = $('#guide-overlay');
-  if(localStorage.getItem('cssbattle-guide-seen')) overlay.classList.add('hidden');
-  function dismiss(){ overlay.classList.add('hidden'); localStorage.setItem('cssbattle-guide-seen','1'); }
+  if(safeGetItem('cssbattle-guide-seen')) overlay.classList.add('hidden');
+  function dismiss(){ overlay.classList.add('hidden'); safeSetItem('cssbattle-guide-seen','1'); }
   $('#guide-dismiss-btn').addEventListener('click', dismiss);
   $('#guide-reopen-btn').addEventListener('click', ()=> overlay.classList.remove('hidden'));
   overlay.addEventListener('click', e=>{ if(e.target===overlay) dismiss(); });
@@ -658,7 +660,7 @@ function buildDrawer(){
     d.appendChild(num);
 
     // Best score indicator
-    const best = parseFloat(localStorage.getItem('cssbattle-best-'+i) || '0');
+    const best = parseFloat(safeGetItem('cssbattle-best-'+i) || '0');
     if(best > 0){
       const medal = document.createElement('span');
       medal.className = 'drawer-medal';
@@ -907,9 +909,9 @@ function showScore(pct, charLen, refChars){
 
   // Save best
   const key = 'cssbattle-best-' + currentChallenge;
-  const prev = parseFloat(localStorage.getItem(key) || '0');
+  const prev = parseFloat(safeGetItem(key) || '0');
   if(pct > prev){
-    localStorage.setItem(key, pct.toString());
+    safeSetItem(key, pct.toString());
     bestScores[currentChallenge] = pct;
   }
   updateBestStatus();
@@ -919,7 +921,7 @@ function showScore(pct, charLen, refChars){
 }
 
 function updateBestStatus(){
-  const best = parseFloat(localStorage.getItem('cssbattle-best-' + currentChallenge) || '0');
+  const best = parseFloat(safeGetItem('cssbattle-best-' + currentChallenge) || '0');
   bestScores[currentChallenge] = best;
   $('#status-score').textContent = 'Best: ' + (best > 0 ? best.toFixed(1) + '%' : '--%');
 }
@@ -961,7 +963,7 @@ $('#score-modal').addEventListener('click', e=>{
    ======================================== */
 (function init(){
   CHALLENGES.forEach((_,i)=>{
-    bestScores[i] = parseFloat(localStorage.getItem('cssbattle-best-'+i) || '0');
+    bestScores[i] = parseFloat(safeGetItem('cssbattle-best-'+i) || '0');
   });
   buildDrawer();
   selectChallenge(0);

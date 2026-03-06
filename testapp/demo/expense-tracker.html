@@ -109,12 +109,14 @@
   <div class="list" id="list"></div>
 </div>
 <script>
+function safeGetItem(k){try{return window.safeGetItem(k);}catch{return null;}}
+function safeSetItem(k,v){try{window.safeSetItem(k,v);}catch{}}
 const STORAGE = 'expense-tracker';
 const CAT_COLORS = { '食費':'#4DD9D9', '交通費':'#fbbf24', '娯楽':'#a855f7', '日用品':'#22c55e', 'その他':'#6366f1' };
-let entries = JSON.parse(localStorage.getItem(STORAGE) || '[]');
+let entries = JSON.parse(safeGetItem(STORAGE) || '[]');
 let chart = null;
 
-function persist() { localStorage.setItem(STORAGE, JSON.stringify(entries)); }
+function persist() { safeSetItem(STORAGE, JSON.stringify(entries)); }
 
 function fmt(n) { return '¥' + Number(n).toLocaleString(); }
 

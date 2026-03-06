@@ -287,6 +287,8 @@ input[type=range]::-webkit-slider-thumb{
 <script>
 (function(){
 "use strict";
+function safeGetItem(k){try{return window.safeGetItem(k);}catch{return null;}}
+function safeSetItem(k,v){try{window.safeSetItem(k,v);}catch{}}
 
 /* ========== Constants ========== */
 const G = 0.8;
@@ -1048,18 +1050,18 @@ function createGalaxy(cx, cy, centerMass, count, vx, vy) {
 
 /* ========== Guide ========== */
 const guide = document.getElementById('guide');
-const guideShown = localStorage.getItem('gravitySketchGuide');
+const guideShown = safeGetItem('gravitySketchGuide');
 if (guideShown) {
   guide.classList.add('hide');
 }
 document.getElementById('guideDismiss').addEventListener('click', function() {
   guide.classList.add('hide');
-  localStorage.setItem('gravitySketchGuide', '1');
+  safeSetItem('gravitySketchGuide', '1');
 });
 guide.addEventListener('click', function(e) {
   if (e.target === guide) {
     guide.classList.add('hide');
-    localStorage.setItem('gravitySketchGuide', '1');
+    safeSetItem('gravitySketchGuide', '1');
   }
 });
 

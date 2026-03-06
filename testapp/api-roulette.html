@@ -705,6 +705,8 @@ button{
 <script>
 (function(){
 'use strict';
+function safeGetItem(k){try{return window.safeGetItem(k);}catch{return null;}}
+function safeSetItem(k,v){try{window.safeSetItem(k,v);}catch{}}
 
 // --- API Data ---
 const apis = [
@@ -794,7 +796,7 @@ var filtersContainer = document.getElementById('filters');
 // --- Guide ---
 function checkGuide(){
   try {
-    if(!localStorage.getItem('api-gacha-visited')){
+    if(!safeGetItem('api-gacha-visited')){
       guideOverlay.classList.remove('hidden');
     }
   } catch(e){
@@ -803,7 +805,7 @@ function checkGuide(){
 }
 function dismissGuide(){
   guideOverlay.classList.add('hidden');
-  try { localStorage.setItem('api-gacha-visited','1'); } catch(e){}
+  try { safeSetItem('api-gacha-visited','1'); } catch(e){}
 }
 guideDismiss.addEventListener('click', dismissGuide);
 guideOverlay.addEventListener('click', function(e){

@@ -59,6 +59,8 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Kosugi Maru',sans-
 <script>
 (function(){
 "use strict";
+function safeGetItem(k){try{return window.safeGetItem(k);}catch{return null;}}
+function safeSetItem(k,v){try{window.safeSetItem(k,v);}catch{}}
 const cv=document.getElementById('cv'),cx=cv.getContext('2d'),cw=document.getElementById('cw');
 const ab=document.getElementById('ab'),rb=document.getElementById('rb');
 const ov=document.getElementById('ov'),oc=document.getElementById('oc');
@@ -176,7 +178,7 @@ function showOv(h){oc.innerHTML=h;ov.classList.remove('h');}
 function hideOv(){ov.classList.add('h');}
 
 function showGuide(){
- if(localStorage.getItem('trz_g'))return showIntro();
+ if(safeGetItem('trz_g'))return showIntro();
  showOv('<h2>遊び方</h2>'+
   '<p>ロープにつかまってターザンのように飛ぼう！</p>'+
   '<p style="margin:10px 0"><svg width="56" height="56" viewBox="0 0 56 56"><circle cx="28" cy="10" r="7" fill="#f39c12"/><line x1="28" y1="17" x2="28" y2="36" stroke="#2c3e50" stroke-width="2.5"/><line x1="28" y1="22" x2="17" y2="30" stroke="#2c3e50" stroke-width="2.5"/><line x1="28" y1="22" x2="39" y2="30" stroke="#2c3e50" stroke-width="2.5"/><line x1="28" y1="36" x2="20" y2="50" stroke="#2c3e50" stroke-width="2.5"/><line x1="28" y1="36" x2="36" y2="50" stroke="#2c3e50" stroke-width="2.5"/><line x1="28" y1="3" x2="28" y2="-8" stroke="#8B4513" stroke-width="2"/></svg></p>'+
@@ -185,7 +187,7 @@ function showGuide(){
   '<p>速度が最大の時に放すのがコツ！</p>'+
   '<button onclick="window._dg()">OK</button>');
 }
-window._dg=function(){localStorage.setItem('trz_g','1');hideOv();showIntro();};
+window._dg=function(){safeSetItem('trz_g','1');hideOv();showIntro();};
 
 function showIntro(){
  const sd=STG[G.stg];

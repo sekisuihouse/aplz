@@ -779,6 +779,8 @@ body {
 </main>
 
 <script>
+function safeGetItem(k){try{return window.safeGetItem(k);}catch{return null;}}
+function safeSetItem(k,v){try{window.safeSetItem(k,v);}catch{}}
 // ========================
 // State
 // ========================
@@ -847,13 +849,13 @@ const railroadWrap = $('railroadWrap');
 // Guide
 // ========================
 function initGuide() {
-  const seen = localStorage.getItem('regex-debugger-guide-seen');
+  const seen = safeGetItem('regex-debugger-guide-seen');
   if (seen) {
     guideOverlay.classList.add('hidden');
   }
   guideOverlay.addEventListener('click', () => {
     guideOverlay.classList.add('hidden');
-    localStorage.setItem('regex-debugger-guide-seen', '1');
+    safeSetItem('regex-debugger-guide-seen', '1');
   });
   helpBtn.addEventListener('click', () => {
     guideOverlay.classList.remove('hidden');

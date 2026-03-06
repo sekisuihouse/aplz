@@ -5,7 +5,30 @@ import { uploadToR2, getPublicUrl } from "@/lib/r2";
 import { generateSlug, getMimeType } from "@/lib/utils";
 import { createServerClient as createSSRServerClient } from "@supabase/ssr";
 
-async function getUser(req: NextRequest) {
+async function getUserFromToken(token: string): Promise<{ id: string } | null> {
+  const db = createServerClient();
+  const { data } = await db
+    .from("api_tokens")
+    .select("user_id")
+    .eq("token", token)
+    .single();
+  if (!data) return null;
+  db.from("api_tokens")
+    .update({ last_used_at: new Date().toISOString() })
+    .eq("token", token)
+    .then(() => {});
+  return { id: data.user_id };
+}
+
+async function getUser(req: NextRequest): Promise<{ id: string } | null> {
+  // Try Bearer token first (MCP / API usage)
+  const authHeader = req.headers.get("Authorization");
+  if (authHeader?.startsWith("Bearer ")) {
+    const tokenUser = await getUserFromToken(authHeader.slice(7));
+    if (tokenUser) return tokenUser;
+  }
+
+  // Fall back to cookie-based auth (browser)
   const supabaseResponse = NextResponse.next({ request: req });
   const supabase = createSSRServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -24,7 +47,7 @@ async function getUser(req: NextRequest) {
     }
   );
   const { data: { user } } = await supabase.auth.getUser();
-  return user;
+  return user ?? null;
 }
 
 export async function POST(req: NextRequest) {
@@ -33,10 +56,23 @@ export async function POST(req: NextRequest) {
 
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
-    const name = (formData.get("name") as string) || "Untitled App";
+    // Accept both "name" (browser) and "title" (MCP)
+    const name = (formData.get("name") as string) || (formData.get("title") as string) || "Untitled App";
     const description = (formData.get("description") as string) || "";
-    const communityId = (formData.get("community_id") as string) || null;
     const isPublic = formData.get("is_public") !== "false";
+
+    // Resolve community_id: accept direct id or slug
+    let communityId = (formData.get("community_id") as string) || null;
+    const communitySlug = formData.get("community_slug") as string | null;
+    if (!communityId && communitySlug) {
+      const db = createServerClient();
+      const { data: community } = await db
+        .from("communities")
+        .select("id")
+        .eq("slug", communitySlug)
+        .single();
+      communityId = community?.id ?? null;
+    }
 
     // Auto-set author_name from profile
     let authorName = "Anonymous";

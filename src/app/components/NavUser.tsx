@@ -67,6 +67,13 @@ export default function NavUser({ email, avatarUrl, displayName }: Props) {
           >
             プロフィール設定
           </Link>
+          <Link
+            href="/settings/api-token"
+            onClick={() => setOpen(false)}
+            className="block px-3 py-2 text-sm text-[#0f0f0f] hover:bg-[#f5f5f5] transition-colors"
+          >
+            APIトークン設定
+          </Link>
           <button
             onClick={handleSignOut}
             className="w-full text-left px-3 py-2 text-sm text-[#0f0f0f] hover:bg-[#f5f5f5] transition-colors cursor-pointer"
