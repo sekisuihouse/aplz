@@ -215,8 +215,10 @@ server.tool(
     app_slug: z.string().describe("更新するアプリのslug（list_appsで確認可能）"),
     html_content: z.string().optional().describe("新しいHTMLのソースコード文字列（file_pathの代わりに使用可）"),
     file_path: z.string().optional().describe("新しいHTMLファイルまたはZIPファイルのパス（html_contentの代わりに使用可）"),
+    title: z.string().optional().describe("新しいタイトル（変更する場合）"),
+    description: z.string().optional().describe("新しい説明（変更する場合）"),
   },
-  async ({ app_slug, html_content, file_path }) => {
+  async ({ app_slug, html_content, file_path, title, description }) => {
     const token = getToken();
 
     if (!html_content && !file_path) {
@@ -234,7 +236,7 @@ server.tool(
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ slug: app_slug, html_content }),
+          body: JSON.stringify({ slug: app_slug, html_content, title, description }),
         });
       } catch (e) {
         return { content: [{ type: "text", text: `ネットワークエラー: ${e instanceof Error ? e.message : String(e)}` }] };
@@ -254,6 +256,8 @@ server.tool(
       const formData = new FormData();
       formData.append("file", blob, path.basename(resolvedPath));
       formData.append("slug", app_slug);
+      if (title) formData.append("name", title);
+      if (description) formData.append("description", description);
 
       try {
         response = await fetch(`${API_BASE}/api/publish`, {

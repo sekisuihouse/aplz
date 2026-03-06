@@ -266,7 +266,7 @@ export async function PUT(req: NextRequest) {
       if (!slug) return NextResponse.json({ success: false, error: "slug is required" }, { status: 400 });
 
       const htmlContent = body.html_content as string | undefined;
-      const name = (body.name as string) || null;
+      const name = (body.title as string) || (body.name as string) || null;
       const description = (body.description as string) || null;
 
       const supabase = createServerClient();
