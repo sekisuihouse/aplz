@@ -95,7 +95,7 @@ export default function CommentSection({ appId, initialComments }: Props) {
           <button
             onClick={handleSubmit}
             disabled={!canSubmit}
-            className="px-5 py-1.5 rounded-lg bg-[#22d3ee] text-black text-sm font-medium hover:bg-[#06b6d4] transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            className="px-5 py-1.5 rounded-lg bg-[#1B4F72] text-white text-sm font-medium hover:bg-[#15415F] transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
           >
             {submitting ? "送信中..." : "送信"}
           </button>

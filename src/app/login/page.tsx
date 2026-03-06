@@ -107,7 +107,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading || !email}
-                className="w-full mt-4 py-3 rounded-lg bg-[#22d3ee] text-black font-semibold hover:bg-[#06b6d4] transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                className="w-full mt-4 py-3 rounded-lg bg-[#1B4F72] text-white font-semibold hover:bg-[#15415F] transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
               >
                 {loading ? "送信中..." : "ログインリンクを送信"}
               </button>

@@ -7,7 +7,7 @@ export default function NotFound() {
       <p className="text-gray-400 text-lg mb-8">App not found</p>
       <Link
         href="/"
-        className="px-6 py-2.5 rounded-lg bg-[#22d3ee] text-black font-semibold hover:bg-[#06b6d4] transition-colors"
+        className="px-6 py-2.5 rounded-lg bg-[#1B4F72] text-white font-semibold hover:bg-[#15415F] transition-colors"
       >
         Back to home
       </Link>

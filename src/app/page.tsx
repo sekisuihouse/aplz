@@ -65,14 +65,24 @@ export default async function Home() {
     <main>
       {/* Hero */}
       <section className="flex flex-col items-center justify-center px-4 pt-16 pb-12 text-center">
-        <h1 className="text-2xl sm:text-3xl font-bold text-[#0f0f0f] mb-3 leading-snug">
-          AIで作ったアプリを、
-          <br />
-          ドラッグ&ドロップで公開。
-        </h1>
+        <div className="flex items-center justify-center gap-3 mb-4">
+          <svg width="48" height="48" viewBox="0 0 36 36">
+            <g transform="translate(18,18)">
+              <path d="M-13,-9 C-3,-9 3,9 13,9" fill="none" stroke="#1B4F72" strokeWidth="2.8" strokeLinecap="round"/>
+              <path d="M-13,9 C-3,9 3,-9 13,-9" fill="none" stroke="#B83232" strokeWidth="2.8" strokeLinecap="round"/>
+              <circle cx="0" cy="0" r="2.2" fill="#1B4F72"/>
+            </g>
+          </svg>
+          <h1 style={{ fontFamily: "'Baloo 2', sans-serif", fontWeight: 800, fontSize: '48px', color: '#1a1a1a' }}>
+            APLZ
+          </h1>
+        </div>
+        <p className="text-lg text-[#606060] mb-3">
+          AIで作ったアプリを、ドラッグ&ドロップで公開。
+        </p>
         <Link
           href="/publish"
-          className="mt-4 px-6 py-2.5 rounded-lg bg-[#22d3ee] text-black font-semibold text-sm hover:bg-[#06b6d4] transition-colors"
+          className="mt-4 px-6 py-2.5 rounded-lg bg-[#1B4F72] text-white font-semibold text-sm hover:bg-[#15415F] transition-colors"
         >
           アプリを公開する
         </Link>
@@ -89,7 +99,7 @@ export default async function Home() {
             <p className="text-[#606060] mb-4">まだアプリがありません</p>
             <Link
               href="/publish"
-              className="inline-block px-5 py-2 rounded-lg bg-[#22d3ee] text-black font-semibold text-sm hover:bg-[#06b6d4] transition-colors"
+              className="inline-block px-5 py-2 rounded-lg bg-[#1B4F72] text-white font-semibold text-sm hover:bg-[#15415F] transition-colors"
             >
               最初のアプリを公開する
             </Link>

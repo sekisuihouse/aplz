@@ -12,7 +12,7 @@ const REACTIONS: {
   bgActive: string;
   borderActive: string;
 }[] = [
-  { type: "like", label: "いいね", icon: ThumbsUp, color: "text-[#065fd4]", bgActive: "bg-[#065fd4]/10", borderActive: "border-[#065fd4]" },
+  { type: "like", label: "いいね", icon: ThumbsUp, color: "text-[#1B4F72]", bgActive: "bg-[#1B4F72]/10", borderActive: "border-[#1B4F72]" },
   { type: "want", label: "使いたい", icon: Bookmark, color: "text-[#ea580c]", bgActive: "bg-[#ea580c]/10", borderActive: "border-[#ea580c]" },
   { type: "amazing", label: "すごい", icon: Sparkles, color: "text-[#7c3aed]", bgActive: "bg-[#7c3aed]/10", borderActive: "border-[#7c3aed]" },
   { type: "feedback", label: "改善点あり", icon: MessageSquarePlus, color: "text-[#059669]", bgActive: "bg-[#059669]/10", borderActive: "border-[#059669]" },

@@ -171,7 +171,7 @@ function PublishForm() {
 
           <button
             onClick={reset}
-            className="w-full mt-6 py-3 rounded-lg bg-[#22d3ee] text-black font-semibold hover:bg-[#06b6d4] transition-colors cursor-pointer"
+            className="w-full mt-6 py-3 rounded-lg bg-[#1B4F72] text-white font-semibold hover:bg-[#15415F] transition-colors cursor-pointer"
           >
             もう一つ公開する
           </button>
@@ -206,7 +206,7 @@ function PublishForm() {
                 type="checkbox"
                 checked={isPublic}
                 onChange={(e) => setIsPublic(e.target.checked)}
-                className="w-4 h-4 accent-[#22d3ee]"
+                className="w-4 h-4 accent-[#1B4F72]"
               />
               <span className="text-sm text-[#0f0f0f]">
                 オープン（誰でも閲覧可）
@@ -231,7 +231,7 @@ function PublishForm() {
                     );
                     setSelectedCommunityId(checked ? cs.community.id : null);
                   }}
-                  className="w-4 h-4 accent-[#22d3ee]"
+                  className="w-4 h-4 accent-[#1B4F72]"
                 />
                 <span className="text-sm text-[#0f0f0f]">
                   {cs.community.name}（メンバー限定）
@@ -327,7 +327,7 @@ function PublishForm() {
         <button
           onClick={handlePublish}
           disabled={!file || publishing}
-          className="w-full mt-6 py-3 rounded-lg bg-[#22d3ee] text-black font-semibold hover:bg-[#06b6d4] transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+          className="w-full mt-6 py-3 rounded-lg bg-[#1B4F72] text-white font-semibold hover:bg-[#15415F] transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
         >
           {publishing ? "公開中..." : "公開する"}
         </button>

@@ -182,7 +182,7 @@ export default function RatingSection({
           <button
             onClick={handleSubmit}
             disabled={!allSelected || submitting}
-            className="px-5 py-2 rounded-lg bg-[#22d3ee] text-black font-medium text-sm hover:bg-[#06b6d4] transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            className="px-5 py-2 rounded-lg bg-[#1B4F72] text-white font-medium text-sm hover:bg-[#15415F] transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
           >
             {submitting ? "送信中..." : "評価を送信"}
           </button>

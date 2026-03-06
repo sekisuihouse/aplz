@@ -39,7 +39,7 @@ export default function NavUser({ email, avatarUrl, displayName }: Props) {
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="w-8 h-8 rounded-full overflow-hidden bg-[#22d3ee] text-black font-semibold text-sm flex items-center justify-center hover:opacity-80 transition-opacity cursor-pointer"
+        className="w-8 h-8 rounded-full overflow-hidden bg-[#1B4F72] text-white font-semibold text-sm flex items-center justify-center hover:opacity-80 transition-opacity cursor-pointer"
       >
         {avatarUrl ? (
           <Image

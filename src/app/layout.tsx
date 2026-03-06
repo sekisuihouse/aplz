@@ -18,9 +18,19 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "aplz — AIで作ったアプリを公開",
+  title: "APLZ — AIで作ったアプリを共有しよう",
   description:
-    "HTMLやZIPをアップロードして即座に公開。コミュニティからフィードバックを集めよう。",
+    "AIで作ったWebアプリを公開してフィードバックをもらえるプラットフォーム",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
+    ],
+    apple: "/apple-touch-icon.png",
+  },
+  openGraph: {
+    images: ["/ogp.png"],
+  },
 };
 
 export default async function RootLayout({
@@ -50,6 +60,12 @@ export default async function RootLayout({
 
   return (
     <html lang="ja">
+      <head>
+        <link
+          href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&display=swap"
+          rel="stylesheet"
+        />
+      </head>
       <body
         className={`${dmSans.variable} ${jetbrainsMono.variable} font-sans antialiased bg-white text-[#0f0f0f]`}
       >
@@ -57,9 +73,15 @@ export default async function RootLayout({
           <nav className="max-w-5xl mx-auto flex items-center justify-between px-4 h-16">
             <div className="flex items-center gap-3">
               <Link href="/" className="flex items-center gap-2">
-                <span className="text-xl font-bold text-[#22d3ee]">aplz</span>
-                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-[#22d3ee]/10 text-[#22d3ee] uppercase tracking-wider">
-                  beta
+                <svg width="28" height="28" viewBox="0 0 36 36" className="flex-shrink-0">
+                  <g transform="translate(18,18)">
+                    <path d="M-13,-9 C-3,-9 3,9 13,9" fill="none" stroke="#1B4F72" strokeWidth="2.8" strokeLinecap="round"/>
+                    <path d="M-13,9 C-3,9 3,-9 13,-9" fill="none" stroke="#B83232" strokeWidth="2.8" strokeLinecap="round"/>
+                    <circle cx="0" cy="0" r="2.2" fill="#1B4F72"/>
+                  </g>
+                </svg>
+                <span style={{ fontFamily: "'Baloo 2', sans-serif", fontWeight: 700, fontSize: '22px', color: '#1a1a1a', letterSpacing: '0.5px' }}>
+                  APLZ
                 </span>
               </Link>
               <WorkspaceSwitcher />
@@ -69,7 +91,7 @@ export default async function RootLayout({
                 <>
                   <Link
                     href="/publish"
-                    className="px-4 py-2 rounded-lg bg-[#22d3ee] text-black text-sm font-medium hover:bg-[#06b6d4] transition-colors"
+                    className="px-4 py-2 rounded-lg bg-[#1B4F72] text-white text-sm font-medium hover:bg-[#15415F] transition-colors"
                   >
                     アプリを公開
                   </Link>
@@ -85,7 +107,7 @@ export default async function RootLayout({
                   </Link>
                   <Link
                     href="/publish"
-                    className="px-4 py-2 rounded-lg bg-[#22d3ee] text-black text-sm font-medium hover:bg-[#06b6d4] transition-colors"
+                    className="px-4 py-2 rounded-lg bg-[#1B4F72] text-white text-sm font-medium hover:bg-[#15415F] transition-colors"
                   >
                     アプリを公開
                   </Link>
@@ -97,7 +119,7 @@ export default async function RootLayout({
         {children}
         <footer className="border-t border-[#e5e5e5] py-8 text-center">
           <p className="text-sm text-[#909090]">
-            <span className="font-semibold text-[#22d3ee]">aplz</span>
+            <span className="font-semibold text-[#1a1a1a]" style={{ fontFamily: "'Baloo 2', sans-serif" }}>APLZ</span>
             {" "}— AIで作ったアプリの集まる場所
           </p>
         </footer>

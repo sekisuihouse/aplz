@@ -60,7 +60,7 @@ export default function RelatedApps({ currentAppId, r2PublicUrl }: Props) {
               <div className="absolute inset-0 z-10" />
             </div>
             <div className="min-w-0 flex-1 pt-0.5">
-              <p className="text-sm font-medium text-[#0f0f0f] line-clamp-2 group-hover:text-[#065fd4] transition-colors">
+              <p className="text-sm font-medium text-[#0f0f0f] line-clamp-2 group-hover:text-[#1B4F72] transition-colors">
                 {app.name}
               </p>
               <div className="flex items-center gap-1 mt-1 text-xs text-[#606060]">

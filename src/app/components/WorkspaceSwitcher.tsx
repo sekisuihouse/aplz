@@ -62,7 +62,7 @@ export default function WorkspaceSwitcher() {
             href="/"
             className={`block px-4 py-2.5 text-sm transition-colors ${
               !communitySlug
-                ? "text-[#22d3ee] font-medium bg-[#f5f5f5]"
+                ? "text-[#1B4F72] font-medium bg-[#1B4F72]/10"
                 : "text-[#0f0f0f] hover:bg-[#f5f5f5]"
             }`}
           >
@@ -79,7 +79,7 @@ export default function WorkspaceSwitcher() {
                   href={`/c/${c.slug}`}
                   className={`block px-4 py-2.5 text-sm transition-colors ${
                     communitySlug === c.slug
-                      ? "text-[#22d3ee] font-medium bg-[#f5f5f5]"
+                      ? "text-[#1B4F72] font-medium bg-[#1B4F72]/10"
                       : "text-[#0f0f0f] hover:bg-[#f5f5f5]"
                   }`}
                 >

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="170" height="44" viewBox="0 0 170 44">
+  <g transform="translate(20,22)">
+    <path d="M-13,-9 C-3,-9 3,9 13,9" fill="none" stroke="#1B4F72" stroke-width="2.8" stroke-linecap="round"/>
+    <path d="M-13,9 C-3,9 3,-9 13,-9" fill="none" stroke="#B83232" stroke-width="2.8" stroke-linecap="round"/>
+    <circle cx="0" cy="0" r="2.2" fill="#1B4F72"/>
+  </g>
+  <text x="42" y="34" font-family="'Baloo 2',sans-serif" font-weight="700" font-size="32" fill="#1a1a1a" letter-spacing="0">APLZ</text>
+</svg>

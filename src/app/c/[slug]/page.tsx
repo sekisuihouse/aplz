@@ -65,7 +65,7 @@ export default async function CommunityPage({ params }: Props) {
             </p>
             <Link
               href="/c/join"
-              className="inline-block px-6 py-2.5 rounded-lg bg-[#22d3ee] text-black font-semibold text-sm hover:bg-[#06b6d4] transition-colors"
+              className="inline-block px-6 py-2.5 rounded-lg bg-[#1B4F72] text-white font-semibold text-sm hover:bg-[#15415F] transition-colors"
             >
               招待コードで参加する
             </Link>
@@ -145,7 +145,7 @@ export default async function CommunityPage({ params }: Props) {
         )}
         <Link
           href={`/publish?community=${slug}`}
-          className="inline-block mt-4 px-5 py-2 rounded-lg bg-[#22d3ee] text-black font-medium text-sm hover:bg-[#06b6d4] transition-colors"
+          className="inline-block mt-4 px-5 py-2 rounded-lg bg-[#1B4F72] text-white font-medium text-sm hover:bg-[#15415F] transition-colors"
         >
           アプリを公開する
         </Link>
@@ -159,7 +159,7 @@ export default async function CommunityPage({ params }: Props) {
           </p>
           <Link
             href={`/publish?community=${slug}`}
-            className="inline-block px-5 py-2 rounded-lg bg-[#22d3ee] text-black font-semibold text-sm hover:bg-[#06b6d4] transition-colors"
+            className="inline-block px-5 py-2 rounded-lg bg-[#1B4F72] text-white font-semibold text-sm hover:bg-[#15415F] transition-colors"
           >
             アプリを公開する
           </Link>

@@ -245,7 +245,7 @@ export default function EditPage() {
         <button
           onClick={handleUpdate}
           disabled={updating}
-          className="w-full mt-6 py-3 rounded-lg bg-[#22d3ee] text-black font-semibold hover:bg-[#06b6d4] transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+          className="w-full mt-6 py-3 rounded-lg bg-[#1B4F72] text-white font-semibold hover:bg-[#15415F] transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
         >
           {updating ? "更新中..." : "更新する"}
         </button>
