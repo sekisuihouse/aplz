@@ -204,6 +204,76 @@ server.tool(
   }
 );
 
+// ─── Tool: update_app ─────────────────────────────────────────────────────────
+
+server.tool(
+  "update_app",
+  "aplzに公開済みのアプリを更新する。新しいファイルで上書きする。",
+  {
+    app_slug: z.string().describe("更新するアプリのslug（list_appsで確認可能）"),
+    file_path: z.string().describe("新しいHTMLファイルまたはZIPファイルのパス"),
+  },
+  async ({ app_slug, file_path }) => {
+    const token = getToken();
+    const resolvedPath = path.resolve(file_path);
+
+    if (!fs.existsSync(resolvedPath)) {
+      return {
+        content: [{ type: "text", text: `エラー: ファイルが見つかりません: ${resolvedPath}` }],
+      };
+    }
+
+    const ext = path.extname(resolvedPath).toLowerCase();
+    if (ext !== ".html" && ext !== ".zip") {
+      return {
+        content: [{ type: "text", text: "エラー: .htmlまたは.zipファイルのみ対応しています。" }],
+      };
+    }
+
+    const fileBuffer = fs.readFileSync(resolvedPath);
+    const mimeType = ext === ".zip" ? "application/zip" : "text/html";
+    const blob = new Blob([fileBuffer], { type: mimeType });
+
+    const formData = new FormData();
+    formData.append("file", blob, path.basename(resolvedPath));
+    formData.append("slug", app_slug);
+
+    let response: Response;
+    try {
+      response = await fetch(`${API_BASE}/api/publish`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+    } catch (e) {
+      return {
+        content: [{ type: "text", text: `ネットワークエラー: ${e instanceof Error ? e.message : String(e)}` }],
+      };
+    }
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      return { content: [{ type: "text", text: `更新失敗 (${response.status}): ${errorText}` }] };
+    }
+
+    const result = await response.json() as { success: boolean; version?: number; app_url?: string; error?: string };
+    if (!result.success) {
+      return { content: [{ type: "text", text: `更新失敗: ${result.error}` }] };
+    }
+
+    return {
+      content: [{
+        type: "text",
+        text: [
+          `更新成功！ v${result.version}`,
+          `アプリURL (直接起動): ${result.app_url}`,
+          `フィードバックページ: ${API_BASE}/apps/${app_slug}`,
+        ].join("\n"),
+      }],
+    };
+  }
+);
+
 // ─── Setup mode ───────────────────────────────────────────────────────────────
 
 function getConfigPath(): string {
@@ -242,7 +312,7 @@ async function runSetup(token: string): Promise<void> {
   }
   (config.mcpServers as Record<string, unknown>).aplz = {
     command: "npx",
-    args: ["@aplz/mcp-server"],
+    args: ["aplz-mcp-server"],
     env: { APLZ_API_TOKEN: token },
   };
 

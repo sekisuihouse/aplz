@@ -307,7 +307,8 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    return NextResponse.json({ success: true, version: updates.version });
+    const appUrl = getPublicUrl(`${slug}/index.html`);
+    return NextResponse.json({ success: true, version: updates.version, app_url: appUrl });
   } catch (err) {
     console.error("Update error:", err);
     return NextResponse.json(
