@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Copy, Trash2, Plus, Key, Terminal, Check } from "lucide-react";
 
 interface Token {
@@ -23,11 +23,16 @@ export default function ApiTokenPage() {
   const [tokens, setTokens] = useState<Token[]>([]);
   const [loading, setLoading] = useState(true);
   const [newName, setNewName] = useState("");
+  const [nameError, setNameError] = useState("");
   const [creating, setCreating] = useState(false);
   const [generatedToken, setGeneratedToken] = useState<NewToken | null>(null);
+  const [tokenVisible, setTokenVisible] = useState(true);
+  const [tokenSaved, setTokenSaved] = useState(false);
   const [copied, setCopied] = useState(false);
   const [copiedSetup, setCopiedSetup] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [deletingAll, setDeletingAll] = useState(false);
+  const fadeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchTokens = useCallback(async () => {
     const res = await fetch("/api/settings/api-token");
@@ -37,13 +42,23 @@ export default function ApiTokenPage() {
 
   useEffect(() => { fetchTokens(); }, [fetchTokens]);
 
+  // Cleanup timer on unmount
+  useEffect(() => () => { if (fadeTimer.current) clearTimeout(fadeTimer.current); }, []);
+
   const handleCreate = async () => {
     if (creating) return;
+    if (!newName.trim()) {
+      setNameError("トークン名を入力してください");
+      return;
+    }
+    setNameError("");
     setCreating(true);
+    setTokenSaved(false);
+    setTokenVisible(true);
     const res = await fetch("/api/settings/api-token", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: newName.trim() || "default" }),
+      body: JSON.stringify({ name: newName.trim() }),
     });
     if (res.ok) {
       const data: NewToken = await res.json();
@@ -54,10 +69,17 @@ export default function ApiTokenPage() {
     setCreating(false);
   };
 
-  const handleCopy = async (text: string) => {
-    await navigator.clipboard.writeText(text);
+  const handleCopyToken = async (token: string) => {
+    await navigator.clipboard.writeText(token);
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    // After 1.5s: start fade-out, then hide
+    fadeTimer.current = setTimeout(() => {
+      setTokenVisible(false);
+      fadeTimer.current = setTimeout(() => {
+        setGeneratedToken(null);
+        setTokenSaved(true);
+      }, 400);
+    }, 1500);
   };
 
   const handleDelete = async (id: string) => {
@@ -70,10 +92,28 @@ export default function ApiTokenPage() {
     });
     if (res.ok) {
       setTokens((prev) => prev.filter((t) => t.id !== id));
-      if (generatedToken?.id === id) setGeneratedToken(null);
+      if (generatedToken?.id === id) { setGeneratedToken(null); setTokenSaved(false); }
     }
     setDeleting(null);
   };
+
+  const handleDeleteAll = async () => {
+    if (!confirm(`${tokens.length}個のトークンを全て削除しますか？この操作は取り消せません。`)) return;
+    setDeletingAll(true);
+    for (const t of tokens) {
+      await fetch("/api/settings/api-token", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: t.id }),
+      });
+    }
+    setTokens([]);
+    setGeneratedToken(null);
+    setTokenSaved(false);
+    setDeletingAll(false);
+  };
+
+  const hasToken = !loading && tokens.length > 0;
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-10">
@@ -87,32 +127,46 @@ export default function ApiTokenPage() {
         トークンは生成時に一度だけ表示されます。
       </p>
 
-      {/* Generate form */}
-      <div className="bg-[#f5f5f5] border border-[#e5e5e5] rounded-xl p-5 mb-8">
-        <h2 className="text-sm font-semibold text-[#0f0f0f] mb-4">新しいトークンを生成</h2>
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-            placeholder="トークン名（例: claude-desktop）"
-            className="flex-1 bg-white border border-[#e5e5e5] rounded-lg px-3 py-2 text-sm text-[#0f0f0f] placeholder:text-[#909090] focus:outline-none focus:border-[#909090] transition-colors"
-            onKeyDown={(e) => e.key === "Enter" && handleCreate()}
-          />
-          <button
-            onClick={handleCreate}
-            disabled={creating}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#22d3ee] text-black text-sm font-semibold hover:bg-[#06b6d4] transition-colors disabled:opacity-40 cursor-pointer"
-          >
-            <Plus size={14} />
-            生成
-          </button>
-        </div>
-      </div>
+      {/* Generate form — hidden when token already exists */}
+      {!loading && (
+        hasToken ? (
+          <div className="bg-[#f5f5f5] border border-[#e5e5e5] rounded-xl p-5 mb-8">
+            <p className="text-sm text-[#606060]">
+              既にトークンがあります。新しいトークンを生成するには既存のトークンを削除してください。
+            </p>
+          </div>
+        ) : (
+          <div className="bg-[#f5f5f5] border border-[#e5e5e5] rounded-xl p-5 mb-8">
+            <h2 className="text-sm font-semibold text-[#0f0f0f] mb-4">新しいトークンを生成</h2>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={newName}
+                onChange={(e) => { setNewName(e.target.value); if (nameError) setNameError(""); }}
+                placeholder="トークン名（例: claude-desktop）"
+                className="flex-1 bg-white border border-[#e5e5e5] rounded-lg px-3 py-2 text-sm text-[#0f0f0f] placeholder:text-[#909090] focus:outline-none focus:border-[#909090] transition-colors"
+                onKeyDown={(e) => e.key === "Enter" && handleCreate()}
+              />
+              <button
+                onClick={handleCreate}
+                disabled={creating || !newName.trim()}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#22d3ee] text-black text-sm font-semibold hover:bg-[#06b6d4] transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              >
+                <Plus size={14} />
+                生成
+              </button>
+            </div>
+            {nameError && <p className="text-xs text-red-500 mt-2">{nameError}</p>}
+          </div>
+        )
+      )}
 
       {/* Generated token reveal */}
       {generatedToken && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 mb-8 animate-fade-in">
+        <div
+          className="bg-amber-50 border border-amber-200 rounded-xl p-5 mb-8 transition-opacity duration-400"
+          style={{ opacity: tokenVisible ? 1 : 0 }}
+        >
           <p className="text-sm font-semibold text-amber-800 mb-1">
             トークンを保存してください
           </p>
@@ -124,11 +178,12 @@ export default function ApiTokenPage() {
               {generatedToken.token}
             </code>
             <button
-              onClick={() => handleCopy(generatedToken.token)}
-              className="shrink-0 flex items-center gap-1 text-xs px-2 py-1 rounded bg-amber-100 text-amber-800 hover:bg-amber-200 transition-colors cursor-pointer"
+              onClick={() => handleCopyToken(generatedToken.token)}
+              disabled={copied}
+              className="shrink-0 flex items-center gap-1 text-xs px-2 py-1 rounded bg-amber-100 text-amber-800 hover:bg-amber-200 transition-colors cursor-pointer disabled:cursor-default"
             >
-              <Copy size={12} />
-              {copied ? "コピー済" : "コピー"}
+              {copied ? <Check size={12} /> : <Copy size={12} />}
+              {copied ? "コピー完了" : "コピー"}
             </button>
           </div>
 
@@ -145,11 +200,11 @@ export default function ApiTokenPage() {
             </p>
             <div className="flex items-center gap-2 bg-[#1e1e1e] rounded-lg px-3 py-2.5">
               <code className="flex-1 text-xs text-[#d4d4d4] font-mono break-all">
-                npx @aplz/mcp-server --setup {generatedToken.token}
+                npx aplz-mcp-server --setup {generatedToken.token}
               </code>
               <button
                 onClick={() => {
-                  navigator.clipboard.writeText(`npx @aplz/mcp-server --setup ${generatedToken.token}`);
+                  navigator.clipboard.writeText(`npx aplz-mcp-server --setup ${generatedToken.token}`);
                   setCopiedSetup(true);
                   setTimeout(() => setCopiedSetup(false), 2000);
                 }}
@@ -164,11 +219,30 @@ export default function ApiTokenPage() {
         </div>
       )}
 
+      {/* Token saved message */}
+      {tokenSaved && (
+        <div className="bg-green-50 border border-green-200 rounded-xl px-5 py-4 mb-8 flex items-center gap-2">
+          <Check size={16} className="text-green-600 shrink-0" />
+          <p className="text-sm text-green-700">トークンは安全に保存されました。</p>
+        </div>
+      )}
+
       {/* Token list */}
       <div>
-        <h2 className="text-sm font-semibold text-[#0f0f0f] mb-3">
-          既存のトークン{tokens.length > 0 && ` (${tokens.length})`}
-        </h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-semibold text-[#0f0f0f]">
+            既存のトークン{tokens.length > 0 && ` (${tokens.length})`}
+          </h2>
+          {tokens.length > 1 && (
+            <button
+              onClick={handleDeleteAll}
+              disabled={deletingAll}
+              className="text-xs px-3 py-1 rounded-lg bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition-colors cursor-pointer disabled:opacity-40"
+            >
+              全てのトークンを削除
+            </button>
+          )}
+        </div>
 
         {loading ? (
           <p className="text-sm text-[#909090]">読み込み中...</p>
@@ -192,7 +266,7 @@ export default function ApiTokenPage() {
                 </div>
                 <button
                   onClick={() => handleDelete(token.id)}
-                  disabled={deleting === token.id}
+                  disabled={deleting === token.id || deletingAll}
                   className="p-2 text-[#909090] hover:text-red-500 transition-colors cursor-pointer disabled:opacity-40"
                   title="削除"
                 >
@@ -206,19 +280,26 @@ export default function ApiTokenPage() {
 
       {/* Usage instructions */}
       <div className="mt-10 bg-[#f5f5f5] border border-[#e5e5e5] rounded-xl p-5">
-        <h2 className="text-sm font-semibold text-[#0f0f0f] mb-3">Claude Desktop の設定方法</h2>
-        <p className="text-xs text-[#606060] mb-3">
+        <h2 className="text-sm font-semibold text-[#0f0f0f] mb-3">かんたんセットアップ</h2>
+        <p className="text-xs text-[#606060] mb-2">
+          トークン生成後、以下のコマンドを実行するだけで設定完了：
+        </p>
+        <pre className="bg-[#1e1e1e] text-[#d4d4d4] text-xs rounded-lg p-4 overflow-x-auto leading-relaxed mb-4">
+{`npx aplz-mcp-server --setup aplz_...`}
+        </pre>
+        <h2 className="text-sm font-semibold text-[#0f0f0f] mb-2">手動設定</h2>
+        <p className="text-xs text-[#606060] mb-2">
           <code className="bg-white px-1 py-0.5 rounded text-[#0f0f0f]">
             ~/Library/Application Support/Claude/claude_desktop_config.json
           </code>{" "}
-          に追加:
+          に追加：
         </p>
         <pre className="bg-[#1e1e1e] text-[#d4d4d4] text-xs rounded-lg p-4 overflow-x-auto leading-relaxed">
 {`{
   "mcpServers": {
     "aplz": {
       "command": "npx",
-      "args": ["-y", "@aplz/mcp-server"],
+      "args": ["aplz-mcp-server"],
       "env": {
         "APLZ_API_TOKEN": "aplz_..."
       }
