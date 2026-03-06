@@ -204,9 +204,78 @@ server.tool(
   }
 );
 
+// ─── Setup mode ───────────────────────────────────────────────────────────────
+
+function getConfigPath(): string {
+  const platform = process.platform;
+  if (platform === "darwin") {
+    return path.join(process.env.HOME ?? "~", "Library", "Application Support", "Claude", "claude_desktop_config.json");
+  } else if (platform === "win32") {
+    return path.join(process.env.APPDATA ?? "", "Claude", "claude_desktop_config.json");
+  } else {
+    return path.join(process.env.HOME ?? "~", ".config", "Claude", "claude_desktop_config.json");
+  }
+}
+
+async function runSetup(token: string): Promise<void> {
+  const configPath = getConfigPath();
+  const configDir = path.dirname(configPath);
+
+  // Ensure directory exists
+  if (!fs.existsSync(configDir)) {
+    fs.mkdirSync(configDir, { recursive: true });
+  }
+
+  // Read existing config or start fresh
+  let config: Record<string, unknown> = {};
+  if (fs.existsSync(configPath)) {
+    try {
+      config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+    } catch {
+      // Corrupted JSON — start fresh
+    }
+  }
+
+  // Merge aplz entry
+  if (!config.mcpServers || typeof config.mcpServers !== "object") {
+    config.mcpServers = {};
+  }
+  (config.mcpServers as Record<string, unknown>).aplz = {
+    command: "npx",
+    args: ["@aplz/mcp-server"],
+    env: { APLZ_API_TOKEN: token },
+  };
+
+  fs.writeFileSync(configPath, JSON.stringify(config, null, 2), "utf-8");
+
+  console.log("セットアップ完了！Claude Desktopを再起動してください。");
+  console.log("以降はClaudeに「このアプリをaplzに公開して」と言うだけで公開できます。");
+
+  // Try to restart Claude Desktop (Mac only, best-effort)
+  if (process.platform === "darwin") {
+    try {
+      const { execSync } = await import("child_process");
+      try { execSync("killall Claude 2>/dev/null", { stdio: "ignore" }); } catch { /* not running */ }
+      await new Promise((r) => setTimeout(r, 1000));
+      try { execSync("open -a Claude 2>/dev/null", { stdio: "ignore" }); } catch { /* not installed */ }
+    } catch { /* ignore */ }
+  }
+}
+
 // ─── Start ────────────────────────────────────────────────────────────────────
 
 async function main() {
+  const setupIdx = process.argv.indexOf("--setup");
+  if (setupIdx !== -1) {
+    const token = process.argv[setupIdx + 1];
+    if (!token || !token.startsWith("aplz_")) {
+      console.error("使い方: npx @aplz/mcp-server --setup aplz_xxxxxxxxxxxxxxxx");
+      process.exit(1);
+    }
+    await runSetup(token);
+    return;
+  }
+
   const transport = new StdioServerTransport();
   await server.connect(transport);
 }
