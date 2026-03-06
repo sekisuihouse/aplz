@@ -179,6 +179,7 @@ export default async function CommunityPage({ params }: Props) {
               authorName={app.profile_display_name || app.author_name}
               avatarUrl={app.profile_avatar_url}
               version={app.version}
+              communitySlug={slug}
             />
           ))}
         </div>

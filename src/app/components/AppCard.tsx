@@ -14,6 +14,7 @@ interface AppCardProps {
   authorName?: string;
   avatarUrl?: string | null;
   version?: number;
+  communitySlug?: string;
 }
 
 export default function AppCard({
@@ -27,10 +28,12 @@ export default function AppCard({
   authorName,
   avatarUrl,
   version,
+  communitySlug,
 }: AppCardProps) {
+  const href = communitySlug ? `/apps/${slug}?from=${communitySlug}` : `/apps/${slug}`;
   return (
     <Link
-      href={`/apps/${slug}`}
+      href={href}
       className="group bg-white border border-[#e5e5e5] rounded-lg overflow-hidden hover:shadow-md transition-all duration-200"
     >
       {/* iframe thumbnail */}

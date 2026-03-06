@@ -3,6 +3,7 @@ import { DM_Sans, JetBrains_Mono } from "next/font/google";
 import Link from "next/link";
 import { createAuthServerClient } from "@/lib/supabase-server";
 import { createServerClient } from "@/lib/supabase";
+import NavLogo from "./components/NavLogo";
 import NavUser from "./components/NavUser";
 import WorkspaceSwitcher from "./components/WorkspaceSwitcher";
 import "./globals.css";
@@ -72,18 +73,7 @@ export default async function RootLayout({
         <header className="sticky top-0 z-50 backdrop-blur-md bg-white/80 border-b border-[#e5e5e5]">
           <nav className="max-w-5xl mx-auto flex items-center justify-between px-4 h-16">
             <div className="flex items-center gap-3">
-              <Link href="/" className="flex items-center gap-2">
-                <svg width="28" height="28" viewBox="0 0 36 36" className="flex-shrink-0">
-                  <g transform="translate(18,18)">
-                    <path d="M-13,-9 C-3,-9 3,9 13,9" fill="none" stroke="#1B4F72" strokeWidth="2.8" strokeLinecap="round"/>
-                    <path d="M-13,9 C-3,9 3,-9 13,-9" fill="none" stroke="#B83232" strokeWidth="2.8" strokeLinecap="round"/>
-                    <circle cx="0" cy="0" r="2.2" fill="#1B4F72"/>
-                  </g>
-                </svg>
-                <span style={{ fontFamily: "'Baloo 2', sans-serif", fontWeight: 700, fontSize: '22px', color: '#1a1a1a', letterSpacing: '0.5px' }}>
-                  APLZ
-                </span>
-              </Link>
+              <NavLogo />
               <WorkspaceSwitcher />
             </div>
             <div className="flex items-center gap-3">
