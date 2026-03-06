@@ -22,67 +22,74 @@ function getToken(): string {
 
 server.tool(
   "publish_app",
-  "aplzにWebアプリを公開する。HTMLファイルまたはZIPファイルのパスを指定。",
+  "aplzにWebアプリを公開する。html_content（HTML文字列）またはfile_path（ファイルパス）のいずれかを指定。",
   {
     title: z.string().describe("アプリのタイトル"),
-    file_path: z.string().describe("公開するHTMLファイルまたはZIPファイルのパス"),
+    html_content: z.string().optional().describe("HTMLのソースコード文字列（file_pathの代わりに使用可）"),
+    file_path: z.string().optional().describe("公開するHTMLファイルまたはZIPファイルのパス（html_contentの代わりに使用可）"),
     description: z.string().optional().describe("アプリの説明（省略可）"),
     community_slug: z.string().optional().describe("公開先コミュニティのslug（省略時はオープン公開）"),
     is_public: z.boolean().default(true).describe("オープンに公開するか（デフォルト: true）"),
   },
-  async ({ title, file_path, description, community_slug, is_public }) => {
+  async ({ title, html_content, file_path, description, community_slug, is_public }) => {
     const token = getToken();
-    const resolvedPath = path.resolve(file_path);
 
-    if (!fs.existsSync(resolvedPath)) {
-      return {
-        content: [{ type: "text", text: `エラー: ファイルが見つかりません: ${resolvedPath}` }],
-      };
+    if (!html_content && !file_path) {
+      return { content: [{ type: "text", text: "エラー: html_contentまたはfile_pathのいずれかを指定してください。" }] };
     }
-
-    const stat = fs.statSync(resolvedPath);
-    if (stat.isDirectory()) {
-      return {
-        content: [{ type: "text", text: "エラー: ディレクトリは現在未サポートです。index.htmlまたはZIPファイルを指定してください。" }],
-      };
-    }
-
-    const ext = path.extname(resolvedPath).toLowerCase();
-    if (ext !== ".html" && ext !== ".zip") {
-      return {
-        content: [{ type: "text", text: "エラー: .htmlまたは.zipファイルのみ対応しています。" }],
-      };
-    }
-
-    const fileBuffer = fs.readFileSync(resolvedPath);
-    const mimeType = ext === ".zip" ? "application/zip" : "text/html";
-    const blob = new Blob([fileBuffer], { type: mimeType });
-
-    const formData = new FormData();
-    formData.append("file", blob, path.basename(resolvedPath));
-    formData.append("name", title);
-    if (description) formData.append("description", description);
-    if (community_slug) formData.append("community_slug", community_slug);
-    formData.append("is_public", String(is_public));
 
     let response: Response;
-    try {
-      response = await fetch(`${API_BASE}/api/publish`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      });
-    } catch (e) {
-      return {
-        content: [{ type: "text", text: `ネットワークエラー: ${e instanceof Error ? e.message : String(e)}` }],
-      };
+
+    if (html_content) {
+      // JSON path: send HTML content directly
+      try {
+        response = await fetch(`${API_BASE}/api/publish`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ title, description, html_content, community_slug, is_public }),
+        });
+      } catch (e) {
+        return { content: [{ type: "text", text: `ネットワークエラー: ${e instanceof Error ? e.message : String(e)}` }] };
+      }
+    } else {
+      // FormData path: send file
+      const resolvedPath = path.resolve(file_path!);
+      if (!fs.existsSync(resolvedPath)) {
+        return { content: [{ type: "text", text: `エラー: ファイルが見つかりません: ${resolvedPath}` }] };
+      }
+      if (fs.statSync(resolvedPath).isDirectory()) {
+        return { content: [{ type: "text", text: "エラー: ディレクトリは未サポートです。index.htmlまたはZIPを指定してください。" }] };
+      }
+      const ext = path.extname(resolvedPath).toLowerCase();
+      if (ext !== ".html" && ext !== ".zip") {
+        return { content: [{ type: "text", text: "エラー: .htmlまたは.zipファイルのみ対応しています。" }] };
+      }
+
+      const blob = new Blob([fs.readFileSync(resolvedPath)], { type: ext === ".zip" ? "application/zip" : "text/html" });
+      const formData = new FormData();
+      formData.append("file", blob, path.basename(resolvedPath));
+      formData.append("name", title);
+      if (description) formData.append("description", description);
+      if (community_slug) formData.append("community_slug", community_slug);
+      formData.append("is_public", String(is_public));
+
+      try {
+        response = await fetch(`${API_BASE}/api/publish`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData,
+        });
+      } catch (e) {
+        return { content: [{ type: "text", text: `ネットワークエラー: ${e instanceof Error ? e.message : String(e)}` }] };
+      }
     }
 
     if (!response.ok) {
       const errorText = await response.text();
-      return {
-        content: [{ type: "text", text: `公開失敗 (${response.status}): ${errorText}` }],
-      };
+      return { content: [{ type: "text", text: `公開失敗 (${response.status}): ${errorText}` }] };
     }
 
     const result = await response.json() as { success: boolean; slug?: string; app_url?: string; platform_url?: string; error?: string };
@@ -93,12 +100,7 @@ server.tool(
     return {
       content: [{
         type: "text",
-        text: [
-          "公開成功!",
-          `アプリURL (直接起動): ${result.app_url}`,
-          `フィードバックページ: ${result.platform_url}`,
-          `slug: ${result.slug}`,
-        ].join("\n"),
+        text: ["公開成功!", `アプリURL (直接起動): ${result.app_url}`, `フィードバックページ: ${result.platform_url}`, `slug: ${result.slug}`].join("\n"),
       }],
     };
   }
@@ -208,47 +210,60 @@ server.tool(
 
 server.tool(
   "update_app",
-  "aplzに公開済みのアプリを更新する。新しいファイルで上書きする。",
+  "aplzに公開済みのアプリを更新する。html_content（HTML文字列）またはfile_path（ファイルパス）のいずれかを指定。",
   {
     app_slug: z.string().describe("更新するアプリのslug（list_appsで確認可能）"),
-    file_path: z.string().describe("新しいHTMLファイルまたはZIPファイルのパス"),
+    html_content: z.string().optional().describe("新しいHTMLのソースコード文字列（file_pathの代わりに使用可）"),
+    file_path: z.string().optional().describe("新しいHTMLファイルまたはZIPファイルのパス（html_contentの代わりに使用可）"),
   },
-  async ({ app_slug, file_path }) => {
+  async ({ app_slug, html_content, file_path }) => {
     const token = getToken();
-    const resolvedPath = path.resolve(file_path);
 
-    if (!fs.existsSync(resolvedPath)) {
-      return {
-        content: [{ type: "text", text: `エラー: ファイルが見つかりません: ${resolvedPath}` }],
-      };
+    if (!html_content && !file_path) {
+      return { content: [{ type: "text", text: "エラー: html_contentまたはfile_pathのいずれかを指定してください。" }] };
     }
-
-    const ext = path.extname(resolvedPath).toLowerCase();
-    if (ext !== ".html" && ext !== ".zip") {
-      return {
-        content: [{ type: "text", text: "エラー: .htmlまたは.zipファイルのみ対応しています。" }],
-      };
-    }
-
-    const fileBuffer = fs.readFileSync(resolvedPath);
-    const mimeType = ext === ".zip" ? "application/zip" : "text/html";
-    const blob = new Blob([fileBuffer], { type: mimeType });
-
-    const formData = new FormData();
-    formData.append("file", blob, path.basename(resolvedPath));
-    formData.append("slug", app_slug);
 
     let response: Response;
-    try {
-      response = await fetch(`${API_BASE}/api/publish`, {
-        method: "PUT",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      });
-    } catch (e) {
-      return {
-        content: [{ type: "text", text: `ネットワークエラー: ${e instanceof Error ? e.message : String(e)}` }],
-      };
+
+    if (html_content) {
+      // JSON path
+      try {
+        response = await fetch(`${API_BASE}/api/publish`, {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ slug: app_slug, html_content }),
+        });
+      } catch (e) {
+        return { content: [{ type: "text", text: `ネットワークエラー: ${e instanceof Error ? e.message : String(e)}` }] };
+      }
+    } else {
+      // FormData path
+      const resolvedPath = path.resolve(file_path!);
+      if (!fs.existsSync(resolvedPath)) {
+        return { content: [{ type: "text", text: `エラー: ファイルが見つかりません: ${resolvedPath}` }] };
+      }
+      const ext = path.extname(resolvedPath).toLowerCase();
+      if (ext !== ".html" && ext !== ".zip") {
+        return { content: [{ type: "text", text: "エラー: .htmlまたは.zipファイルのみ対応しています。" }] };
+      }
+
+      const blob = new Blob([fs.readFileSync(resolvedPath)], { type: ext === ".zip" ? "application/zip" : "text/html" });
+      const formData = new FormData();
+      formData.append("file", blob, path.basename(resolvedPath));
+      formData.append("slug", app_slug);
+
+      try {
+        response = await fetch(`${API_BASE}/api/publish`, {
+          method: "PUT",
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData,
+        });
+      } catch (e) {
+        return { content: [{ type: "text", text: `ネットワークエラー: ${e instanceof Error ? e.message : String(e)}` }] };
+      }
     }
 
     if (!response.ok) {
@@ -264,11 +279,7 @@ server.tool(
     return {
       content: [{
         type: "text",
-        text: [
-          `更新成功！ v${result.version}`,
-          `アプリURL (直接起動): ${result.app_url}`,
-          `フィードバックページ: ${API_BASE}/apps/${app_slug}`,
-        ].join("\n"),
+        text: [`更新成功！ v${result.version}`, `アプリURL (直接起動): ${result.app_url}`, `フィードバックページ: ${API_BASE}/apps/${app_slug}`].join("\n"),
       }],
     };
   }

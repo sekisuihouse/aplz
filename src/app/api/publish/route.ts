@@ -53,7 +53,53 @@ async function getUser(req: NextRequest): Promise<{ id: string } | null> {
 export async function POST(req: NextRequest) {
   try {
     const user = await getUser(req);
+    const contentType = req.headers.get("content-type") ?? "";
 
+    // ── JSON path: html_content direct upload ───────────────────
+    if (contentType.includes("application/json")) {
+      const body = await req.json().catch(() => ({})) as Record<string, unknown>;
+      const name = (body.title as string) || (body.name as string) || "Untitled App";
+      const description = (body.description as string) || "";
+      const isPublic = body.is_public !== false;
+      const htmlContent = body.html_content as string | undefined;
+
+      if (!htmlContent) {
+        return NextResponse.json({ success: false, error: "html_content is required" }, { status: 400 });
+      }
+
+      let communityId = (body.community_id as string) || null;
+      const communitySlug = (body.community_slug as string) || null;
+      if (!communityId && communitySlug) {
+        const db = createServerClient();
+        const { data: community } = await db.from("communities").select("id").eq("slug", communitySlug).single();
+        communityId = community?.id ?? null;
+      }
+
+      let authorName = "Anonymous";
+      if (user) {
+        const db = createServerClient();
+        const { data: profile } = await db.from("profiles").select("display_name").eq("id", user.id).single();
+        if (profile?.display_name) authorName = profile.display_name;
+      }
+
+      const slug = generateSlug(name);
+      await uploadToR2(`${slug}/index.html`, new TextEncoder().encode(htmlContent), "text/html");
+
+      const authorToken = crypto.randomUUID();
+      const supabase = createServerClient();
+      const { data, error } = await supabase.from("apps").insert({
+        name, description, slug, author_token: authorToken, file_count: 1,
+        community_id: communityId, user_id: user?.id ?? null, author_name: authorName, is_public: isPublic,
+      }).select("id").single();
+
+      if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+
+      const appUrl = getPublicUrl(`${slug}/index.html`);
+      const platformUrl = `${process.env.NEXT_PUBLIC_APP_URL}/apps/${slug}`;
+      return NextResponse.json({ success: true, app_id: data.id, slug, app_url: appUrl, platform_url: platformUrl });
+    }
+
+    // ── FormData path (existing) ────────────────────────────────
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
     // Accept both "name" (browser) and "title" (MCP)
@@ -211,6 +257,43 @@ export async function PUT(req: NextRequest) {
       );
     }
 
+    const contentType = req.headers.get("content-type") ?? "";
+
+    // ── JSON path: html_content direct update ───────────────────
+    if (contentType.includes("application/json")) {
+      const body = await req.json().catch(() => ({})) as Record<string, unknown>;
+      const slug = body.slug as string;
+      if (!slug) return NextResponse.json({ success: false, error: "slug is required" }, { status: 400 });
+
+      const htmlContent = body.html_content as string | undefined;
+      const name = (body.name as string) || null;
+      const description = (body.description as string) || null;
+
+      const supabase = createServerClient();
+      const { data: app } = await supabase.from("apps").select("id, slug, version, user_id").eq("slug", slug).single();
+      if (!app || app.user_id !== user.id) {
+        return NextResponse.json({ success: false, error: "Not found or not authorized" }, { status: 403 });
+      }
+
+      if (htmlContent) {
+        await uploadToR2(`${slug}/index.html`, new TextEncoder().encode(htmlContent), "text/html");
+      }
+
+      const updates: Record<string, unknown> = {
+        version: (app.version ?? 1) + 1,
+        last_published_at: new Date().toISOString(),
+      };
+      if (name !== null) updates.name = name;
+      if (description !== null) updates.description = description;
+
+      const { error } = await supabase.from("apps").update(updates).eq("id", app.id);
+      if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+
+      const appUrl = getPublicUrl(`${slug}/index.html`);
+      return NextResponse.json({ success: true, version: updates.version, app_url: appUrl });
+    }
+
+    // ── FormData path (existing) ────────────────────────────────
     const formData = await req.formData();
     const slug = formData.get("slug") as string;
     const file = formData.get("file") as File | null;
