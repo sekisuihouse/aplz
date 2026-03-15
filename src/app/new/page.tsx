@@ -1,23 +1,34 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { ArrowLeft, History, Save, Sparkles, X } from "lucide-react";
-import { createAuthBrowserClient } from "@/lib/supabase";
+import { ArrowLeft, History, Sparkles, X, Upload } from "lucide-react";
 
 const Editor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
 
-interface AppData {
-  id: string;
-  name: string;
-  description: string;
-  slug: string;
-  version: number;
-  last_published_at: string;
-  user_id: string;
-}
+const DEFAULT_TEMPLATE = `<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My App</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #f5f5f5; }
+    .container { text-align: center; padding: 40px; }
+    h1 { font-size: 24px; margin-bottom: 16px; }
+    p { color: #666; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Hello, APLZ!</h1>
+    <p>ここからアプリを作り始めましょう</p>
+  </div>
+</body>
+</html>`;
 
 interface HistoryEntry {
   code: string;
@@ -25,21 +36,12 @@ interface HistoryEntry {
   label: string;
 }
 
-export default function EditPage() {
-  const params = useParams();
+export default function NewAppPage() {
   const router = useRouter();
-  const slug = params.slug as string;
-
-  // Loading / auth states
-  const [loading, setLoading] = useState(true);
-  const [unauthorized, setUnauthorized] = useState(false);
-
-  // App data
-  const [app, setApp] = useState<AppData | null>(null);
 
   // Editor states
-  const [code, setCode] = useState("");
-  const [previewCode, setPreviewCode] = useState("");
+  const [code, setCode] = useState(DEFAULT_TEMPLATE);
+  const [previewCode, setPreviewCode] = useState(DEFAULT_TEMPLATE);
 
   // AI chat
   const [aiPrompt, setAiPrompt] = useState("");
@@ -50,49 +52,13 @@ export default function EditPage() {
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [historyOpen, setHistoryOpen] = useState(false);
 
-  // Save
-  const [isSaving, setIsSaving] = useState(false);
-  const [saveMessage, setSaveMessage] = useState("");
+  // Publish modal
+  const [showPublishModal, setShowPublishModal] = useState(false);
+  const [publishTitle, setPublishTitle] = useState("");
+  const [publishDescription, setPublishDescription] = useState("");
+  const [isPublishing, setIsPublishing] = useState(false);
 
-  // Load app data and source
-  useEffect(() => {
-    const load = async () => {
-      const supabase = createAuthBrowserClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
-        router.push("/login");
-        return;
-      }
-
-      // Fetch app + source via API
-      const res = await fetch(`/api/apps/${slug}/source`);
-      if (!res.ok) {
-        setUnauthorized(true);
-        setLoading(false);
-        return;
-      }
-
-      const data = await res.json();
-      const appData = data.app as AppData;
-
-      if (appData.user_id !== user.id) {
-        setUnauthorized(true);
-        setLoading(false);
-        return;
-      }
-
-      setApp(appData);
-      setCode(data.code);
-      setPreviewCode(data.code);
-      setLoading(false);
-    };
-    load();
-  }, [slug, router]);
-
-  // Check if AI is available
+  // Check AI availability
   useEffect(() => {
     fetch("/api/ai-edit", {
       method: "POST",
@@ -105,7 +71,7 @@ export default function EditPage() {
       .catch(() => setAiEnabled(false));
   }, []);
 
-  // Debounced preview update
+  // Debounced preview
   useEffect(() => {
     const timer = setTimeout(() => {
       setPreviewCode(code);
@@ -138,7 +104,7 @@ export default function EditPage() {
     }
   };
 
-  // AI edit handler
+  // AI edit
   const handleAiEdit = async () => {
     if (!aiPrompt.trim() || isAiLoading) return;
 
@@ -168,11 +134,10 @@ export default function EditPage() {
     }
   };
 
-  // Save (publish) handler
-  const handleSave = async () => {
-    if (isSaving || !app) return;
-    setIsSaving(true);
-    setSaveMessage("");
+  // Publish
+  const handleConfirmPublish = async () => {
+    if (!publishTitle.trim() || isPublishing) return;
+    setIsPublishing(true);
 
     try {
       const blob = new Blob([code], { type: "text/html" });
@@ -180,76 +145,46 @@ export default function EditPage() {
 
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("slug", slug);
-      formData.append("title", app.name);
-      formData.append("description", app.description || "");
+      formData.append("name", publishTitle);
+      formData.append("description", publishDescription);
+      formData.append("is_public", "true");
 
       const res = await fetch("/api/publish", {
-        method: "PUT",
+        method: "POST",
         body: formData,
       });
 
       if (!res.ok) {
         const error = await res.json();
-        alert(error.error || "保存に失敗しました");
+        alert(error.error || "公開に失敗しました");
         return;
       }
 
       const data = await res.json();
-      setApp((prev) => (prev ? { ...prev, version: data.version } : prev));
-      setSaveMessage("公開に反映しました！");
-      setTimeout(() => setSaveMessage(""), 3000);
+      router.push(`/apps/${data.slug}`);
     } catch {
       alert("通信エラーが発生しました");
     } finally {
-      setIsSaving(false);
+      setIsPublishing(false);
     }
   };
-
-  if (loading) {
-    return (
-      <div className="h-screen flex items-center justify-center bg-white">
-        <p className="text-[#909090]">読み込み中...</p>
-      </div>
-    );
-  }
-
-  if (unauthorized) {
-    return (
-      <div className="h-screen flex items-center justify-center p-4 bg-white">
-        <div className="text-center">
-          <h1 className="text-xl font-bold text-[#0f0f0f] mb-2">
-            編集権限がありません
-          </h1>
-          <p className="text-[#606060]">このアプリの編集権限がありません。</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="h-screen flex flex-col bg-white">
       {/* Header */}
       <div className="h-12 flex items-center justify-between px-4 border-b border-[#e5e5e5] bg-white flex-shrink-0">
-        {/* Left: back */}
         <Link
-          href={`/apps/${slug}`}
+          href="/publish"
           className="flex items-center gap-1 text-sm text-[#606060] hover:text-[#0f0f0f] transition-colors"
         >
           <ArrowLeft size={16} />
           戻る
         </Link>
 
-        {/* Center: app name + version */}
         <div className="text-sm font-medium text-[#0f0f0f]">
-          {app?.name}{" "}
-          <span className="text-[#909090]">v{app?.version ?? 1}</span>
-          {saveMessage && (
-            <span className="ml-3 text-xs text-green-600">{saveMessage}</span>
-          )}
+          新しいアプリを作成
         </div>
 
-        {/* Right: actions */}
         <div className="flex items-center gap-2">
           <button
             onClick={() => setHistoryOpen(!historyOpen)}
@@ -259,12 +194,11 @@ export default function EditPage() {
             履歴
           </button>
           <button
-            onClick={handleSave}
-            disabled={isSaving}
-            className="flex items-center gap-1 text-sm text-white bg-[#1B4F72] hover:bg-[#15415F] px-4 py-1.5 rounded-lg font-medium transition-colors disabled:opacity-50 cursor-pointer"
+            onClick={() => setShowPublishModal(true)}
+            className="flex items-center gap-1 text-sm text-white bg-[#1B4F72] hover:bg-[#15415F] px-4 py-1.5 rounded-lg font-medium transition-colors cursor-pointer"
           >
-            <Save size={16} />
-            {isSaving ? "保存中..." : "公開に反映"}
+            <Upload size={16} />
+            公開する
           </button>
         </div>
       </div>
@@ -348,7 +282,7 @@ export default function EditPage() {
             value={aiPrompt}
             onChange={(e) => setAiPrompt(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleAiEdit()}
-            placeholder='AIに指示: 「ボタンの色を青にして」「レスポンシブ対応にして」'
+            placeholder='AIに指示: 「ToDoアプリ作って」「ボタンの色を青にして」'
             className="flex-1 bg-white border border-[#e5e5e5] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#1B4F72] transition-colors"
             disabled={isAiLoading}
           />
@@ -359,6 +293,61 @@ export default function EditPage() {
           >
             {isAiLoading ? "処理中..." : "送信"}
           </button>
+        </div>
+      )}
+
+      {/* Publish Modal */}
+      {showPublishModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4 animate-fade-in">
+            <h2 className="text-lg font-bold text-[#0f0f0f] mb-4">
+              アプリを公開
+            </h2>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm text-[#606060] mb-1.5">
+                  アプリ名
+                </label>
+                <input
+                  type="text"
+                  value={publishTitle}
+                  onChange={(e) => setPublishTitle(e.target.value)}
+                  placeholder="アプリの名前"
+                  className="w-full bg-[#f5f5f5] border border-[#e5e5e5] rounded-lg px-4 py-2.5 text-[#0f0f0f] placeholder:text-[#909090] focus:outline-none focus:border-[#1B4F72] transition-colors"
+                  autoFocus
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-[#606060] mb-1.5">
+                  説明 <span className="text-[#909090]">（任意）</span>
+                </label>
+                <textarea
+                  value={publishDescription}
+                  onChange={(e) => setPublishDescription(e.target.value)}
+                  placeholder="アプリの説明"
+                  rows={3}
+                  className="w-full bg-[#f5f5f5] border border-[#e5e5e5] rounded-lg px-4 py-2.5 text-[#0f0f0f] placeholder:text-[#909090] focus:outline-none focus:border-[#1B4F72] transition-colors resize-none"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setShowPublishModal(false)}
+                className="flex-1 py-2.5 rounded-lg border border-[#e5e5e5] text-[#606060] text-sm font-medium hover:bg-[#f5f5f5] transition-colors cursor-pointer"
+              >
+                キャンセル
+              </button>
+              <button
+                onClick={handleConfirmPublish}
+                disabled={!publishTitle.trim() || isPublishing}
+                className="flex-1 py-2.5 rounded-lg bg-[#1B4F72] text-white text-sm font-medium hover:bg-[#15415F] transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                {isPublishing ? "公開中..." : "公開する"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

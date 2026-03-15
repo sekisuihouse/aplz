@@ -331,6 +331,14 @@ function PublishForm() {
         >
           {publishing ? "公開中..." : "公開する"}
         </button>
+
+        <div className="text-center text-sm text-[#909090] my-4">または</div>
+        <Link
+          href="/new"
+          className="block text-center text-sm text-[#1B4F72] hover:underline"
+        >
+          エディタで新しいアプリを作る →
+        </Link>
       </div>
     </div>
   );
