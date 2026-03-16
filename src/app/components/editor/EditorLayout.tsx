@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Undo2, History, X } from "lucide-react";
+import { ArrowLeft, Undo2, Redo2, History, X } from "lucide-react";
 import { ResizableHorizontal, ResizableVertical } from "../ResizablePanels";
 import ChatPanel, { type ChatMessage } from "./ChatPanel";
 import PreviewPanel from "./PreviewPanel";
@@ -35,9 +35,9 @@ interface EditorLayoutProps {
 }
 
 const INITIAL_GREETING =
-  "こんにちは！何を作りますか？\n「ToDoアプリ作って」「タイマー作って」など、何でも指示してください。";
+  "こんにちは！何を作りますか？\n\n例:\n• 「ToDoアプリを作って」\n• 「タイマーアプリを作って」\n• 「じゃんけんゲームを作って」\n\n何でも指示してください！";
 const EDIT_GREETING =
-  "コードを読み込みました。修正したいことがあれば指示してください。";
+  "このアプリを編集できます。\n\n例:\n• 「ボタンの色を青にして」\n• 「レスポンシブ対応にして」\n• 「アニメーションを追加して」";
 
 export default function EditorLayout({
   app: initialApp,
@@ -62,8 +62,9 @@ export default function EditorLayout({
   const [aiPrompt, setAiPrompt] = useState("");
   const [isAiLoading, setIsAiLoading] = useState(false);
 
-  // History
-  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  // Undo / Redo
+  const [undoStack, setUndoStack] = useState<HistoryEntry[]>([]);
+  const [redoStack, setRedoStack] = useState<string[]>([]);
   const [historyOpen, setHistoryOpen] = useState(false);
 
   // Right bottom tab
@@ -74,7 +75,6 @@ export default function EditorLayout({
   // Style editor
   const [selectedElement, setSelectedElement] =
     useState<SelectedElementInfo | null>(null);
-  const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
   // Save / publish
   const [isSaving, setIsSaving] = useState(false);
@@ -111,7 +111,7 @@ export default function EditorLayout({
   // History helpers
   const saveToHistory = useCallback(
     (currentCode: string, label?: string) => {
-      setHistory((prev) =>
+      setUndoStack((prev) =>
         [
           {
             code: currentCode,
@@ -121,24 +121,51 @@ export default function EditorLayout({
           ...prev,
         ].slice(0, 50)
       );
+      setRedoStack([]); // clear redo on new change
     },
     []
   );
 
-  const handleUndo = () => {
-    if (history.length === 0) return;
-    const last = history[0];
-    setHistory((prev) => prev.slice(1));
+  const handleUndo = useCallback(() => {
+    if (undoStack.length === 0) return;
+    const last = undoStack[0];
+    setRedoStack((prev) => [code, ...prev]);
+    setUndoStack((prev) => prev.slice(1));
     setCode(last.code);
-  };
+  }, [undoStack, code]);
+
+  const handleRedo = useCallback(() => {
+    if (redoStack.length === 0) return;
+    const next = redoStack[0];
+    setUndoStack((prev) => [{ code, timestamp: new Date(), label: "Redo前" }, ...prev]);
+    setRedoStack((prev) => prev.slice(1));
+    setCode(next);
+  }, [redoStack, code]);
 
   const restoreFromHistory = (index: number) => {
-    const entry = history[index];
+    const entry = undoStack[index];
     if (entry) {
       saveToHistory(code, "復元前");
       setCode(entry.code);
     }
   };
+
+  // Keyboard shortcuts: Cmd+Z / Cmd+Shift+Z
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "z") {
+        if (e.shiftKey) {
+          e.preventDefault();
+          handleRedo();
+        } else {
+          e.preventDefault();
+          handleUndo();
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleUndo, handleRedo]);
 
   // Style change → send to iframe
   const handleStyleChange = (property: string, value: string) => {
@@ -203,7 +230,7 @@ export default function EditorLayout({
         ...prev,
         {
           role: "assistant",
-          content: "修正しました！プレビューを確認してください。",
+          content: data.summary || "修正しました！プレビューを確認してください。",
           timestamp: new Date(),
         },
       ]);
@@ -340,11 +367,19 @@ export default function EditorLayout({
         <div className="flex items-center gap-1.5">
           <button
             onClick={handleUndo}
-            disabled={history.length === 0}
+            disabled={undoStack.length === 0}
             className="p-1.5 rounded-lg text-[#606060] hover:bg-[#f5f5f5] disabled:opacity-30 cursor-pointer transition-colors"
-            title="元に戻す"
+            title="元に戻す (⌘Z)"
           >
             <Undo2 size={16} />
+          </button>
+          <button
+            onClick={handleRedo}
+            disabled={redoStack.length === 0}
+            className="p-1.5 rounded-lg text-[#606060] hover:bg-[#f5f5f5] disabled:opacity-30 cursor-pointer transition-colors"
+            title="やり直す (⌘⇧Z)"
+          >
+            <Redo2 size={16} />
           </button>
           <button
             onClick={() => setHistoryOpen(!historyOpen)}
@@ -372,7 +407,7 @@ export default function EditorLayout({
       {/* Main area */}
       <div className="flex-1 min-h-0 relative">
         <ResizableHorizontal
-          defaultLeftWidth={30}
+          defaultLeftWidth={28}
           minLeftWidth={20}
           maxLeftWidth={50}
           left={
@@ -386,9 +421,9 @@ export default function EditorLayout({
           }
           right={
             <ResizableVertical
-              defaultTopHeight={60}
-              minTopHeight={30}
-              maxTopHeight={85}
+              defaultTopHeight={70}
+              minTopHeight={40}
+              maxTopHeight={90}
               top={<PreviewPanel code={previewCode} />}
               bottom={
                 <div className="flex flex-col h-full">
@@ -416,7 +451,7 @@ export default function EditorLayout({
                     </button>
                   </div>
                   {/* Content */}
-                  <div className="flex-1 overflow-hidden">
+                  <div className="flex-1 overflow-y-auto">
                     {rightBottomTab === "style" ? (
                       <StyleEditor
                         selectedElement={selectedElement}
@@ -445,12 +480,12 @@ export default function EditorLayout({
               </button>
             </div>
             <div className="divide-y divide-[#f0f0f0]">
-              {history.length === 0 ? (
+              {undoStack.length === 0 ? (
                 <p className="p-4 text-sm text-[#909090]">
                   まだ変更履歴がありません
                 </p>
               ) : (
-                history.map((entry, i) => (
+                undoStack.map((entry, i) => (
                   <button
                     key={i}
                     onClick={() => restoreFromHistory(i)}

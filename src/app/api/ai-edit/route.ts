@@ -38,12 +38,11 @@ export async function POST(request: NextRequest) {
 ユーザーの指示に従って、以下のHTMLコードを修正してください。
 
 【重要なルール】
-- 修正後の完全なHTMLコードのみを返してください
-- HTMLコード以外のテキスト（説明、マークダウン、コードブロック記号など）は一切含めないでください
-- <!DOCTYPE html> または <html> から始めてください
-- 元のコードの機能を壊さないでください
-- CSSはインラインまたは<style>タグ内に書いてください
-- JavaScriptは<script>タグ内に書いてください
+- 以下のJSON形式で返してください。他のテキストは含めないでください:
+{"code": "修正後の完全なHTMLコード", "summary": "何を変更したかの簡潔な説明（日本語、1-2文）"}
+- codeには完全なHTMLコードを入れてください
+- summaryには変更内容を簡潔に日本語で説明してください
+- JSONとして有効な形式で返してください。コード内のダブルクォートはエスケープしてください
 
 【現在のHTMLコード】
 ${code}
@@ -62,19 +61,27 @@ ${prompt}`,
     }
 
     const data = await response.json();
-    const newCode = data.content[0]?.text || "";
+    const rawText = data.content[0]?.text || "";
+
+    let newCode = "";
+    let summary = "修正しました！";
+
+    try {
+      const cleaned = rawText.replace(/^```json?\n?/i, "").replace(/\n?```$/i, "").trim();
+      const parsed = JSON.parse(cleaned);
+      newCode = parsed.code || "";
+      summary = parsed.summary || "修正しました！";
+    } catch {
+      // JSON parse failed — treat entire text as HTML
+      newCode = rawText.replace(/^```html?\n?/i, "").replace(/\n?```$/i, "").trim();
+      summary = "修正しました！プレビューを確認してください。";
+    }
 
     if (!newCode.includes("<") || !newCode.includes(">")) {
       return NextResponse.json({ error: "AIが有効なHTMLを返しませんでした" }, { status: 500 });
     }
 
-    // Remove markdown code block markers if present
-    const cleanCode = newCode
-      .replace(/^```html?\n?/i, "")
-      .replace(/\n?```$/i, "")
-      .trim();
-
-    return NextResponse.json({ code: cleanCode });
+    return NextResponse.json({ code: newCode, summary });
   } catch (error) {
     console.error("AI edit error:", error);
     return NextResponse.json({ error: "内部エラーが発生しました" }, { status: 500 });
