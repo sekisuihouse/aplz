@@ -80,12 +80,20 @@ export default async function Home() {
         <p className="text-lg text-[#606060] mb-3">
           AIで作ったアプリを、ドラッグ&ドロップで公開。
         </p>
-        <Link
-          href="/publish"
-          className="mt-4 px-6 py-2.5 rounded-lg bg-[#1B4F72] text-white font-semibold text-sm hover:bg-[#15415F] transition-colors"
-        >
-          アプリを公開する
-        </Link>
+        <div className="flex items-center justify-center gap-3 mt-4">
+          <Link
+            href="/new"
+            className="px-6 py-2.5 rounded-lg bg-[#1B4F72] text-white font-semibold text-sm hover:bg-[#15415F] transition-colors"
+          >
+            AIでアプリを作る
+          </Link>
+          <Link
+            href="/publish"
+            className="px-6 py-2.5 rounded-lg border border-[#e5e5e5] text-[#606060] font-semibold text-sm hover:bg-[#f5f5f5] transition-colors"
+          >
+            ファイルをアップロード
+          </Link>
+        </div>
       </section>
 
       {/* App List */}

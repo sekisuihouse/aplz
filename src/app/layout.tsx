@@ -80,10 +80,10 @@ export default async function RootLayout({
               {user ? (
                 <>
                   <Link
-                    href="/publish"
+                    href="/new"
                     className="px-4 py-2 rounded-lg bg-[#1B4F72] text-white text-sm font-medium hover:bg-[#15415F] transition-colors"
                   >
-                    アプリを公開
+                    アプリを作る
                   </Link>
                   <NavUser email={user.email ?? ""} avatarUrl={avatarUrl} displayName={displayName} />
                 </>
@@ -96,10 +96,10 @@ export default async function RootLayout({
                     ログイン
                   </Link>
                   <Link
-                    href="/publish"
+                    href="/new"
                     className="px-4 py-2 rounded-lg bg-[#1B4F72] text-white text-sm font-medium hover:bg-[#15415F] transition-colors"
                   >
-                    アプリを公開
+                    アプリを作る
                   </Link>
                 </>
               )}
