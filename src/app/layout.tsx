@@ -75,6 +75,12 @@ export default async function RootLayout({
             <div className="flex items-center gap-3">
               <NavLogo />
               <WorkspaceSwitcher />
+              <Link
+                href="/templates"
+                className="px-3 py-1.5 rounded-lg text-sm text-[#606060] hover:text-[#0f0f0f] hover:bg-[#f5f5f5] transition-colors"
+              >
+                Templates
+              </Link>
             </div>
             <div className="flex items-center gap-3">
               {user ? (
