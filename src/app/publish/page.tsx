@@ -10,6 +10,7 @@ interface PublishResult {
   slug: string;
   app_url: string;
   platform_url: string;
+  solution_id?: string | null;
 }
 
 interface Community {
@@ -34,6 +35,7 @@ export default function PublishPage() {
 function PublishForm() {
   const searchParams = useSearchParams();
   const communitySlug = searchParams.get("community");
+  const requestSlug = searchParams.get("request");
 
   const [file, setFile] = useState<File | null>(null);
   const [name, setName] = useState("");
@@ -104,6 +106,9 @@ function PublishForm() {
       if (selectedCommunityId) {
         formData.append("community_id", selectedCommunityId);
       }
+      if (requestSlug) {
+        formData.append("request", requestSlug);
+      }
 
       const res = await fetch("/api/publish", {
         method: "POST",
@@ -150,6 +155,11 @@ function PublishForm() {
               公開しました！
             </h2>
             <p className="text-[#606060] mt-1">アプリが公開されました</p>
+            {result.solution_id && (
+              <p className="text-sm text-[#1B4F72] mt-2">
+                困りごとへの回答として紐づけました
+              </p>
+            )}
           </div>
 
           <div className="space-y-4">
@@ -176,8 +186,11 @@ function PublishForm() {
             もう一つ公開する
           </button>
           <div className="text-center">
-            <Link href="/" className="text-[#606060] underline text-sm mt-2 inline-block">
-              ホームに戻る
+            <Link
+              href={requestSlug ? `/requests/${requestSlug}` : "/"}
+              className="text-[#606060] underline text-sm mt-2 inline-block"
+            >
+              {requestSlug ? "困りごとに戻る" : "ホームに戻る"}
             </Link>
           </div>
         </div>
@@ -194,6 +207,11 @@ function PublishForm() {
         <p className="text-[#606060] mb-8">
           ZIPまたはHTMLファイルをアップロードして、すぐに公開できます。
         </p>
+        {requestSlug && (
+          <div className="mb-6 p-3 rounded-lg bg-[#1B4F72]/10 text-[#1B4F72] text-sm">
+            この公開は困りごと「{requestSlug}」へのアプリ回答として紐づきます。
+          </div>
+        )}
 
         {/* Publish Targets */}
         {communitySelections.length > 0 && (

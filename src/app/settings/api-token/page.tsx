@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Copy, Trash2, Plus, Key, Terminal, Check } from "lucide-react";
 
 interface Token {
@@ -34,13 +34,28 @@ export default function ApiTokenPage() {
   const [deletingAll, setDeletingAll] = useState(false);
   const fadeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const fetchTokens = useCallback(async () => {
+  const fetchTokens = async () => {
     const res = await fetch("/api/settings/api-token");
     if (res.ok) setTokens(await res.json());
     setLoading(false);
-  }, []);
+  };
 
-  useEffect(() => { fetchTokens(); }, [fetchTokens]);
+  useEffect(() => {
+    let active = true;
+    fetch("/api/settings/api-token")
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => {
+        if (!active) return;
+        setTokens(data);
+        setLoading(false);
+      })
+      .catch(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // Cleanup timer on unmount
   useEffect(() => () => { if (fadeTimer.current) clearTimeout(fadeTimer.current); }, []);

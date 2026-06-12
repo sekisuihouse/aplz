@@ -38,7 +38,19 @@ export async function GET(req: NextRequest) {
     .eq("id", user.id)
     .single();
 
-  return NextResponse.json(profile ?? { id: user.id, display_name: "", bio: "", avatar_url: "" });
+  return NextResponse.json(
+    profile ?? {
+      id: user.id,
+      display_name: "",
+      bio: "",
+      avatar_url: "",
+      github_url: "",
+      sns_url: "",
+      website_url: "",
+      developer_enabled: false,
+      skill_categories: [],
+    }
+  );
 }
 
 export async function PUT(req: NextRequest) {
@@ -50,6 +62,11 @@ export async function PUT(req: NextRequest) {
   const formData = await req.formData();
   const displayName = formData.get("display_name") as string | null;
   const bio = formData.get("bio") as string | null;
+  const githubUrl = formData.get("github_url") as string | null;
+  const snsUrl = formData.get("sns_url") as string | null;
+  const websiteUrl = formData.get("website_url") as string | null;
+  const developerEnabled = formData.get("developer_enabled") as string | null;
+  const skillCategories = formData.get("skill_categories") as string | null;
   const avatar = formData.get("avatar") as File | null;
 
   const supabase = createServerClient();
@@ -59,7 +76,18 @@ export async function PUT(req: NextRequest) {
   };
 
   if (displayName !== null) updates.display_name = displayName;
-  if (bio !== null) updates.bio = bio.slice(0, 200);
+  if (bio !== null) updates.bio = bio.slice(0, 1000);
+  if (githubUrl !== null) updates.github_url = githubUrl.slice(0, 500);
+  if (snsUrl !== null) updates.sns_url = snsUrl.slice(0, 500);
+  if (websiteUrl !== null) updates.website_url = websiteUrl.slice(0, 500);
+  if (developerEnabled !== null) updates.developer_enabled = developerEnabled === "true";
+  if (skillCategories !== null) {
+    updates.skill_categories = skillCategories
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean)
+      .slice(0, 12);
+  }
 
   // Upload avatar if provided
   if (avatar && avatar.size > 0) {

@@ -32,6 +32,7 @@ interface EditorLayoutProps {
   initialCode: string;
   isNewApp: boolean;
   backUrl: string;
+  requestSlug?: string | null;
 }
 
 const INITIAL_GREETING =
@@ -44,6 +45,7 @@ export default function EditorLayout({
   initialCode,
   isNewApp,
   backUrl,
+  requestSlug,
 }: EditorLayoutProps) {
   const router = useRouter();
 
@@ -300,6 +302,9 @@ export default function EditorLayout({
       formData.append("name", publishTitle);
       formData.append("description", publishDescription);
       formData.append("is_public", "true");
+      if (requestSlug) {
+        formData.append("request", requestSlug);
+      }
 
       const res = await fetch("/api/publish", {
         method: "POST",
@@ -313,7 +318,7 @@ export default function EditorLayout({
       }
 
       const data = await res.json();
-      router.push(`/apps/${data.slug}`);
+      router.push(requestSlug ? `/requests/${requestSlug}` : `/apps/${data.slug}`);
     } catch {
       alert("通信エラーが発生しました");
     } finally {
@@ -512,6 +517,11 @@ export default function EditorLayout({
             <h2 className="text-lg font-bold text-[#0f0f0f] mb-4">
               アプリを公開
             </h2>
+            {requestSlug && (
+              <div className="mb-4 p-3 rounded-lg bg-[#1B4F72]/10 text-[#1B4F72] text-sm">
+                このアプリは困りごと「{requestSlug}」への回答として公開されます。
+              </div>
+            )}
             <div className="space-y-4">
               <div>
                 <label className="block text-sm text-[#606060] mb-1.5">

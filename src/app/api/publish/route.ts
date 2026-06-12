@@ -4,6 +4,7 @@ import { createServerClient } from "@/lib/supabase";
 import { uploadToR2, getPublicUrl } from "@/lib/r2";
 import { generateSlug, getMimeType } from "@/lib/utils";
 import { createServerClient as createSSRServerClient } from "@supabase/ssr";
+import { createNotification } from "@/lib/request-platform";
 
 async function getUserFromToken(token: string): Promise<{ id: string } | null> {
   const db = createServerClient();
@@ -62,6 +63,7 @@ export async function POST(req: NextRequest) {
       const description = (body.description as string) || "";
       const isPublic = body.is_public !== false;
       const htmlContent = body.html_content as string | undefined;
+      const requestSlug = (body.request_slug as string) || (body.request as string) || null;
 
       if (!htmlContent) {
         return NextResponse.json({ success: false, error: "html_content is required" }, { status: 400 });
@@ -96,7 +98,16 @@ export async function POST(req: NextRequest) {
 
       const appUrl = getPublicUrl(`${slug}/index.html`);
       const platformUrl = `${process.env.NEXT_PUBLIC_APP_URL}/apps/${slug}`;
-      return NextResponse.json({ success: true, app_id: data.id, slug, app_url: appUrl, platform_url: platformUrl });
+      const solutionId = await linkPublishedAppToRequest({
+        requestSlug,
+        userId: user?.id ?? null,
+        appId: data.id,
+        appSlug: slug,
+        appName: name,
+        appUrl: platformUrl,
+        description,
+      });
+      return NextResponse.json({ success: true, app_id: data.id, slug, app_url: appUrl, platform_url: platformUrl, solution_id: solutionId });
     }
 
     // ── FormData path (existing) ────────────────────────────────
@@ -106,6 +117,7 @@ export async function POST(req: NextRequest) {
     const name = (formData.get("name") as string) || (formData.get("title") as string) || "Untitled App";
     const description = (formData.get("description") as string) || "";
     const isPublic = formData.get("is_public") !== "false";
+    const requestSlug = (formData.get("request_slug") as string) || (formData.get("request") as string) || null;
 
     // Resolve community_id: accept direct id or slug
     let communityId = (formData.get("community_id") as string) || null;
@@ -230,6 +242,15 @@ export async function POST(req: NextRequest) {
 
     const appUrl = getPublicUrl(`${slug}/index.html`);
     const platformUrl = `${process.env.NEXT_PUBLIC_APP_URL}/apps/${slug}`;
+    const solutionId = await linkPublishedAppToRequest({
+      requestSlug,
+      userId: user?.id ?? null,
+      appId: data.id,
+      appSlug: slug,
+      appName: name,
+      appUrl: platformUrl,
+      description,
+    });
 
     return NextResponse.json({
       success: true,
@@ -237,6 +258,7 @@ export async function POST(req: NextRequest) {
       slug,
       app_url: appUrl,
       platform_url: platformUrl,
+      solution_id: solutionId,
     });
   } catch (err) {
     console.error("Publish error:", err);
@@ -403,4 +425,65 @@ export async function PUT(req: NextRequest) {
 
 function stripPrefix(path: string, prefix: string): string {
   return prefix && path.startsWith(prefix) ? path.slice(prefix.length) : path;
+}
+
+async function linkPublishedAppToRequest({
+  requestSlug,
+  userId,
+  appId,
+  appSlug,
+  appName,
+  appUrl,
+  description,
+}: {
+  requestSlug: string | null;
+  userId: string | null;
+  appId: string;
+  appSlug: string;
+  appName: string;
+  appUrl: string;
+  description: string;
+}): Promise<string | null> {
+  if (!requestSlug || !userId) return null;
+
+  const db = createServerClient();
+  const { data: request } = await db
+    .from("requests")
+    .select("id, user_id, status")
+    .eq("slug", requestSlug)
+    .single();
+
+  if (!request) return null;
+
+  const { data: solution, error } = await db
+    .from("solutions")
+    .insert({
+      request_id: request.id,
+      user_id: userId,
+      app_id: appId,
+      app_slug: appSlug,
+      title: appName,
+      app_url: appUrl,
+      description,
+      usage_guide: "APLZで公開されたアプリです。起動ボタンから試せます。",
+      external_communication: false,
+    })
+    .select("id")
+    .single();
+
+  if (error || !solution) return null;
+
+  if (["open", "questions"].includes(request.status)) {
+    await db.from("requests").update({ status: "answered" }).eq("id", request.id);
+  }
+
+  await createNotification({
+    userId: request.user_id,
+    actorId: userId,
+    type: "solution_created",
+    requestId: request.id,
+    solutionId: solution.id,
+  });
+
+  return solution.id;
 }

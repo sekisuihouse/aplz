@@ -61,6 +61,13 @@ export default function NavUser({ email, avatarUrl, displayName }: Props) {
             <p className="text-xs text-[#909090] truncate">{email}</p>
           </div>
           <Link
+            href="/dashboard"
+            onClick={() => setOpen(false)}
+            className="block px-3 py-2 text-sm text-[#0f0f0f] hover:bg-[#f5f5f5] transition-colors"
+          >
+            ダッシュボード
+          </Link>
+          <Link
             href="/profile"
             onClick={() => setOpen(false)}
             className="block px-3 py-2 text-sm text-[#0f0f0f] hover:bg-[#f5f5f5] transition-colors"

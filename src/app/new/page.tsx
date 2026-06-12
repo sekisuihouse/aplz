@@ -1,5 +1,6 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import EditorLayout from "@/app/components/editor/EditorLayout";
 
 const DEFAULT_TEMPLATE = `<!DOCTYPE html>
@@ -25,12 +26,15 @@ const DEFAULT_TEMPLATE = `<!DOCTYPE html>
 </html>`;
 
 export default function NewAppPage() {
+  const searchParams = useSearchParams();
+  const requestSlug = searchParams.get("request");
   return (
     <EditorLayout
       app={null}
       initialCode={DEFAULT_TEMPLATE}
       isNewApp={true}
-      backUrl="/publish"
+      backUrl={requestSlug ? `/requests/${requestSlug}` : "/publish"}
+      requestSlug={requestSlug}
     />
   );
 }

@@ -10,6 +10,7 @@ import RatingSection from "./RatingSection";
 import CommentSection from "./CommentSection";
 import RelatedApps from "./RelatedApps";
 import QrCodeButton from "./QrCodeButton";
+import ReportButton from "@/app/components/ReportButton";
 
 export const revalidate = 10;
 
@@ -205,6 +206,7 @@ export default async function AppDetailPage({ params }: Props) {
                   新しいタブで開く &#8599;
                 </a>
                 <QrCodeButton appUrl={iframeSrc} />
+                <ReportButton targetType="app" targetId={app.id} />
                 {isOwner && (
                   <Link
                     href={`/apps/${slug}/edit`}

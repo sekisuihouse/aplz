@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
 
   // Fetch ratings for these apps
   const appIds = apps.map((a) => a.id as string);
-  let ratingsByApp: Record<string, { sum: number; count: number }> = {};
+  const ratingsByApp: Record<string, { sum: number; count: number }> = {};
 
   if (appIds.length > 0) {
     const { data: ratings } = await supabase

@@ -42,10 +42,6 @@ export default function WorkspaceSwitcher() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  useEffect(() => {
-    setOpen(false);
-  }, [pathname]);
-
   return (
     <div className="relative" ref={ref}>
       <button

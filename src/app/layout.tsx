@@ -19,9 +19,9 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "APLZ — AIで作ったアプリを共有しよう",
+  title: "APLZ — 小さな困りごとを小さなアプリで解決",
   description:
-    "AIで作ったWebアプリを公開してフィードバックをもらえるプラットフォーム",
+    "日常の小さな困りごとを投稿し、開発者が小さなWebアプリで解決するプラットフォーム",
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },
@@ -76,6 +76,12 @@ export default async function RootLayout({
               <NavLogo />
               <WorkspaceSwitcher />
               <Link
+                href="/requests"
+                className="px-3 py-1.5 rounded-lg text-sm text-[#606060] hover:text-[#0f0f0f] hover:bg-[#f5f5f5] transition-colors"
+              >
+                困りごと
+              </Link>
+              <Link
                 href="/templates"
                 className="px-3 py-1.5 rounded-lg text-sm text-[#606060] hover:text-[#0f0f0f] hover:bg-[#f5f5f5] transition-colors"
               >
@@ -85,6 +91,18 @@ export default async function RootLayout({
             <div className="flex items-center gap-3">
               {user ? (
                 <>
+                  <Link
+                    href="/requests/new"
+                    className="hidden sm:inline-flex px-3 py-2 rounded-lg border border-[#e5e5e5] text-[#606060] text-sm font-medium hover:bg-[#f5f5f5] transition-colors"
+                  >
+                    困りごとを投稿
+                  </Link>
+                  <Link
+                    href="/publish"
+                    className="hidden md:inline-flex px-3 py-2 rounded-lg border border-[#e5e5e5] text-[#606060] text-sm font-medium hover:bg-[#f5f5f5] transition-colors"
+                  >
+                    公開
+                  </Link>
                   <Link
                     href="/new"
                     className="px-4 py-2 rounded-lg bg-[#1B4F72] text-white text-sm font-medium hover:bg-[#15415F] transition-colors"
@@ -102,6 +120,12 @@ export default async function RootLayout({
                     ログイン
                   </Link>
                   <Link
+                    href="/requests/new"
+                    className="hidden sm:inline-flex px-3 py-2 rounded-lg border border-[#e5e5e5] text-[#606060] text-sm font-medium hover:bg-[#f5f5f5] transition-colors"
+                  >
+                    困りごとを投稿
+                  </Link>
+                  <Link
                     href="/new"
                     className="px-4 py-2 rounded-lg bg-[#1B4F72] text-white text-sm font-medium hover:bg-[#15415F] transition-colors"
                   >
@@ -116,7 +140,7 @@ export default async function RootLayout({
         <footer className="border-t border-[#e5e5e5] py-8 text-center">
           <p className="text-sm text-[#909090]">
             <span className="font-semibold text-[#1a1a1a]" style={{ fontFamily: "'Baloo 2', sans-serif" }}>APLZ</span>
-            {" "}— AIで作ったアプリの集まる場所
+            {" "}— 小さな困りごとを小さなアプリで解決する場所
           </p>
         </footer>
       </body>
