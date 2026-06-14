@@ -21,7 +21,7 @@ function isProtected(pathname: string) {
   });
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -51,7 +51,6 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  // Redirect unauthenticated users from protected pages
   if (!user && isProtected(pathname)) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
@@ -59,7 +58,6 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Redirect authenticated users away from login
   if (user && pathname === "/login") {
     const url = request.nextUrl.clone();
     url.pathname = "/";

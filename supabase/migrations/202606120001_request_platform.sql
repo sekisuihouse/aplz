@@ -255,3 +255,5 @@ with check (auth.uid() = reporter_id);
 
 -- Admin report reads are intentionally handled through service-role API routes.
 -- If you add direct client reads later, add a role/email based select policy.
+
+select pg_notify('pgrst', 'reload schema');

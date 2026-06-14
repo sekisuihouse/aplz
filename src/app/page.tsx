@@ -57,7 +57,7 @@ export default async function Home() {
               <circle cx="0" cy="0" r="2.2" fill="#1B4F72"/>
             </g>
           </svg>
-          <h1 style={{ fontFamily: "'Baloo 2', sans-serif", fontWeight: 800, fontSize: "48px", color: "#1a1a1a" }}>
+          <h1 style={{ fontFamily: "var(--font-baloo-2)", fontWeight: 800, fontSize: "48px", color: "#1a1a1a" }}>
             APLZ
           </h1>
         </div>

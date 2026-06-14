@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { DM_Sans, JetBrains_Mono } from "next/font/google";
+import { Baloo_2, DM_Sans, JetBrains_Mono } from "next/font/google";
 import Link from "next/link";
 import { createAuthServerClient } from "@/lib/supabase-server";
 import { createServerClient } from "@/lib/supabase";
@@ -7,6 +7,8 @@ import NavLogo from "./components/NavLogo";
 import NavUser from "./components/NavUser";
 import WorkspaceSwitcher from "./components/WorkspaceSwitcher";
 import "./globals.css";
+
+const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",
@@ -18,7 +20,14 @@ const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
 });
 
+const baloo2 = Baloo_2({
+  variable: "--font-baloo-2",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+});
+
 export const metadata: Metadata = {
+  metadataBase: new URL(appUrl),
   title: "APLZ — 小さな困りごとを小さなアプリで解決",
   description:
     "日常の小さな困りごとを投稿し、開発者が小さなWebアプリで解決するプラットフォーム",
@@ -61,14 +70,8 @@ export default async function RootLayout({
 
   return (
     <html lang="ja">
-      <head>
-        <link
-          href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&display=swap"
-          rel="stylesheet"
-        />
-      </head>
       <body
-        className={`${dmSans.variable} ${jetbrainsMono.variable} font-sans antialiased bg-white text-[#0f0f0f]`}
+        className={`${dmSans.variable} ${jetbrainsMono.variable} ${baloo2.variable} font-sans antialiased bg-white text-[#0f0f0f]`}
       >
         <header className="sticky top-0 z-50 backdrop-blur-md bg-white/80 border-b border-[#e5e5e5]">
           <nav className="max-w-5xl mx-auto flex items-center justify-between px-4 h-16">
@@ -139,7 +142,7 @@ export default async function RootLayout({
         {children}
         <footer className="border-t border-[#e5e5e5] py-8 text-center">
           <p className="text-sm text-[#909090]">
-            <span className="font-semibold text-[#1a1a1a]" style={{ fontFamily: "'Baloo 2', sans-serif" }}>APLZ</span>
+            <span className="font-semibold text-[#1a1a1a]" style={{ fontFamily: "var(--font-baloo-2)" }}>APLZ</span>
             {" "}— 小さな困りごとを小さなアプリで解決する場所
           </p>
         </footer>

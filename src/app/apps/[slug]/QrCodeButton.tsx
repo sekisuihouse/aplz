@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import { QrCode, X } from "lucide-react";
 
@@ -33,11 +34,12 @@ export default function QrCodeButton({ appUrl }: { appUrl: string }) {
               <X size={18} />
             </button>
             <div className="flex flex-col items-center">
-              <img
+              <Image
                 src={qrSrc}
                 alt="QR Code"
                 width={200}
                 height={200}
+                unoptimized
               />
               <p className="text-sm text-[#606060] mt-4 text-center">
                 スマホで読み取ってプレイ

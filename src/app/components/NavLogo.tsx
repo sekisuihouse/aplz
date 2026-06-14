@@ -28,7 +28,7 @@ export default function NavLogo() {
           <circle cx="0" cy="0" r="2.2" fill="#1B4F72"/>
         </g>
       </svg>
-      <span style={{ fontFamily: "'Baloo 2', sans-serif", fontWeight: 700, fontSize: '22px', color: '#1a1a1a', letterSpacing: '0.5px' }}>
+      <span style={{ fontFamily: "var(--font-baloo-2)", fontWeight: 700, fontSize: '22px', color: '#1a1a1a', letterSpacing: '0.5px' }}>
         APLZ
       </span>
     </Link>

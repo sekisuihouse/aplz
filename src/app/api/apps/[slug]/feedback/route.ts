@@ -36,7 +36,7 @@ export async function GET(
         db.from("ratings").select("usability, design, idea").eq("app_id", app.id),
         db
           .from("comments")
-          .select("content, created_at")
+          .select("body, created_at")
           .eq("app_id", app.id)
           .order("created_at", { ascending: false })
           .limit(20),
@@ -76,7 +76,7 @@ export async function GET(
       rating_count: ratingCount,
       reactions: reactionCounts,
       comments: (comments ?? []).map((c) => ({
-        content: c.content,
+        content: c.body,
         time_ago: timeAgo(c.created_at),
       })),
     });
