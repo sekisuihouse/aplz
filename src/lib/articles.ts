@@ -415,6 +415,19 @@ export function getArticle(slug: string): Article | undefined {
 
 export const ALL_ARTICLES: Article[] = [...ARTICLES, ...(GENERATED_ARTICLES as unknown as Article[])];
 
+function slugCandidates(slug: string): string[] {
+  const candidates = new Set([slug, slug.normalize("NFC")]);
+  try {
+    const decoded = decodeURIComponent(slug);
+    candidates.add(decoded);
+    candidates.add(decoded.normalize("NFC"));
+  } catch {
+    // Keep the original slug when the segment is already decoded.
+  }
+  return [...candidates];
+}
+
 export function getAnyArticle(slug: string): Article | undefined {
-  return ALL_ARTICLES.find((article) => article.slug === slug);
+  const candidates = slugCandidates(slug);
+  return ALL_ARTICLES.find((article) => candidates.includes(article.slug));
 }
