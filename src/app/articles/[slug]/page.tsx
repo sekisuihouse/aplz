@@ -30,6 +30,11 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   const { slug } = await params;
   const article = getArticle(slug);
   if (!article) notFound();
+  const relatedArticles = ARTICLES.filter(
+    (item) => item.slug !== article.slug && item.category === article.category
+  )
+    .concat(ARTICLES.filter((item) => item.slug !== article.slug && item.category !== article.category))
+    .slice(0, 3);
 
   const jsonLd = [
     breadcrumbJsonLd([
@@ -139,6 +144,27 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             >
               困りごとを書く
             </Link>
+          </div>
+        </section>
+
+        <section className="mt-10">
+          <h2 className="text-xl font-bold text-[#0f0f0f] mb-4">関連する記事</h2>
+          <div className="grid gap-3">
+            {relatedArticles.map((related) => (
+              <Link
+                key={related.slug}
+                href={`/articles/${related.slug}`}
+                className="rounded-lg border border-[#e5e5e5] bg-white p-4 hover:shadow-md transition-all"
+              >
+                <p className="text-xs font-semibold text-[#1B4F72] mb-1">{related.category}</p>
+                <h3 className="text-sm font-semibold text-[#0f0f0f] leading-snug">
+                  {related.title}
+                </h3>
+                <p className="text-xs text-[#606060] leading-relaxed mt-1">
+                  {related.description}
+                </p>
+              </Link>
+            ))}
           </div>
         </section>
       </article>
