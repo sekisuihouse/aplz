@@ -2,7 +2,7 @@
 article_id: A198
 title: "APLZ・小さな開発・制作記録を一人で抱えないための小さな表"
 slug: aplz-小さな開発-制作記録を一人で抱えないための小さな表-a198
-status: published_draft
+status: published
 editorial_world: P40
 secondary_world: 誰にも評価されない仕事とは何か
 content_format: F03 解説・仕組み

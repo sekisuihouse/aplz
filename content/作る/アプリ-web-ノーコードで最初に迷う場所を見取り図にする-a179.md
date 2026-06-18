@@ -2,7 +2,7 @@
 article_id: A179
 title: "アプリ・Web・ノーコードで最初に迷う場所を見取り図にする"
 slug: アプリ-web-ノーコードで最初に迷う場所を見取り図にする-a179
-status: published_draft
+status: published
 editorial_world: P36
 secondary_world: 無料で提供する範囲はどこまでか
 content_format: F18 ニュース・トレンド分析

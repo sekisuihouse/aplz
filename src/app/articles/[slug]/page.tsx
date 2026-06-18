@@ -17,13 +17,13 @@ export async function generateMetadata({ params }: ArticlePageProps) {
   const article = getAnyArticle(slug);
   if (!article) return { title: "記事が見つかりません | APLZ" };
   return pageMetadata({
-    title: `${article.title} | APLZ`,
-    description: article.description,
+    title: article.seoTitle ?? `${article.title} | APLZ`,
+    description: article.seoDescription ?? article.description,
     path: `/articles/${article.slug}`,
     type: "article",
     publishedTime: article.publishedAt,
     modifiedTime: article.updatedAt,
-    keywords: article.keywords,
+    keywords: article.seoKeywords ?? article.keywords,
   });
 }
 
@@ -47,11 +47,26 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
       "@context": "https://schema.org",
       "@type": "Article",
       headline: article.title,
-      description: article.description,
+      description: article.seoDescription ?? article.description,
       inLanguage: "ja",
       datePublished: article.publishedAt,
       dateModified: article.updatedAt,
       mainEntityOfPage: absoluteUrl(`/articles/${article.slug}`),
+      articleSection: article.category,
+      wordCount: article.wordCount,
+      isAccessibleForFree: true,
+      about: [
+        article.category,
+        article.secondaryWorld,
+        article.searchIntent,
+        article.originalArtifact,
+      ].filter(Boolean),
+      audience: article.audience
+        ? {
+            "@type": "Audience",
+            audienceType: article.audience,
+          }
+        : undefined,
       author: {
         "@type": "Organization",
         name: "APLZ",
@@ -66,7 +81,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           url: absoluteUrl("/icon-512.png"),
         },
       },
-      keywords: article.keywords.join(", "),
+      keywords: (article.seoKeywords ?? article.keywords).join(", "),
     },
     {
       "@context": "https://schema.org",
@@ -148,7 +163,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           ))}
         </div>
 
-        {article.postExample && (
+        {article.postExample && article.aplzCta && (
           <section className="mt-12 rounded-lg border border-[#dfe7ec] bg-white p-5 md:p-6">
             <div className="flex items-center gap-2 mb-4">
               <PenLine size={18} className="text-[#1B4F72]" />
@@ -178,31 +193,33 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           </div>
         </section>
 
-        <section className="mt-12 rounded-lg bg-[#103a54] p-6 text-white">
-          <div className="flex items-center gap-2 mb-3">
-            <BookOpen size={18} />
-            <h2 className="text-xl font-bold">読んだ内容を、そのまま相談にする</h2>
-          </div>
-          <p className="text-sm text-white/80 leading-7">
-            似た作業で困っている場合は、既存の投稿を見るか、自分の条件で投稿できます。
-          </p>
-          <div className="flex flex-wrap gap-3 mt-4">
-            <Link
-              href={`/requests?q=${encodeURIComponent(article.relatedRequestQuery)}`}
-              className="inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-white text-[#103a54] text-sm font-semibold hover:bg-[#eef6fa] transition-colors"
-            >
-              関連する困りごとを見る
-              <ArrowRight size={14} />
-            </Link>
-            <Link
-              href="/requests/new"
-              className="inline-flex items-center gap-1 px-4 py-2 rounded-lg border border-white/30 text-white text-sm font-semibold hover:bg-white/10 transition-colors"
-            >
-              困りごとを書く
-              <ArrowRight size={14} />
-            </Link>
-          </div>
-        </section>
+        {article.aplzCta && (
+          <section className="mt-12 rounded-lg bg-[#103a54] p-6 text-white">
+            <div className="flex items-center gap-2 mb-3">
+              <BookOpen size={18} />
+              <h2 className="text-xl font-bold">読んだ内容を、そのまま相談にする</h2>
+            </div>
+            <p className="text-sm text-white/80 leading-7">
+              似た作業で困っている場合は、既存の投稿を見るか、自分の条件で投稿できます。
+            </p>
+            <div className="flex flex-wrap gap-3 mt-4">
+              <Link
+                href={`/requests?q=${encodeURIComponent(article.relatedRequestQuery)}`}
+                className="inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-white text-[#103a54] text-sm font-semibold hover:bg-[#eef6fa] transition-colors"
+              >
+                関連する困りごとを見る
+                <ArrowRight size={14} />
+              </Link>
+              <Link
+                href="/requests/new"
+                className="inline-flex items-center gap-1 px-4 py-2 rounded-lg border border-white/30 text-white text-sm font-semibold hover:bg-white/10 transition-colors"
+              >
+                困りごとを書く
+                <ArrowRight size={14} />
+              </Link>
+            </div>
+          </section>
+        )}
 
         <section className="mt-10">
           <h2 className="text-xl font-bold text-[#0f0f0f] mb-4">関連する記事</h2>

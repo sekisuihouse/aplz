@@ -10,6 +10,8 @@
     "check:supabase": "node scripts/verify-supabase.mjs",
     "seed:demo": "node scripts/seed-demo-content.mjs",
     "content:generate": "node scripts/generate-media-content.mjs",
+    "content:publish:seo": "node scripts/publish-and-optimize-seo.mjs",
+    "content:check:published-seo": "node scripts/validate-published-seo.mjs",
     "content:check:bias": "node scripts/detect-aplz-bias.mjs"
   },
   "dependencies": {

@@ -2,7 +2,7 @@
 article_id: A136
 title: "町内会・自治会・PTAは、誰のために続いているのか"
 slug: 町内会-自治会-ptaは-誰のために続いているのか-a136
-status: published_draft
+status: published
 editorial_world: P28
 secondary_world: 効率化は常に正しいのか
 content_format: F11 エッセー・論考・問題提起

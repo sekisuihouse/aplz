@@ -2,7 +2,7 @@
 article_id: A176
 title: "アプリ・Web・ノーコードは、誰のために続いているのか"
 slug: アプリ-web-ノーコードは-誰のために続いているのか-a176
-status: published_draft
+status: published
 editorial_world: P36
 secondary_world: 子どもと大人で見える仕組みの違い
 content_format: F15 診断・クイズ

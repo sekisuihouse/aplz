@@ -2,7 +2,7 @@
 article_id: A175
 title: "Excel・紙・LINEなどの道具文化の失敗例を先に並べてみる"
 slug: excel-紙-lineなどの道具文化の失敗例を先に並べてみる-a175
-status: published_draft
+status: published
 editorial_world: P35
 secondary_world: 便利さとプライバシー
 content_format: F14 ビジュアル解説

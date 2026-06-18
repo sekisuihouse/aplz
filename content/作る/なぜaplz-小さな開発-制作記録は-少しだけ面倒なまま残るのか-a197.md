@@ -2,7 +2,7 @@
 article_id: A197
 title: "なぜAPLZ・小さな開発・制作記録は、少しだけ面倒なまま残るのか"
 slug: なぜaplz-小さな開発-制作記録は-少しだけ面倒なまま残るのか-a197
-status: published_draft
+status: published
 editorial_world: P40
 secondary_world: 不便には価値があるのか
 content_format: F18 ニュース・トレンド分析

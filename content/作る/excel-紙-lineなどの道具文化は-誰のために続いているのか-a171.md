@@ -2,7 +2,7 @@
 article_id: A171
 title: "Excel・紙・LINEなどの道具文化は、誰のために続いているのか"
 slug: excel-紙-lineなどの道具文化は-誰のために続いているのか-a171
-status: published_draft
+status: published
 editorial_world: P35
 secondary_world: 小さいことへ時間を使う意味
 content_format: F10 制作ドキュメンタリー

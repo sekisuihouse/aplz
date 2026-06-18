@@ -17,10 +17,10 @@ export async function generateMetadata({ params }: ToolPageProps) {
   const tool = GENERATED_TOOLS.find((item) => item.slug === slug);
   if (!tool) return { title: "ツールが見つかりません | APLZ" };
   return pageMetadata({
-    title: `${tool.title} | 無料ツール | APLZ`,
-    description: tool.description,
+    title: tool.seoTitle,
+    description: tool.seoDescription,
     path: `/tools/${tool.slug}`,
-    keywords: [tool.title, "無料ツール", "診断", "計算機"],
+    keywords: [...tool.keywords],
   });
 }
 
@@ -42,11 +42,12 @@ export default async function ToolPage({ params }: ToolPageProps) {
             "@context": "https://schema.org",
             "@type": "SoftwareApplication",
             name: tool.title,
-            description: tool.description,
+            description: tool.seoDescription,
             url: absoluteUrl(`/tools/${tool.slug}`),
             applicationCategory: "UtilityApplication",
             operatingSystem: "Web",
             offers: { "@type": "Offer", price: "0", priceCurrency: "JPY" },
+            keywords: [...tool.keywords].join(", "),
           },
         ]}
       />

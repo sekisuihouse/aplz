@@ -2,7 +2,7 @@
 article_id: A138
 title: "町内会・自治会・PTAを一人で抱えないための小さな表"
 slug: 町内会-自治会-ptaを一人で抱えないための小さな表-a138
-status: published_draft
+status: published
 editorial_world: P28
 secondary_world: 誰にも評価されない仕事とは何か
 content_format: F13 実験・検証・対決

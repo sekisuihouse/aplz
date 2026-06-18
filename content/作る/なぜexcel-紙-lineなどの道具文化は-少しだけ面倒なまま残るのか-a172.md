@@ -2,7 +2,7 @@
 article_id: A172
 title: "なぜExcel・紙・LINEなどの道具文化は、少しだけ面倒なまま残るのか"
 slug: なぜexcel-紙-lineなどの道具文化は-少しだけ面倒なまま残るのか-a172
-status: published_draft
+status: published
 editorial_world: P35
 secondary_world: 地域とテクノロジーの距離
 content_format: F11 エッセー・論考・問題提起

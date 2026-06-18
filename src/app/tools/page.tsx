@@ -23,6 +23,15 @@ export default function ToolsPage() {
             "@type": "CollectionPage",
             name: "無料ツール・診断",
             url: absoluteUrl("/tools"),
+            hasPart: GENERATED_TOOLS.map((tool) => ({
+              "@type": "SoftwareApplication",
+              name: tool.title,
+              description: tool.seoDescription,
+              url: absoluteUrl(`/tools/${tool.slug}`),
+              applicationCategory: "UtilityApplication",
+              operatingSystem: "Web",
+              offers: { "@type": "Offer", price: "0", priceCurrency: "JPY" },
+            })),
           },
         ]}
       />
@@ -41,7 +50,9 @@ export default function ToolsPage() {
             className="rounded-lg border border-[#e5e5e5] bg-white p-5 hover:shadow-md transition-all"
           >
             <h2 className="text-lg font-bold text-[#0f0f0f]">{tool.title}</h2>
-            <p className="text-sm text-[#606060] leading-7 mt-2">{tool.description}</p>
+            <p className="text-sm text-[#606060] leading-7 mt-2">
+              {tool.seoDescription}
+            </p>
           </Link>
         ))}
       </div>

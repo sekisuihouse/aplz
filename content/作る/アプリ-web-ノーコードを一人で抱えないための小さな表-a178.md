@@ -2,7 +2,7 @@
 article_id: A178
 title: "アプリ・Web・ノーコードを一人で抱えないための小さな表"
 slug: アプリ-web-ノーコードを一人で抱えないための小さな表-a178
-status: published_draft
+status: published
 editorial_world: P36
 secondary_world: 成功より失敗から何を学べるか
 content_format: F17 歴史・文化・由来

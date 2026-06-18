@@ -3,11 +3,11 @@ import { ALL_ARTICLES } from "@/lib/articles";
 import { JsonLd, absoluteUrl, breadcrumbJsonLd, pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata({
-  title: "記事 — 小さな業務アプリと困りごと解決のヒント | APLZ",
+  title: "記事 — 暮らし・仕事・地域・学びの小さな疑問を読む | APLZ",
   description:
-    "町内会、学校、個人事業主、イベント運営などの小さな困りごとをアプリで解決するための記事一覧です。",
+    "暮らし、学校、仕事、商売、地域、技術の中で生まれる小さな疑問、不便、工夫、失敗、文化を読むAPLZのコンテンツメディアです。",
   path: "/articles",
-  keywords: ["小さな業務アプリ", "業務改善", "困りごと 解決", "APLZ 記事"],
+  keywords: ["暮らしの疑問", "地域の困りごと", "名もない仕事", "小さな不便", "APLZ 記事"],
 });
 
 export default function ArticlesPage() {
@@ -26,10 +26,11 @@ export default function ArticlesPage() {
       hasPart: ALL_ARTICLES.map((article) => ({
         "@type": "Article",
         headline: article.title,
-        description: article.description,
+        description: article.seoDescription ?? article.description,
         url: absoluteUrl(`/articles/${article.slug}`),
         datePublished: article.publishedAt,
         dateModified: article.updatedAt,
+        articleSection: article.category,
       })),
     },
   ];
@@ -40,9 +41,9 @@ export default function ArticlesPage() {
       <div className="max-w-5xl mx-auto px-4 py-10 md:py-14">
         <div className="mb-10">
           <p className="text-sm font-semibold text-[#1B4F72] mb-2">APLZ Articles</p>
-          <h1 className="text-3xl md:text-4xl font-bold text-[#0f0f0f]">小さな困りごとを、投稿できる形にする読み物</h1>
+          <h1 className="text-3xl md:text-4xl font-bold text-[#0f0f0f]">暮らし・仕事・地域・学びの小さな疑問を読む</h1>
           <p className="text-base text-[#606060] leading-8 mt-4 max-w-2xl">
-            紙、Excel、LINE、手入力で回している作業を、どこから小さなアプリにすればいいか分かるようにまとめています。
+            家、学校、店、町内会、職場、制作現場で生まれる不便や工夫を、道具だけでなく人の動きや文化から考えます。
           </p>
         </div>
 
@@ -53,7 +54,9 @@ export default function ArticlesPage() {
           >
             <p className="text-xs font-semibold text-[#1B4F72] mb-3">{featured.category}</p>
             <h2 className="text-2xl md:text-3xl font-bold text-[#0f0f0f] leading-snug">{featured.title}</h2>
-            <p className="text-base text-[#606060] leading-8 mt-3 max-w-3xl">{featured.description}</p>
+            <p className="text-base text-[#606060] leading-8 mt-3 max-w-3xl">
+              {featured.seoDescription ?? featured.description}
+            </p>
             <p className="text-xs text-[#909090] mt-4">
               {new Date(featured.publishedAt).toLocaleDateString("ja-JP")}
             </p>
@@ -75,7 +78,9 @@ export default function ArticlesPage() {
               </div>
               <div>
                 <h2 className="text-lg font-bold text-[#0f0f0f] leading-snug">{article.title}</h2>
-                <p className="text-sm text-[#606060] leading-7 mt-2">{article.description}</p>
+                <p className="text-sm text-[#606060] leading-7 mt-2">
+                  {article.seoDescription ?? article.description}
+                </p>
               </div>
             </Link>
           ))}

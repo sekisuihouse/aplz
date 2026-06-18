@@ -2,7 +2,7 @@
 article_id: A199
 title: "APLZ・小さな開発・制作記録で最初に迷う場所を見取り図にする"
 slug: aplz-小さな開発-制作記録で最初に迷う場所を見取り図にする-a199
-status: published_draft
+status: published
 editorial_world: P40
 secondary_world: 道具が人の行動をどう変えるか
 content_format: F01 検索回答記事

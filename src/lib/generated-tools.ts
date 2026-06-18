@@ -6,7 +6,19 @@ export const GENERATED_TOOLS = [
     "inputLabel": "人数",
     "unit": "人",
     "formula": "入力値を整理し、必要な確認項目を表示します。",
-    "relatedArticleSlug": "日常の小さな不便は-誰のために続いているのか-a001"
+    "relatedArticleSlug": "日常の小さな不便は-誰のために続いているのか-a001",
+    "category": "暮らし",
+    "seoTitle": "家事分担シャッフル | 無料ツール | APLZ",
+    "seoDescription": "家事分担シャッフルは、家族や同居人の家事を偏らないように並べ替えるための無料ツールです。入力例、結果の意味、計算根拠、個人情報への配慮を確認しながら使えます。",
+    "keywords": [
+      "家事分担シャッフル",
+      "家事分担シャッフル 無料",
+      "家事分担シャッフル 使い方",
+      "暮らし",
+      "無料ツール",
+      "診断",
+      "計算機"
+    ]
   },
   {
     "slug": "family-calendar",
@@ -15,7 +27,19 @@ export const GENERATED_TOOLS = [
     "inputLabel": "件数",
     "unit": "件",
     "formula": "入力値に予備分を足して目安を出します。",
-    "relatedArticleSlug": "なぜ日常の小さな不便は-少しだけ面倒なまま残るのか-a002"
+    "relatedArticleSlug": "なぜ日常の小さな不便は-少しだけ面倒なまま残るのか-a002",
+    "category": "暮らし",
+    "seoTitle": "家族予定共有表ジェネレーター | 無料ツール | APLZ",
+    "seoDescription": "家族予定共有表ジェネレーターは、予定を貼り付けて一週間の共有表を作るための無料ツールです。入力例、結果の意味、計算根拠、個人情報への配慮を確認しながら使えます。",
+    "keywords": [
+      "家族予定共有表ジェネレーター",
+      "家族予定共有表ジェネレーター 無料",
+      "家族予定共有表ジェネレーター 使い方",
+      "暮らし",
+      "無料ツール",
+      "診断",
+      "計算機"
+    ]
   },
   {
     "slug": "keep-or-discard",
@@ -24,7 +48,19 @@ export const GENERATED_TOOLS = [
     "inputLabel": "時間",
     "unit": "時間",
     "formula": "入力値を人数や日数で割って見通しを作ります。",
-    "relatedArticleSlug": "日常の小さな不便を一人で抱えないための小さな表-a003"
+    "relatedArticleSlug": "日常の小さな不便を一人で抱えないための小さな表-a003",
+    "category": "小さな判断",
+    "seoTitle": "捨てるか残すか診断 | 無料診断 | APLZ",
+    "seoDescription": "捨てるか残すか診断は、物を残す理由を質問で分けるための無料ツールです。入力例、結果の意味、計算根拠、個人情報への配慮を確認しながら使えます。",
+    "keywords": [
+      "捨てるか残すか診断",
+      "捨てるか残すか診断 無料",
+      "捨てるか残すか診断 使い方",
+      "小さな判断",
+      "無料ツール",
+      "診断",
+      "計算機"
+    ]
   },
   {
     "slug": "forgotten-items",
@@ -33,7 +69,19 @@ export const GENERATED_TOOLS = [
     "inputLabel": "金額",
     "unit": "円",
     "formula": "入力値を整理し、必要な確認項目を表示します。",
-    "relatedArticleSlug": "日常の小さな不便で最初に迷う場所を見取り図にする-a004"
+    "relatedArticleSlug": "日常の小さな不便で最初に迷う場所を見取り図にする-a004",
+    "category": "暮らし",
+    "seoTitle": "忘れ物チェックリスト作成 | 無料ツール | APLZ",
+    "seoDescription": "忘れ物チェックリスト作成は、出かける目的から持ち物を作るための無料ツールです。入力例、結果の意味、計算根拠、個人情報への配慮を確認しながら使えます。",
+    "keywords": [
+      "忘れ物チェックリスト作成",
+      "忘れ物チェックリスト作成 無料",
+      "忘れ物チェックリスト作成 使い方",
+      "暮らし",
+      "無料ツール",
+      "診断",
+      "計算機"
+    ]
   },
   {
     "slug": "meeting-cost",
@@ -42,7 +90,19 @@ export const GENERATED_TOOLS = [
     "inputLabel": "人数",
     "unit": "人",
     "formula": "入力値に予備分を足して目安を出します。",
-    "relatedArticleSlug": "日常の小さな不便の失敗例を先に並べてみる-a005"
+    "relatedArticleSlug": "日常の小さな不便の失敗例を先に並べてみる-a005",
+    "category": "働く",
+    "seoTitle": "会議時間コスト計算 | 無料ツール | APLZ",
+    "seoDescription": "会議時間コスト計算は、人数と時間から会議の重さを見える化するための無料ツールです。入力例、結果の意味、計算根拠、個人情報への配慮を確認しながら使えます。",
+    "keywords": [
+      "会議時間コスト計算",
+      "会議時間コスト計算 無料",
+      "会議時間コスト計算 使い方",
+      "働く",
+      "無料ツール",
+      "診断",
+      "計算機"
+    ]
   },
   {
     "slug": "event-staff",
@@ -51,7 +111,19 @@ export const GENERATED_TOOLS = [
     "inputLabel": "件数",
     "unit": "件",
     "formula": "入力値を人数や日数で割って見通しを作ります。",
-    "relatedArticleSlug": "家-家族-共同生活は-誰のために続いているのか-a006"
+    "relatedArticleSlug": "家-家族-共同生活は-誰のために続いているのか-a006",
+    "category": "地域・学校",
+    "seoTitle": "イベント必要スタッフ数計算 | 無料ツール | APLZ",
+    "seoDescription": "イベント必要スタッフ数計算は、受付、誘導、予備を含めて人数を出すための無料ツールです。入力例、結果の意味、計算根拠、個人情報への配慮を確認しながら使えます。",
+    "keywords": [
+      "イベント必要スタッフ数計算",
+      "イベント必要スタッフ数計算 無料",
+      "イベント必要スタッフ数計算 使い方",
+      "地域・学校",
+      "無料ツール",
+      "診断",
+      "計算機"
+    ]
   },
   {
     "slug": "duty-shuffle",
@@ -60,7 +132,19 @@ export const GENERATED_TOOLS = [
     "inputLabel": "時間",
     "unit": "時間",
     "formula": "入力値を整理し、必要な確認項目を表示します。",
-    "relatedArticleSlug": "なぜ家-家族-共同生活は-少しだけ面倒なまま残るのか-a007"
+    "relatedArticleSlug": "なぜ家-家族-共同生活は-少しだけ面倒なまま残るのか-a007",
+    "category": "小さな判断",
+    "seoTitle": "当番順シャッフル | 無料ツール | APLZ",
+    "seoDescription": "当番順シャッフルは、候補者と当番数から順番案を作るための無料ツールです。入力例、結果の意味、計算根拠、個人情報への配慮を確認しながら使えます。",
+    "keywords": [
+      "当番順シャッフル",
+      "当番順シャッフル 無料",
+      "当番順シャッフル 使い方",
+      "小さな判断",
+      "無料ツール",
+      "診断",
+      "計算機"
+    ]
   },
   {
     "slug": "seat-change",
@@ -69,7 +153,19 @@ export const GENERATED_TOOLS = [
     "inputLabel": "金額",
     "unit": "円",
     "formula": "入力値に予備分を足して目安を出します。",
-    "relatedArticleSlug": "家-家族-共同生活を一人で抱えないための小さな表-a008"
+    "relatedArticleSlug": "家-家族-共同生活を一人で抱えないための小さな表-a008",
+    "category": "地域・学校",
+    "seoTitle": "席替えツール | 無料ツール | APLZ",
+    "seoDescription": "席替えツールは、人数と列から席を並べるための無料ツールです。入力例、結果の意味、計算根拠、個人情報への配慮を確認しながら使えます。",
+    "keywords": [
+      "席替えツール",
+      "席替えツール 無料",
+      "席替えツール 使い方",
+      "地域・学校",
+      "無料ツール",
+      "診断",
+      "計算機"
+    ]
   },
   {
     "slug": "fee-collection",
@@ -78,7 +174,19 @@ export const GENERATED_TOOLS = [
     "inputLabel": "人数",
     "unit": "人",
     "formula": "入力値を人数や日数で割って見通しを作ります。",
-    "relatedArticleSlug": "家-家族-共同生活で最初に迷う場所を見取り図にする-a009"
+    "relatedArticleSlug": "家-家族-共同生活で最初に迷う場所を見取り図にする-a009",
+    "category": "地域・学校",
+    "seoTitle": "町内会費集金チェック | 無料ツール | APLZ",
+    "seoDescription": "町内会費集金チェックは、集金状況の確認表を作るための無料ツールです。入力例、結果の意味、計算根拠、個人情報への配慮を確認しながら使えます。",
+    "keywords": [
+      "町内会費集金チェック",
+      "町内会費集金チェック 無料",
+      "町内会費集金チェック 使い方",
+      "地域・学校",
+      "無料ツール",
+      "診断",
+      "計算機"
+    ]
   },
   {
     "slug": "kitchen-cost",
@@ -87,7 +195,19 @@ export const GENERATED_TOOLS = [
     "inputLabel": "件数",
     "unit": "件",
     "formula": "入力値を整理し、必要な確認項目を表示します。",
-    "relatedArticleSlug": "家-家族-共同生活の失敗例を先に並べてみる-a010"
+    "relatedArticleSlug": "家-家族-共同生活の失敗例を先に並べてみる-a010",
+    "category": "商売",
+    "seoTitle": "キッチンカー原価計算 | 無料ツール | APLZ",
+    "seoDescription": "キッチンカー原価計算は、材料費と販売数から原価を出すための無料ツールです。入力例、結果の意味、計算根拠、個人情報への配慮を確認しながら使えます。",
+    "keywords": [
+      "キッチンカー原価計算",
+      "キッチンカー原価計算 無料",
+      "キッチンカー原価計算 使い方",
+      "商売",
+      "無料ツール",
+      "診断",
+      "計算機"
+    ]
   },
   {
     "slug": "pricing-simulator",
@@ -96,7 +216,19 @@ export const GENERATED_TOOLS = [
     "inputLabel": "時間",
     "unit": "時間",
     "formula": "入力値に予備分を足して目安を出します。",
-    "relatedArticleSlug": "片付け-整理-所有は-誰のために続いているのか-a011"
+    "relatedArticleSlug": "片付け-整理-所有は-誰のために続いているのか-a011",
+    "category": "商売",
+    "seoTitle": "値付けシミュレーター | 無料ツール | APLZ",
+    "seoDescription": "値付けシミュレーターは、原価、時間、手数料から価格を考えるための無料ツールです。入力例、結果の意味、計算根拠、個人情報への配慮を確認しながら使えます。",
+    "keywords": [
+      "値付けシミュレーター",
+      "値付けシミュレーター 無料",
+      "値付けシミュレーター 使い方",
+      "商売",
+      "無料ツール",
+      "診断",
+      "計算機"
+    ]
   },
   {
     "slug": "reservation-slots",
@@ -105,7 +237,19 @@ export const GENERATED_TOOLS = [
     "inputLabel": "金額",
     "unit": "円",
     "formula": "入力値を人数や日数で割って見通しを作ります。",
-    "relatedArticleSlug": "なぜ片付け-整理-所有は-少しだけ面倒なまま残るのか-a012"
+    "relatedArticleSlug": "なぜ片付け-整理-所有は-少しだけ面倒なまま残るのか-a012",
+    "category": "商売",
+    "seoTitle": "予約枠数計算 | 無料ツール | APLZ",
+    "seoDescription": "予約枠数計算は、営業時間と所要時間から予約枠を出すための無料ツールです。入力例、結果の意味、計算根拠、個人情報への配慮を確認しながら使えます。",
+    "keywords": [
+      "予約枠数計算",
+      "予約枠数計算 無料",
+      "予約枠数計算 使い方",
+      "商売",
+      "無料ツール",
+      "診断",
+      "計算機"
+    ]
   },
   {
     "slug": "handover-items",
@@ -114,7 +258,19 @@ export const GENERATED_TOOLS = [
     "inputLabel": "人数",
     "unit": "人",
     "formula": "入力値を整理し、必要な確認項目を表示します。",
-    "relatedArticleSlug": "片付け-整理-所有を一人で抱えないための小さな表-a013"
+    "relatedArticleSlug": "片付け-整理-所有を一人で抱えないための小さな表-a013",
+    "category": "働く",
+    "seoTitle": "引き継ぎ項目ジェネレーター | 無料ツール | APLZ",
+    "seoDescription": "引き継ぎ項目ジェネレーターは、仕事の種類から引き継ぎ表を作るための無料ツールです。入力例、結果の意味、計算根拠、個人情報への配慮を確認しながら使えます。",
+    "keywords": [
+      "引き継ぎ項目ジェネレーター",
+      "引き継ぎ項目ジェネレーター 無料",
+      "引き継ぎ項目ジェネレーター 使い方",
+      "働く",
+      "無料ツール",
+      "診断",
+      "計算機"
+    ]
   },
   {
     "slug": "reminder-text",
@@ -123,7 +279,19 @@ export const GENERATED_TOOLS = [
     "inputLabel": "件数",
     "unit": "件",
     "formula": "入力値に予備分を足して目安を出します。",
-    "relatedArticleSlug": "片付け-整理-所有で最初に迷う場所を見取り図にする-a014"
+    "relatedArticleSlug": "片付け-整理-所有で最初に迷う場所を見取り図にする-a014",
+    "category": "小さな判断",
+    "seoTitle": "リマインド文章作成 | 無料ツール | APLZ",
+    "seoDescription": "リマインド文章作成は、相手と用件から催促文を作るための無料ツールです。入力例、結果の意味、計算根拠、個人情報への配慮を確認しながら使えます。",
+    "keywords": [
+      "リマインド文章作成",
+      "リマインド文章作成 無料",
+      "リマインド文章作成 使い方",
+      "小さな判断",
+      "無料ツール",
+      "診断",
+      "計算機"
+    ]
   },
   {
     "slug": "menu-font-size",
@@ -132,7 +300,19 @@ export const GENERATED_TOOLS = [
     "inputLabel": "時間",
     "unit": "時間",
     "formula": "入力値を人数や日数で割って見通しを作ります。",
-    "relatedArticleSlug": "片付け-整理-所有の失敗例を先に並べてみる-a015"
+    "relatedArticleSlug": "片付け-整理-所有の失敗例を先に並べてみる-a015",
+    "category": "小さな判断",
+    "seoTitle": "メニュー文字サイズ確認 | 無料ツール | APLZ",
+    "seoDescription": "メニュー文字サイズ確認は、距離と客層から文字サイズの目安を見るための無料ツールです。入力例、結果の意味、計算根拠、個人情報への配慮を確認しながら使えます。",
+    "keywords": [
+      "メニュー文字サイズ確認",
+      "メニュー文字サイズ確認 無料",
+      "メニュー文字サイズ確認 使い方",
+      "小さな判断",
+      "無料ツール",
+      "診断",
+      "計算機"
+    ]
   },
   {
     "slug": "form-question-count",
@@ -141,7 +321,19 @@ export const GENERATED_TOOLS = [
     "inputLabel": "金額",
     "unit": "円",
     "formula": "入力値を整理し、必要な確認項目を表示します。",
-    "relatedArticleSlug": "時間-習慣-注意力は-誰のために続いているのか-a016"
+    "relatedArticleSlug": "時間-習慣-注意力は-誰のために続いているのか-a016",
+    "category": "働く",
+    "seoTitle": "フォーム質問数診断 | 無料診断 | APLZ",
+    "seoDescription": "フォーム質問数診断は、質問数と離脱リスクを確認するための無料ツールです。入力例、結果の意味、計算根拠、個人情報への配慮を確認しながら使えます。",
+    "keywords": [
+      "フォーム質問数診断",
+      "フォーム質問数診断 無料",
+      "フォーム質問数診断 使い方",
+      "働く",
+      "無料ツール",
+      "診断",
+      "計算機"
+    ]
   },
   {
     "slug": "line-limit",
@@ -150,7 +342,19 @@ export const GENERATED_TOOLS = [
     "inputLabel": "人数",
     "unit": "人",
     "formula": "入力値に予備分を足して目安を出します。",
-    "relatedArticleSlug": "なぜ時間-習慣-注意力は-少しだけ面倒なまま残るのか-a017"
+    "relatedArticleSlug": "なぜ時間-習慣-注意力は-少しだけ面倒なまま残るのか-a017",
+    "category": "小さな判断",
+    "seoTitle": "LINE管理限界診断 | 無料診断 | APLZ",
+    "seoDescription": "LINE管理限界診断は、人数と頻度からLINE運用の限界を考えるための無料ツールです。入力例、結果の意味、計算根拠、個人情報への配慮を確認しながら使えます。",
+    "keywords": [
+      "LINE管理限界診断",
+      "LINE管理限界診断 無料",
+      "LINE管理限界診断 使い方",
+      "小さな判断",
+      "無料ツール",
+      "診断",
+      "計算機"
+    ]
   },
   {
     "slug": "excel-exit",
@@ -159,7 +363,19 @@ export const GENERATED_TOOLS = [
     "inputLabel": "件数",
     "unit": "件",
     "formula": "入力値を人数や日数で割って見通しを作ります。",
-    "relatedArticleSlug": "時間-習慣-注意力を一人で抱えないための小さな表-a018"
+    "relatedArticleSlug": "時間-習慣-注意力を一人で抱えないための小さな表-a018",
+    "category": "働く",
+    "seoTitle": "Excel脱出診断 | 無料診断 | APLZ",
+    "seoDescription": "Excel脱出診断は、Excelから別の方法へ移るべきか見るための無料ツールです。入力例、結果の意味、計算根拠、個人情報への配慮を確認しながら使えます。",
+    "keywords": [
+      "Excel脱出診断",
+      "Excel脱出診断 無料",
+      "Excel脱出診断 使い方",
+      "働く",
+      "無料ツール",
+      "診断",
+      "計算機"
+    ]
   },
   {
     "slug": "event-missing",
@@ -168,7 +384,19 @@ export const GENERATED_TOOLS = [
     "inputLabel": "時間",
     "unit": "時間",
     "formula": "入力値を整理し、必要な確認項目を表示します。",
-    "relatedArticleSlug": "時間-習慣-注意力で最初に迷う場所を見取り図にする-a019"
+    "relatedArticleSlug": "時間-習慣-注意力で最初に迷う場所を見取り図にする-a019",
+    "category": "地域・学校",
+    "seoTitle": "イベント企画抜け漏れ診断 | 無料診断 | APLZ",
+    "seoDescription": "イベント企画抜け漏れ診断は、準備項目の抜けを確認するための無料ツールです。入力例、結果の意味、計算根拠、個人情報への配慮を確認しながら使えます。",
+    "keywords": [
+      "イベント企画抜け漏れ診断",
+      "イベント企画抜け漏れ診断 無料",
+      "イベント企画抜け漏れ診断 使い方",
+      "地域・学校",
+      "無料ツール",
+      "診断",
+      "計算機"
+    ]
   },
   {
     "slug": "small-business-fixed-cost",
@@ -177,6 +405,18 @@ export const GENERATED_TOOLS = [
     "inputLabel": "金額",
     "unit": "円",
     "formula": "入力値に予備分を足して目安を出します。",
-    "relatedArticleSlug": "時間-習慣-注意力の失敗例を先に並べてみる-a020"
+    "relatedArticleSlug": "時間-習慣-注意力の失敗例を先に並べてみる-a020",
+    "category": "商売",
+    "seoTitle": "小さな商売の固定費計算 | 無料ツール | APLZ",
+    "seoDescription": "小さな商売の固定費計算は、月の固定費と必要売上を出すための無料ツールです。入力例、結果の意味、計算根拠、個人情報への配慮を確認しながら使えます。",
+    "keywords": [
+      "小さな商売の固定費計算",
+      "小さな商売の固定費計算 無料",
+      "小さな商売の固定費計算 使い方",
+      "商売",
+      "無料ツール",
+      "診断",
+      "計算機"
+    ]
   }
 ] as const;

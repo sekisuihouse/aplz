@@ -2,7 +2,7 @@
 article_id: A139
 title: "町内会・自治会・PTAで最初に迷う場所を見取り図にする"
 slug: 町内会-自治会-ptaで最初に迷う場所を見取り図にする-a139
-status: published_draft
+status: published
 editorial_world: P28
 secondary_world: 道具が人の行動をどう変えるか
 content_format: F14 ビジュアル解説

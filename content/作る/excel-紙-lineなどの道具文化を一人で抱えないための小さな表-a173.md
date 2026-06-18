@@ -2,7 +2,7 @@
 article_id: A173
 title: "Excel・紙・LINEなどの道具文化を一人で抱えないための小さな表"
 slug: excel-紙-lineなどの道具文化を一人で抱えないための小さな表-a173
-status: published_draft
+status: published
 editorial_world: P35
 secondary_world: 人に頼ることと仕組みに頼ること
 content_format: F12 データ記事・白書

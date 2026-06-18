@@ -2,7 +2,7 @@
 article_id: A177
 title: "なぜアプリ・Web・ノーコードは、少しだけ面倒なまま残るのか"
 slug: なぜアプリ-web-ノーコードは-少しだけ面倒なまま残るのか-a177
-status: published_draft
+status: published
 editorial_world: P36
 secondary_world: 一人の問題は社会の問題になり得るか
 content_format: F16 投稿・Q&A・相談

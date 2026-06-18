@@ -2,7 +2,7 @@
 article_id: A140
 title: "町内会・自治会・PTAの失敗例を先に並べてみる"
 slug: 町内会-自治会-ptaの失敗例を先に並べてみる-a140
-status: published_draft
+status: published
 editorial_world: P28
 secondary_world: 人はなぜ古い方法を使い続けるのか
 content_format: F15 診断・クイズ

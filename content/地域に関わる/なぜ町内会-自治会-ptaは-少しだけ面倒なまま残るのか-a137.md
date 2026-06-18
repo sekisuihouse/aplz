@@ -2,7 +2,7 @@
 article_id: A137
 title: "なぜ町内会・自治会・PTAは、少しだけ面倒なまま残るのか"
 slug: なぜ町内会-自治会-ptaは-少しだけ面倒なまま残るのか-a137
-status: published_draft
+status: published
 editorial_world: P28
 secondary_world: 不便には価値があるのか
 content_format: F12 データ記事・白書

@@ -2,7 +2,7 @@
 article_id: A196
 title: "APLZ・小さな開発・制作記録は、誰のために続いているのか"
 slug: aplz-小さな開発-制作記録は-誰のために続いているのか-a196
-status: published_draft
+status: published
 editorial_world: P40
 secondary_world: 効率化は常に正しいのか
 content_format: F17 歴史・文化・由来

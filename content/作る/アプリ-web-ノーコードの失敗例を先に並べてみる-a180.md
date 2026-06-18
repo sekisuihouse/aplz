@@ -2,7 +2,7 @@
 article_id: A180
 title: "アプリ・Web・ノーコードの失敗例を先に並べてみる"
 slug: アプリ-web-ノーコードの失敗例を先に並べてみる-a180
-status: published_draft
+status: published
 editorial_world: P36
 secondary_world: 仕事と生活を分けることは可能か
 content_format: F03 解説・仕組み

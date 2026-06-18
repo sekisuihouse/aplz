@@ -2,7 +2,7 @@
 article_id: A200
 title: "APLZ・小さな開発・制作記録の失敗例を先に並べてみる"
 slug: aplz-小さな開発-制作記録の失敗例を先に並べてみる-a200
-status: published_draft
+status: published
 editorial_world: P40
 secondary_world: 人はなぜ古い方法を使い続けるのか
 content_format: F02 手順・ハウツー

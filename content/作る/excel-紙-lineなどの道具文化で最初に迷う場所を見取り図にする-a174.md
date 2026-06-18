@@ -2,7 +2,7 @@
 article_id: A174
 title: "Excel・紙・LINEなどの道具文化で最初に迷う場所を見取り図にする"
 slug: excel-紙-lineなどの道具文化で最初に迷う場所を見取り図にする-a174
-status: published_draft
+status: published
 editorial_world: P35
 secondary_world: 記録することと忘れること
 content_format: F13 実験・検証・対決
