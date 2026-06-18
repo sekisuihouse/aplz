@@ -74,7 +74,31 @@ export default function LoginClient({
 
   return (
     <div className="min-h-[calc(100vh-64px)] flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-4xl grid md:grid-cols-[1fr_420px] gap-8 items-center">
+        <aside className="hidden md:block">
+          <p className="text-sm font-semibold text-[#1B4F72] mb-3">
+            APLZを使い始める
+          </p>
+          <h1 className="text-3xl font-bold text-[#0f0f0f] leading-tight">
+            困りごとは一言で投稿できます。
+          </h1>
+          <div className="mt-5 space-y-3">
+            {[
+              "初めてなら「新規登録」",
+              "登録済みなら「ログイン」",
+              "メールのリンクを開くと元の画面に戻ります",
+            ].map((item, index) => (
+              <div key={item} className="flex items-start gap-3">
+                <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#f5f5f5] text-xs font-semibold text-[#1B4F72]">
+                  {index + 1}
+                </span>
+                <p className="text-sm text-[#606060] pt-1">{item}</p>
+              </div>
+            ))}
+          </div>
+        </aside>
+
+        <div>
         {sent ? (
           <div className="text-center animate-fade-in">
             <h1 className="text-2xl font-bold text-[#0f0f0f] mb-3">
@@ -99,6 +123,11 @@ export default function LoginClient({
                   ? "メールだけで始められます。パスワードは不要です。"
                   : "登録済みのメールにログインリンクを送ります。"}
               </p>
+              {nextPath !== "/" && (
+                <p className="text-xs text-[#909090] mt-2">
+                  認証後、開いていた画面に戻ります。
+                </p>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-2 p-1 rounded-lg bg-[#f5f5f5] mb-5">
@@ -188,6 +217,7 @@ export default function LoginClient({
             </form>
           </div>
         )}
+        </div>
       </div>
     </div>
   );

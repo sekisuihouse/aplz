@@ -84,11 +84,11 @@ export default function RequestCard({ request, compact = false }: RequestCardPro
         <div className="flex flex-wrap items-center justify-end gap-x-2 gap-y-1 shrink-0">
           <span className="flex items-center gap-0.5">
             <Wrench size={12} />
-            {request.answer_count ?? 0}
+            {request.answer_count ?? 0}件回答
           </span>
           <span className="flex items-center gap-0.5">
             <MessageCircle size={12} />
-            {request.comment_count ?? 0}
+            {request.comment_count ?? 0}件やりとり
           </span>
           {request.usage_frequency && <span>{request.usage_frequency}</span>}
           {deadlineLabel && (

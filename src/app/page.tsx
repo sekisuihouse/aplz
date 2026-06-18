@@ -1,12 +1,40 @@
 import Link from "next/link";
 import type { ComponentType } from "react";
-import { ArrowRight, CheckCircle2, Clock3, Layers3, Search, Wrench } from "lucide-react";
+import {
+  ArrowRight,
+  CheckCircle2,
+  Clock3,
+  Layers3,
+  MessageCircle,
+  PenLine,
+  Search,
+  Sparkles,
+  Wrench,
+} from "lucide-react";
 import { createServerClient } from "@/lib/supabase";
 import { REQUEST_CATEGORIES } from "@/lib/request-platform";
 import AppCard from "./components/AppCard";
 import RequestCard from "./components/RequestCard";
 
 export const revalidate = 30;
+
+const FLOW_STEPS = [
+  {
+    title: "一言で書く",
+    text: "仕様ではなく、困っている作業からで大丈夫です。",
+    icon: PenLine,
+  },
+  {
+    title: "質問で補う",
+    text: "足りない条件は開発者が短く聞けます。",
+    icon: MessageCircle,
+  },
+  {
+    title: "小さく試す",
+    text: "回答アプリを開いて、使えそうか確認します。",
+    icon: Sparkles,
+  },
+];
 
 export default async function Home() {
   const supabase = createServerClient();
@@ -103,50 +131,61 @@ export default async function Home() {
 
   return (
     <main>
-      <section className="flex flex-col items-center justify-center px-4 pt-14 pb-8 text-center">
-        <div className="flex items-center justify-center gap-3 mb-4">
-          <svg width="48" height="48" viewBox="0 0 36 36">
-            <g transform="translate(18,18)">
-              <path d="M-13,-9 C-3,-9 3,9 13,9" fill="none" stroke="#1B4F72" strokeWidth="2.8" strokeLinecap="round"/>
-              <path d="M-13,9 C-3,9 3,-9 13,-9" fill="none" stroke="#B83232" strokeWidth="2.8" strokeLinecap="round"/>
-              <circle cx="0" cy="0" r="2.2" fill="#1B4F72"/>
-            </g>
-          </svg>
-          <h1 style={{ fontFamily: "var(--font-baloo-2)", fontWeight: 800, fontSize: "48px", color: "#1a1a1a" }}>
-            APLZ
-          </h1>
-        </div>
-        <p className="text-xl font-semibold text-[#0f0f0f] mb-3">
-          小さな困りごとを、小さなアプリで解決。
-        </p>
-        <p className="max-w-2xl text-sm md:text-base text-[#606060] leading-relaxed">
-          APLZは、町内会・個人事業主・学校・イベント運営などの外注するほどではないけど毎回めんどくさい作業を、誰かが小さなアプリで解決してくれる場所です。
-        </p>
-        <div className="flex flex-wrap items-center justify-center gap-3 mt-5">
-          <Link
-            href="/requests/new"
-            className="px-6 py-2.5 rounded-lg bg-[#1B4F72] text-white font-semibold text-sm hover:bg-[#15415F] transition-colors"
-          >
-            困りごとを投稿する
-          </Link>
-          <Link
-            href="/requests"
-            className="px-6 py-2.5 rounded-lg border border-[#e5e5e5] text-[#606060] font-semibold text-sm hover:bg-[#f5f5f5] transition-colors"
-          >
-            困りごとを見る
-          </Link>
-          <Link
-            href="/new"
-            className="px-6 py-2.5 rounded-lg border border-[#e5e5e5] text-[#606060] font-semibold text-sm hover:bg-[#f5f5f5] transition-colors"
-          >
-            アプリを作る
-          </Link>
-          <Link
-            href="/publish"
-            className="px-6 py-2.5 rounded-lg border border-[#e5e5e5] text-[#606060] font-semibold text-sm hover:bg-[#f5f5f5] transition-colors"
-          >
-            ファイルをアップロード
-          </Link>
+      <section className="px-4 pt-10 pb-8">
+        <div className="max-w-5xl mx-auto">
+          <div className="grid lg:grid-cols-[1fr_360px] gap-8 items-end">
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-[#e5e5e5] bg-[#f8f8f8] px-3 py-1 text-xs font-medium text-[#606060] mb-4">
+                <span className="h-2 w-2 rounded-full bg-[#1B4F72]" />
+                3分で書き始める
+              </div>
+              <h1 className="text-4xl md:text-5xl font-bold leading-tight text-[#0f0f0f]">
+                小さな困りごとを、
+                <br className="hidden sm:block" />
+                小さなアプリで解決。
+              </h1>
+              <p className="max-w-2xl text-sm md:text-base text-[#606060] leading-relaxed mt-4">
+                APLZは、町内会・学校・個人事業主・イベント運営などの「外注するほどではないけど毎回めんどう」な作業を、投稿して小さなアプリで解決する場所です。
+              </p>
+              <div className="flex flex-wrap items-center gap-3 mt-6">
+                <Link
+                  href="/requests/new"
+                  className="inline-flex min-h-12 items-center justify-center px-6 rounded-lg bg-[#1B4F72] text-white font-semibold text-sm hover:bg-[#15415F] transition-colors"
+                >
+                  困りごとを書く
+                </Link>
+                <Link
+                  href="/requests?filter=unsolved"
+                  className="inline-flex min-h-12 items-center justify-center px-5 rounded-lg border border-[#d8d8d8] text-[#0f0f0f] font-semibold text-sm hover:bg-[#f5f5f5] transition-colors"
+                >
+                  未解決を見る
+                </Link>
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-[#e5e5e5] bg-white p-4">
+              <p className="text-sm font-semibold text-[#0f0f0f] mb-3">
+                迷ったら、この順で進めます
+              </p>
+              <div className="space-y-3">
+                {FLOW_STEPS.map((step, index) => (
+                  <div key={step.title} className="flex gap-3">
+                    <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#f5f5f5] text-[#1B4F72]">
+                      <step.icon size={16} />
+                    </span>
+                    <div>
+                      <p className="text-sm font-semibold text-[#0f0f0f]">
+                        {index + 1}. {step.title}
+                      </p>
+                      <p className="text-xs text-[#606060] leading-relaxed mt-0.5">
+                        {step.text}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -163,8 +202,8 @@ export default async function Home() {
           <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#909090]" />
           <input
             name="q"
-            placeholder="困りごとや作業名で検索"
-            className="w-full bg-[#f5f5f5] border border-[#e5e5e5] rounded-lg pl-11 pr-4 py-3 text-sm focus:outline-none focus:border-[#1B4F72]"
+            placeholder="当番表、集計、予約、連絡文などで検索"
+            className="w-full bg-[#f5f5f5] border border-[#e5e5e5] rounded-lg pl-11 pr-4 py-3.5 text-sm focus:outline-none focus:border-[#1B4F72]"
           />
         </form>
       </section>

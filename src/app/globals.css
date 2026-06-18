@@ -10,6 +10,28 @@ body {
   color: #0f0f0f;
 }
 
+a,
+button,
+input,
+textarea,
+select {
+  -webkit-tap-highlight-color: transparent;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 3px solid rgba(27, 79, 114, 0.22);
+  outline-offset: 2px;
+}
+
+button,
+a {
+  touch-action: manipulation;
+}
+
 @keyframes fade-in {
   from {
     opacity: 0;

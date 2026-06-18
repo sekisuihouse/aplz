@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { Search } from "lucide-react";
+import { Search, SlidersHorizontal } from "lucide-react";
 import { createServerClient } from "@/lib/supabase";
 import RequestCard from "@/app/components/RequestCard";
 import { REQUEST_CATEGORIES } from "@/lib/request-platform";
@@ -18,6 +18,7 @@ export default async function RequestsPage({ searchParams }: RequestsPageProps) 
   const category = getParam(params.category);
   const privacy = getParam(params.privacy);
   const hasActiveFilters = Boolean(q || filter || category || privacy);
+  const hasAdvancedFilters = Boolean(filter || category || privacy);
 
   const db = createServerClient();
   let query = db
@@ -130,44 +131,58 @@ export default async function RequestsPage({ searchParams }: RequestsPageProps) 
       </div>
 
       <form className="bg-white border border-[#e5e5e5] rounded-lg p-4 mb-5">
-        <div className="grid lg:grid-cols-[1fr_auto_auto_auto_auto] gap-3">
+        <div className="grid md:grid-cols-[1fr_auto] gap-3">
           <label className="relative block">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#909090]" />
             <input
               name="q"
               defaultValue={q}
-              placeholder="タイトル、説明、カテゴリで検索"
+              placeholder="例: 当番表、集計、予約、連絡文"
               className="w-full bg-[#f5f5f5] border border-[#e5e5e5] rounded-lg pl-9 pr-4 py-2.5 text-sm focus:outline-none focus:border-[#1B4F72]"
             />
           </label>
-          <select name="filter" defaultValue={filter} className="input min-w-36">
-            <option value="">新着</option>
-            <option value="unsolved">未解決</option>
-            <option value="answered">回答あり</option>
-            <option value="solved">解決済み</option>
-            <option value="beginner">初心者向け</option>
-            <option value="privacy_none">個人情報なし</option>
-          </select>
-          <select name="category" defaultValue={category} className="input min-w-36">
-            <option value="">すべてのカテゴリ</option>
-            {REQUEST_CATEGORIES.map((item) => (
-              <option key={item} value={item}>
-                {item}
-              </option>
-            ))}
-          </select>
-          <select name="privacy" defaultValue={privacy} className="input min-w-36">
-            <option value="">安全レベル</option>
-            <option value="none">個人情報なし</option>
-            <option value="low">名前程度</option>
-            <option value="medium">連絡先など</option>
-            <option value="high">高リスク</option>
-            <option value="unknown">不明</option>
-          </select>
-          <button className="px-4 py-2.5 rounded-lg bg-[#1B4F72] text-white text-sm font-medium hover:bg-[#15415F] transition-colors">
+          <button className="min-h-10 px-5 py-2.5 rounded-lg bg-[#1B4F72] text-white text-sm font-semibold hover:bg-[#15415F] transition-colors">
             検索
           </button>
         </div>
+
+        <details className="mt-3 group" open={hasAdvancedFilters}>
+          <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 text-sm text-[#1B4F72] hover:underline">
+            <SlidersHorizontal size={15} />
+            絞り込み
+            {hasAdvancedFilters && (
+              <span className="rounded-full bg-[#1B4F72]/10 px-2 py-0.5 text-xs text-[#1B4F72]">
+                適用中
+              </span>
+            )}
+          </summary>
+          <div className="grid md:grid-cols-3 gap-3 mt-3 pt-3 border-t border-[#e5e5e5]">
+            <select name="filter" defaultValue={filter} className="input min-w-36">
+              <option value="">新着順</option>
+              <option value="unsolved">未解決</option>
+              <option value="answered">回答あり</option>
+              <option value="solved">解決済み</option>
+              <option value="beginner">初心者向け</option>
+              <option value="privacy_none">個人情報なし</option>
+            </select>
+            <select name="category" defaultValue={category} className="input min-w-36">
+              <option value="">すべてのカテゴリ</option>
+              {REQUEST_CATEGORIES.map((item) => (
+                <option key={item} value={item}>
+                  {item}
+                </option>
+              ))}
+            </select>
+            <select name="privacy" defaultValue={privacy} className="input min-w-36">
+              <option value="">安全レベル</option>
+              <option value="none">個人情報なし</option>
+              <option value="low">名前程度</option>
+              <option value="medium">連絡先など</option>
+              <option value="high">高リスク</option>
+              <option value="unknown">不明</option>
+            </select>
+          </div>
+        </details>
       </form>
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">

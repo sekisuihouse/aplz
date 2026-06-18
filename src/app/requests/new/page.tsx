@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ChevronDown, Sparkles } from "lucide-react";
+import { CheckCircle2, ChevronDown, Sparkles } from "lucide-react";
 import { REQUEST_CATEGORIES } from "@/lib/request-platform";
 
 const EXAMPLES = [
@@ -106,9 +106,25 @@ export default function NewRequestPage() {
   };
 
   const canSubmit = form.title.trim().length > 0;
+  const hasContext = Boolean(
+    form.description.trim() ||
+      form.desired_outcome.trim() ||
+      form.current_workflow.trim() ||
+      form.pain_point.trim()
+  );
+  const progressItems = [
+    { label: "困りごと", done: canSubmit, hint: "タイトルを書く" },
+    { label: "状況", done: hasContext, hint: "本文か詳細を少し足す" },
+    {
+      label: "安全",
+      done: form.privacy_level !== "unknown",
+      hint: "個人情報の扱いを選ぶ",
+    },
+  ];
+  const progress = progressItems.filter((item) => item.done).length;
 
   return (
-    <main className="max-w-3xl mx-auto px-4 py-8">
+    <main className="max-w-5xl mx-auto px-4 py-8">
       <div className="mb-6">
         <Link href="/requests" className="text-sm text-[#606060] hover:underline">
           ← 困りごと一覧へ
@@ -121,7 +137,25 @@ export default function NewRequestPage() {
         </p>
       </div>
 
+      <div className="grid lg:grid-cols-[1fr_280px] gap-6 items-start">
       <section className="bg-white border border-[#e5e5e5] rounded-lg p-5">
+        <div className="mb-5">
+          <div className="flex items-center justify-between gap-3 mb-2">
+            <p className="text-xs font-medium text-[#606060]">
+              投稿まで {progress}/3
+            </p>
+            <p className="text-xs text-[#909090]">
+              必須はタイトルだけ
+            </p>
+          </div>
+          <div className="h-2 rounded-full bg-[#f0f0f0] overflow-hidden">
+            <div
+              className="h-full rounded-full bg-[#1B4F72] transition-all"
+              style={{ width: `${progress === 0 ? 8 : progress * 33.333}%` }}
+            />
+          </div>
+        </div>
+
         <div className="flex flex-wrap gap-2 mb-5">
           {EXAMPLES.map((example) => (
             <button
@@ -314,6 +348,42 @@ export default function NewRequestPage() {
         </div>
       </section>
 
+      <aside className="lg:sticky lg:top-24 space-y-3">
+        <div className="rounded-lg border border-[#e5e5e5] bg-[#fafafa] p-4">
+          <h2 className="text-sm font-semibold text-[#0f0f0f] mb-3">
+            書く順番
+          </h2>
+          <div className="space-y-3">
+            {progressItems.map((item, index) => (
+              <div key={item.label} className="flex gap-3">
+                <span
+                  className={`mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
+                    item.done
+                      ? "bg-[#1B4F72] text-white"
+                      : "bg-white border border-[#e5e5e5] text-[#909090]"
+                  }`}
+                >
+                  {item.done ? <CheckCircle2 size={14} /> : index + 1}
+                </span>
+                <div>
+                  <p className="text-sm font-medium text-[#0f0f0f]">{item.label}</p>
+                  <p className="text-xs text-[#606060] mt-0.5">{item.hint}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="rounded-lg border border-[#e5e5e5] bg-white p-4">
+          <h2 className="text-sm font-semibold text-[#0f0f0f] mb-2">
+            何を書けばいい？
+          </h2>
+          <p className="text-sm text-[#606060] leading-relaxed">
+            「誰が」「今どうしていて」「何が面倒か」のうち、書けるところだけで十分です。
+          </p>
+        </div>
+      </aside>
+      </div>
+
       {error && (
         <div className="mt-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm">
           {error}
@@ -322,7 +392,7 @@ export default function NewRequestPage() {
 
       <div className="sticky bottom-0 -mx-4 mt-6 px-4 py-3 bg-white/90 backdrop-blur border-t border-[#e5e5e5] flex items-center justify-between gap-3">
         <p className="text-xs text-[#909090]">
-          {canSubmit ? "この内容で投稿できます" : "タイトルだけ入力すれば投稿できます"}
+          {canSubmit ? "この内容で投稿できます。足りない条件は質問で補えます。" : "タイトルだけ入力すれば投稿できます"}
         </p>
         <div className="flex items-center gap-3">
           <Link href="/requests" className="text-sm text-[#606060] hover:underline">

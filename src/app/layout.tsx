@@ -74,41 +74,35 @@ export default async function RootLayout({
         className={`${dmSans.variable} ${jetbrainsMono.variable} ${baloo2.variable} font-sans antialiased bg-white text-[#0f0f0f]`}
       >
         <header className="sticky top-0 z-50 backdrop-blur-md bg-white/80 border-b border-[#e5e5e5]">
-          <nav className="max-w-5xl mx-auto flex items-center justify-between px-4 h-16">
+          <nav className="max-w-[1800px] mx-auto flex items-center justify-between gap-3 px-4 h-16">
             <div className="flex items-center gap-3">
               <NavLogo />
               <WorkspaceSwitcher />
               <Link
                 href="/requests"
-                className="px-3 py-1.5 rounded-lg text-sm text-[#606060] hover:text-[#0f0f0f] hover:bg-[#f5f5f5] transition-colors"
+                className="hidden sm:inline-flex px-3 py-1.5 rounded-lg text-sm text-[#606060] hover:text-[#0f0f0f] hover:bg-[#f5f5f5] transition-colors"
               >
-                困りごと
+                困りごとを見る
               </Link>
               <Link
                 href="/templates"
-                className="px-3 py-1.5 rounded-lg text-sm text-[#606060] hover:text-[#0f0f0f] hover:bg-[#f5f5f5] transition-colors"
+                className="hidden md:inline-flex px-3 py-1.5 rounded-lg text-sm text-[#606060] hover:text-[#0f0f0f] hover:bg-[#f5f5f5] transition-colors"
               >
-                Templates
+                テンプレート
               </Link>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               {user ? (
                 <>
                   <Link
                     href="/requests/new"
-                    className="hidden sm:inline-flex px-3 py-2 rounded-lg border border-[#e5e5e5] text-[#606060] text-sm font-medium hover:bg-[#f5f5f5] transition-colors"
+                    className="inline-flex min-h-10 items-center px-3 sm:px-4 py-2 rounded-lg bg-[#1B4F72] text-white text-sm font-semibold hover:bg-[#15415F] transition-colors"
                   >
-                    困りごとを投稿
-                  </Link>
-                  <Link
-                    href="/publish"
-                    className="hidden md:inline-flex px-3 py-2 rounded-lg border border-[#e5e5e5] text-[#606060] text-sm font-medium hover:bg-[#f5f5f5] transition-colors"
-                  >
-                    公開
+                    困りごとを書く
                   </Link>
                   <Link
                     href="/new"
-                    className="px-4 py-2 rounded-lg bg-[#1B4F72] text-white text-sm font-medium hover:bg-[#15415F] transition-colors"
+                    className="hidden md:inline-flex min-h-10 items-center px-3 py-2 rounded-lg border border-[#e5e5e5] text-[#606060] text-sm font-medium hover:bg-[#f5f5f5] transition-colors"
                   >
                     アプリを作る
                   </Link>
@@ -118,19 +112,19 @@ export default async function RootLayout({
                 <>
                   <Link
                     href="/login"
-                    className="px-4 py-2 rounded-lg text-[#0f0f0f] text-sm font-medium hover:bg-[#f5f5f5] transition-colors"
+                    className="hidden sm:inline-flex min-h-10 items-center px-3 py-2 rounded-lg text-[#0f0f0f] text-sm font-medium hover:bg-[#f5f5f5] transition-colors"
                   >
                     ログイン
                   </Link>
                   <Link
                     href="/requests/new"
-                    className="hidden sm:inline-flex px-3 py-2 rounded-lg border border-[#e5e5e5] text-[#606060] text-sm font-medium hover:bg-[#f5f5f5] transition-colors"
+                    className="inline-flex min-h-10 items-center px-3 sm:px-4 py-2 rounded-lg bg-[#1B4F72] text-white text-sm font-semibold hover:bg-[#15415F] transition-colors"
                   >
-                    困りごとを投稿
+                    困りごとを書く
                   </Link>
                   <Link
                     href="/new"
-                    className="px-4 py-2 rounded-lg bg-[#1B4F72] text-white text-sm font-medium hover:bg-[#15415F] transition-colors"
+                    className="hidden md:inline-flex min-h-10 items-center px-3 py-2 rounded-lg border border-[#e5e5e5] text-[#606060] text-sm font-medium hover:bg-[#f5f5f5] transition-colors"
                   >
                     アプリを作る
                   </Link>
