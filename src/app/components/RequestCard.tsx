@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { MessageCircle, Wrench } from "lucide-react";
+import { CalendarDays, MessageCircle, Sparkles, Wrench } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import PrivacyLevelBadge from "./PrivacyLevelBadge";
 import RequestStatusBadge from "./RequestStatusBadge";
@@ -15,6 +15,8 @@ interface RequestCardProps {
     desired_outcome: string | null;
     usage_frequency: string | null;
     privacy_level: string | null;
+    deadline?: string | null;
+    is_beginner_friendly?: boolean;
     created_at: string;
     updated_at: string;
     answer_count?: number;
@@ -28,6 +30,8 @@ interface RequestCardProps {
 }
 
 export default function RequestCard({ request, compact = false }: RequestCardProps) {
+  const deadlineLabel = formatDeadline(request.deadline);
+
   return (
     <Link
       href={`/requests/${request.slug}`}
@@ -43,6 +47,12 @@ export default function RequestCard({ request, compact = false }: RequestCardPro
                 {request.category}
               </span>
             )}
+            {request.is_beginner_friendly && (
+              <span className="inline-flex items-center gap-1 text-xs text-[#1B4F72] bg-[#1B4F72]/10 px-2 py-0.5 rounded-md">
+                <Sparkles size={11} />
+                初心者歓迎
+              </span>
+            )}
           </div>
           <h3 className="text-sm font-semibold text-[#0f0f0f] line-clamp-2">
             {request.title}
@@ -55,7 +65,7 @@ export default function RequestCard({ request, compact = false }: RequestCardPro
         </div>
       </div>
 
-      <div className="flex items-center justify-between gap-3 mt-3 text-xs text-[#909090]">
+      <div className="flex flex-wrap items-center justify-between gap-3 mt-3 text-xs text-[#909090]">
         <div className="flex items-center gap-2 min-w-0">
           {request.author?.avatar_url && (
             <Image
@@ -71,7 +81,7 @@ export default function RequestCard({ request, compact = false }: RequestCardPro
             {request.author?.display_name || "匿名ユーザー"}
           </span>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex flex-wrap items-center justify-end gap-x-2 gap-y-1 shrink-0">
           <span className="flex items-center gap-0.5">
             <Wrench size={12} />
             {request.answer_count ?? 0}
@@ -81,9 +91,22 @@ export default function RequestCard({ request, compact = false }: RequestCardPro
             {request.comment_count ?? 0}
           </span>
           {request.usage_frequency && <span>{request.usage_frequency}</span>}
+          {deadlineLabel && (
+            <span className="flex items-center gap-0.5">
+              <CalendarDays size={12} />
+              {deadlineLabel}
+            </span>
+          )}
           <span>{formatDate(request.updated_at || request.created_at)}</span>
         </div>
       </div>
     </Link>
   );
+}
+
+function formatDeadline(deadline: string | null | undefined): string | null {
+  if (!deadline) return null;
+  const date = new Date(`${deadline}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return null;
+  return `${date.getMonth() + 1}/${date.getDate()}期限`;
 }

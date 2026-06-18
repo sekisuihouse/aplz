@@ -1,6 +1,8 @@
 import Link from "next/link";
-import { Search } from "lucide-react";
+import type { ComponentType } from "react";
+import { ArrowRight, CheckCircle2, Clock3, Layers3, Search, Wrench } from "lucide-react";
 import { createServerClient } from "@/lib/supabase";
+import { REQUEST_CATEGORIES } from "@/lib/request-platform";
 import AppCard from "./components/AppCard";
 import RequestCard from "./components/RequestCard";
 
@@ -8,7 +10,15 @@ export const revalidate = 30;
 
 export default async function Home() {
   const supabase = createServerClient();
-  const [{ data: apps }, { data: newRequests }, { data: solvedRequests }] =
+  const [
+    { data: apps },
+    { data: newRequests },
+    { data: solvedRequests },
+    { count: requestCount },
+    { count: openRequestCount },
+    { count: answeredRequestCount },
+    { count: appCount },
+  ] =
     await Promise.all([
       supabase
         .from("apps")
@@ -36,6 +46,25 @@ export default async function Home() {
         .eq("status", "solved")
         .order("updated_at", { ascending: false })
         .limit(6),
+      supabase
+        .from("requests")
+        .select("*", { count: "exact", head: true })
+        .eq("is_public", true)
+        .neq("status", "hidden"),
+      supabase
+        .from("requests")
+        .select("*", { count: "exact", head: true })
+        .eq("is_public", true)
+        .in("status", ["open", "questions", "in_progress"]),
+      supabase
+        .from("requests")
+        .select("*", { count: "exact", head: true })
+        .eq("is_public", true)
+        .in("status", ["answered", "testing", "solved"]),
+      supabase
+        .from("apps")
+        .select("*", { count: "exact", head: true })
+        .eq("is_public", true),
     ]);
 
   const [requestList, solvedRequestList, appList] = await Promise.all([
@@ -45,10 +74,36 @@ export default async function Home() {
   ]);
 
   const r2PublicUrl = process.env.R2_PUBLIC_URL;
+  const metrics = [
+    {
+      label: "公開中の困りごと",
+      value: requestCount ?? 0,
+      icon: Layers3,
+      href: "/requests",
+    },
+    {
+      label: "募集中",
+      value: openRequestCount ?? 0,
+      icon: Clock3,
+      href: "/requests?filter=unsolved",
+    },
+    {
+      label: "回答あり",
+      value: answeredRequestCount ?? 0,
+      icon: CheckCircle2,
+      href: "/requests?filter=answered",
+    },
+    {
+      label: "公開アプリ",
+      value: appCount ?? 0,
+      icon: Wrench,
+      href: "/#apps",
+    },
+  ];
 
   return (
     <main>
-      <section className="flex flex-col items-center justify-center px-4 pt-16 pb-10 text-center">
+      <section className="flex flex-col items-center justify-center px-4 pt-14 pb-8 text-center">
         <div className="flex items-center justify-center gap-3 mb-4">
           <svg width="48" height="48" viewBox="0 0 36 36">
             <g transform="translate(18,18)">
@@ -95,6 +150,14 @@ export default async function Home() {
         </div>
       </section>
 
+      <section className="max-w-5xl mx-auto px-4 pb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {metrics.map((metric) => (
+            <MetricTile key={metric.label} {...metric} />
+          ))}
+        </div>
+      </section>
+
       <section className="max-w-3xl mx-auto px-4 pb-8">
         <form action="/requests" className="relative">
           <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#909090]" />
@@ -104,6 +167,32 @@ export default async function Home() {
             className="w-full bg-[#f5f5f5] border border-[#e5e5e5] rounded-lg pl-11 pr-4 py-3 text-sm focus:outline-none focus:border-[#1B4F72]"
           />
         </form>
+      </section>
+
+      <section className="max-w-5xl mx-auto px-4 pb-10">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-3">
+          <div>
+            <h2 className="text-sm font-semibold text-[#0f0f0f]">カテゴリから探す</h2>
+            <p className="text-sm text-[#606060] mt-1">
+              身近な作業単位で、解決できそうな困りごとを見つけられます。
+            </p>
+          </div>
+          <Link href="/requests" className="inline-flex items-center gap-1 text-sm text-[#1B4F72] hover:underline">
+            すべてのカテゴリ
+            <ArrowRight size={14} />
+          </Link>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {REQUEST_CATEGORIES.map((category) => (
+            <Link
+              key={category}
+              href={`/requests?category=${encodeURIComponent(category)}`}
+              className="px-3 py-1.5 rounded-lg border border-[#e5e5e5] bg-white text-sm text-[#606060] hover:border-[#1B4F72] hover:text-[#1B4F72] transition-colors"
+            >
+              {category}
+            </Link>
+          ))}
+        </div>
       </section>
 
       <section className="max-w-[1800px] mx-auto px-4 pb-10">
@@ -142,7 +231,7 @@ export default async function Home() {
         )}
       </section>
 
-      <section className="max-w-[1800px] mx-auto px-4 pb-12">
+      <section id="apps" className="max-w-[1800px] mx-auto px-4 pb-12">
         <h2 className="text-sm font-medium text-[#909090] mb-4">
           公開されたアプリ
         </h2>
@@ -206,6 +295,35 @@ export default async function Home() {
   );
 }
 
+function MetricTile({
+  label,
+  value,
+  icon: Icon,
+  href,
+}: {
+  label: string;
+  value: number;
+  icon: ComponentType<{ size?: number; className?: string }>;
+  href: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="group rounded-lg border border-[#e5e5e5] bg-white px-4 py-3 hover:shadow-md transition-all"
+    >
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-2xl font-bold text-[#0f0f0f] leading-none">{value}</p>
+          <p className="text-xs text-[#606060] mt-1.5">{label}</p>
+        </div>
+        <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-[#f5f5f5] text-[#1B4F72] group-hover:bg-[#1B4F72] group-hover:text-white transition-colors">
+          <Icon size={18} />
+        </span>
+      </div>
+    </Link>
+  );
+}
+
 async function enrichRequests(supabase: ReturnType<typeof createServerClient>, requests: Record<string, unknown>[]) {
   const requestIds = requests.map((request) => request.id as string);
   const userIds = [...new Set(requests.map((request) => request.user_id as string | null).filter(Boolean))];
@@ -254,6 +372,8 @@ async function enrichRequests(supabase: ReturnType<typeof createServerClient>, r
     desired_outcome: string | null;
     usage_frequency: string | null;
     privacy_level: string | null;
+    deadline: string | null;
+    is_beginner_friendly: boolean;
     created_at: string;
     updated_at: string;
     answer_count: number;
