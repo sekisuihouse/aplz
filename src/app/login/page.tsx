@@ -1,4 +1,10 @@
 import LoginClient from "./LoginClient";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "ログイン | APLZ",
+  robots: { index: false, follow: false },
+};
 
 type LoginPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;

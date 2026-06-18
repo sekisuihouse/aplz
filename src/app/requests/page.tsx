@@ -4,8 +4,17 @@ import { Search, SlidersHorizontal } from "lucide-react";
 import { createServerClient } from "@/lib/supabase";
 import RequestCard from "@/app/components/RequestCard";
 import { REQUEST_CATEGORIES } from "@/lib/request-platform";
+import { JsonLd, absoluteUrl, breadcrumbJsonLd, pageMetadata } from "@/lib/seo";
 
 export const revalidate = 20;
+
+export const metadata = pageMetadata({
+  title: "困りごと一覧 — 小さな業務アプリで解決できる投稿 | APLZ",
+  description:
+    "当番表、集計、予約、連絡文、イベント運営など、小さな業務アプリで解決できる困りごとを探せます。",
+  path: "/requests",
+  keywords: ["困りごと 投稿", "小さな業務アプリ", "業務改善 相談", "アプリ 開発 依頼"],
+});
 
 interface RequestsPageProps {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -94,6 +103,21 @@ export default async function RequestsPage({ searchParams }: RequestsPageProps) 
 
   return (
     <main className="max-w-[1800px] mx-auto px-4 py-8">
+      <JsonLd
+        data={[
+          breadcrumbJsonLd([
+            { name: "APLZ", path: "/" },
+            { name: "困りごと", path: "/requests" },
+          ]),
+          {
+            "@context": "https://schema.org",
+            "@type": "CollectionPage",
+            name: "APLZの困りごと一覧",
+            description: "小さな業務アプリで解決できる困りごとの投稿一覧です。",
+            url: absoluteUrl("/requests"),
+          },
+        ]}
+      />
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-[#0f0f0f]">困りごと</h1>

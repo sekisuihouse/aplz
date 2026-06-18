@@ -13,10 +13,20 @@ import {
 } from "lucide-react";
 import { createServerClient } from "@/lib/supabase";
 import { REQUEST_CATEGORIES } from "@/lib/request-platform";
+import { JsonLd, absoluteUrl, pageMetadata } from "@/lib/seo";
+import { getUseCaseByCategory } from "@/lib/use-cases";
 import AppCard from "./components/AppCard";
 import RequestCard from "./components/RequestCard";
 
 export const revalidate = 30;
+
+export const metadata = pageMetadata({
+  title: "APLZ — 小さな困りごとを小さなアプリで解決",
+  description:
+    "町内会・学校・個人事業主・イベント運営などの小さな困りごとを投稿し、開発者が小さなWebアプリで解決するプラットフォームです。",
+  path: "/",
+  keywords: ["小さな業務アプリ", "困りごと 解決", "業務改善", "当番表 アプリ", "集計 アプリ"],
+});
 
 const FLOW_STEPS = [
   {
@@ -131,6 +141,28 @@ export default async function Home() {
 
   return (
     <main>
+      <JsonLd
+        data={[
+          {
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            name: "APLZ",
+            url: absoluteUrl("/"),
+            logo: absoluteUrl("/icon-512.png"),
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            name: "APLZ",
+            url: absoluteUrl("/"),
+            potentialAction: {
+              "@type": "SearchAction",
+              target: `${absoluteUrl("/requests")}?q={search_term_string}`,
+              "query-input": "required name=search_term_string",
+            },
+          },
+        ]}
+      />
       <section className="px-4 pt-10 pb-8">
         <div className="max-w-5xl mx-auto">
           <div className="grid lg:grid-cols-[1fr_360px] gap-8 items-end">
@@ -225,7 +257,7 @@ export default async function Home() {
           {REQUEST_CATEGORIES.map((category) => (
             <Link
               key={category}
-              href={`/requests?category=${encodeURIComponent(category)}`}
+              href={`/use-cases/${getUseCaseByCategory(category)?.slug ?? "other"}`}
               className="px-3 py-1.5 rounded-lg border border-[#e5e5e5] bg-white text-sm text-[#606060] hover:border-[#1B4F72] hover:text-[#1B4F72] transition-colors"
             >
               {category}

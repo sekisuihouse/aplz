@@ -11,6 +11,7 @@ import ReportButton from "@/app/components/ReportButton";
 import SolutionCard from "@/app/components/SolutionCard";
 import SolutionForm from "@/app/components/SolutionForm";
 import { formatDate } from "@/lib/utils";
+import { JsonLd, absoluteUrl, breadcrumbJsonLd, pageMetadata, truncateDescription } from "@/lib/seo";
 
 export const revalidate = 10;
 
@@ -23,15 +24,25 @@ export async function generateMetadata({ params }: RequestDetailProps) {
   const db = createServerClient();
   const { data: request } = await db
     .from("requests")
-    .select("title, description")
+    .select("title, description, desired_outcome, status, is_public, updated_at, created_at")
     .eq("slug", slug)
     .single();
 
-  if (!request) return { title: "困りごとが見つかりません" };
-  return {
-    title: `${request.title} — APLZ`,
-    description: request.description || request.title,
-  };
+  if (!request) return { title: "困りごとが見つかりません | APLZ" };
+  const description = truncateDescription(
+    request.desired_outcome || request.description,
+    `${request.title}について、小さなWebアプリで解決するための困りごと投稿です。`
+  );
+  return pageMetadata({
+    title: `${request.title} | APLZ`,
+    description,
+    path: `/requests/${slug}`,
+    type: "article",
+    noIndex: !request.is_public || request.status === "hidden",
+    publishedTime: request.created_at,
+    modifiedTime: request.updated_at,
+    keywords: ["困りごと", "小さな業務アプリ", request.title],
+  });
 }
 
 export default async function RequestDetailPage({ params }: RequestDetailProps) {
@@ -115,9 +126,52 @@ export default async function RequestDetailPage({ params }: RequestDetailProps) 
     author: solution.user_id ? solutionProfileMap[solution.user_id] ?? null : null,
     feedback_counts: feedbackMap[solution.id] ?? {},
   }));
+  const requestUrl = absoluteUrl(`/requests/${request.slug}`);
+  const jsonLd = [
+    breadcrumbJsonLd([
+      { name: "APLZ", path: "/" },
+      { name: "困りごと", path: "/requests" },
+      { name: request.title, path: `/requests/${request.slug}` },
+    ]),
+    {
+      "@context": "https://schema.org",
+      "@type": "DiscussionForumPosting",
+      headline: request.title,
+      text: [
+        request.description,
+        request.current_workflow,
+        request.pain_point,
+        request.desired_outcome,
+      ]
+        .filter(Boolean)
+        .join("\n\n"),
+      url: requestUrl,
+      datePublished: request.created_at,
+      dateModified: request.updated_at,
+      author: {
+        "@type": "Person",
+        name: author?.display_name || "匿名ユーザー",
+      },
+      discussionUrl: requestUrl,
+      keywords: [request.category, request.usage_frequency, request.privacy_level].filter(Boolean),
+      interactionStatistic: [
+        {
+          "@type": "InteractionCounter",
+          interactionType: "https://schema.org/CommentAction",
+          userInteractionCount: enrichedComments.length,
+        },
+        {
+          "@type": "InteractionCounter",
+          interactionType: "https://schema.org/ReplyAction",
+          userInteractionCount: enrichedSolutions.length,
+        },
+      ],
+    },
+  ];
 
   return (
     <main className="max-w-[1800px] mx-auto px-4 py-8">
+      <JsonLd data={jsonLd} />
       <div className="grid lg:grid-cols-[1fr_320px] gap-6">
         <div className="min-w-0">
           <div className="mb-4">

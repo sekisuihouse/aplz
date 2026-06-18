@@ -11,6 +11,7 @@ import CommentSection from "./CommentSection";
 import RelatedApps from "./RelatedApps";
 import QrCodeButton from "./QrCodeButton";
 import ReportButton from "@/app/components/ReportButton";
+import { JsonLd, absoluteUrl, breadcrumbJsonLd, pageMetadata, truncateDescription } from "@/lib/seo";
 
 export const revalidate = 10;
 
@@ -23,20 +24,26 @@ export async function generateMetadata({ params }: Props) {
   const supabase = createServerClient();
   const { data: app } = await supabase
     .from("apps")
-    .select("name, description")
+    .select("name, description, is_public, created_at, last_published_at")
     .eq("slug", slug)
     .single();
 
-  if (!app) return { title: "アプリが見つかりません" };
+  if (!app) return { title: "アプリが見つかりません | APLZ" };
 
-  return {
-    title: `${app.name} — aplz`,
-    description: app.description || `${app.name} を aplz でチェック`,
-    openGraph: {
-      title: app.name,
-      description: app.description || `${app.name} を aplz でチェック`,
-    },
-  };
+  const description = truncateDescription(
+    app.description,
+    `${app.name}はAPLZで公開された小さなWebアプリです。`
+  );
+  return pageMetadata({
+    title: `${app.name} | APLZ`,
+    description,
+    path: `/apps/${slug}`,
+    type: "article",
+    noIndex: !app.is_public,
+    publishedTime: app.created_at,
+    modifiedTime: app.last_published_at || app.created_at,
+    keywords: ["小さなWebアプリ", "業務アプリ", app.name],
+  });
 }
 
 export default async function AppDetailPage({ params }: Props) {
@@ -134,9 +141,53 @@ export default async function AppDetailPage({ params }: Props) {
 
   const iframeSrc = `${process.env.R2_PUBLIC_URL}/${slug}/index.html`;
   const r2PublicUrl = process.env.R2_PUBLIC_URL!;
+  const appUrl = absoluteUrl(`/apps/${slug}`);
+  const averageRating =
+    ratingsCount > 0
+      ? (ratingsAverages.usability + ratingsAverages.design + ratingsAverages.idea) / 3
+      : null;
+  const jsonLd = [
+    breadcrumbJsonLd([
+      { name: "APLZ", path: "/" },
+      { name: "公開アプリ", path: "/#apps" },
+      { name: app.name, path: `/apps/${slug}` },
+    ]),
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      name: app.name,
+      description: app.description || `${app.name}はAPLZで公開された小さなWebアプリです。`,
+      url: appUrl,
+      applicationCategory: "BusinessApplication",
+      operatingSystem: "Web",
+      datePublished: app.created_at,
+      dateModified: app.last_published_at || app.created_at,
+      author: {
+        "@type": "Person",
+        name: authorProfile?.display_name || app.author_name || "APLZユーザー",
+      },
+      offers: {
+        "@type": "Offer",
+        price: "0",
+        priceCurrency: "JPY",
+      },
+      ...(averageRating
+        ? {
+            aggregateRating: {
+              "@type": "AggregateRating",
+              ratingValue: averageRating.toFixed(1),
+              ratingCount: ratingsCount,
+              bestRating: 5,
+              worstRating: 1,
+            },
+          }
+        : {}),
+    },
+  ];
 
   return (
     <main className="max-w-[1800px] mx-auto px-4 py-8">
+      <JsonLd data={jsonLd} />
       <div className="flex gap-6">
         {/* Main Column */}
         <div className="flex-1 min-w-0">

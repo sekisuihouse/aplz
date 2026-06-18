@@ -8,7 +8,7 @@ import NavUser from "./components/NavUser";
 import WorkspaceSwitcher from "./components/WorkspaceSwitcher";
 import "./globals.css";
 
-const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://aplz.dev";
 
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",
@@ -28,9 +28,39 @@ const baloo2 = Baloo_2({
 
 export const metadata: Metadata = {
   metadataBase: new URL(appUrl),
-  title: "APLZ — 小さな困りごとを小さなアプリで解決",
+  applicationName: "APLZ",
+  title: {
+    default: "APLZ — 小さな困りごとを小さなアプリで解決",
+    template: "%s",
+  },
   description:
-    "日常の小さな困りごとを投稿し、開発者が小さなWebアプリで解決するプラットフォーム",
+    "APLZは、町内会・学校・個人事業主・イベント運営などの日常の小さな困りごとを投稿し、開発者が小さなWebアプリで解決するプラットフォームです。",
+  keywords: [
+    "APLZ",
+    "小さな業務アプリ",
+    "困りごと 解決",
+    "業務改善",
+    "当番表 アプリ",
+    "集計 アプリ",
+    "個人事業主 業務改善",
+  ],
+  authors: [{ name: "APLZ" }],
+  creator: "APLZ",
+  publisher: "APLZ",
+  alternates: {
+    canonical: appUrl,
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },
@@ -39,6 +69,20 @@ export const metadata: Metadata = {
     apple: "/apple-touch-icon.png",
   },
   openGraph: {
+    title: "APLZ — 小さな困りごとを小さなアプリで解決",
+    description:
+      "町内会・学校・個人事業主・イベント運営などの日常の小さな困りごとを投稿し、小さなWebアプリで解決する場所です。",
+    url: appUrl,
+    siteName: "APLZ",
+    locale: "ja_JP",
+    type: "website",
+    images: [{ url: "/ogp.png", width: 1200, height: 630, alt: "APLZ" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "APLZ — 小さな困りごとを小さなアプリで解決",
+    description:
+      "日常の小さな困りごとを投稿し、小さなWebアプリで解決する場所です。",
     images: ["/ogp.png"],
   },
 };
@@ -90,6 +134,18 @@ export default async function RootLayout({
               >
                 テンプレート
               </Link>
+              <Link
+                href="/use-cases"
+                className="hidden lg:inline-flex px-3 py-1.5 rounded-lg text-sm text-[#606060] hover:text-[#0f0f0f] hover:bg-[#f5f5f5] transition-colors"
+              >
+                用途別
+              </Link>
+              <Link
+                href="/articles"
+                className="hidden lg:inline-flex px-3 py-1.5 rounded-lg text-sm text-[#606060] hover:text-[#0f0f0f] hover:bg-[#f5f5f5] transition-colors"
+              >
+                記事
+              </Link>
             </div>
             <div className="flex items-center gap-2 sm:gap-3">
               {user ? (
@@ -134,11 +190,19 @@ export default async function RootLayout({
           </nav>
         </header>
         {children}
-        <footer className="border-t border-[#e5e5e5] py-8 text-center">
-          <p className="text-sm text-[#909090]">
-            <span className="font-semibold text-[#1a1a1a]" style={{ fontFamily: "var(--font-baloo-2)" }}>APLZ</span>
-            {" "}— 小さな困りごとを小さなアプリで解決する場所
-          </p>
+        <footer className="border-t border-[#e5e5e5] py-8">
+          <div className="max-w-5xl mx-auto px-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <p className="text-sm text-[#909090]">
+              <span className="font-semibold text-[#1a1a1a]" style={{ fontFamily: "var(--font-baloo-2)" }}>APLZ</span>
+              {" "}— 小さな困りごとを小さなアプリで解決する場所
+            </p>
+            <div className="flex flex-wrap gap-4 text-sm text-[#606060]">
+              <Link href="/requests" className="hover:text-[#0f0f0f]">困りごと</Link>
+              <Link href="/use-cases" className="hover:text-[#0f0f0f]">用途別</Link>
+              <Link href="/articles" className="hover:text-[#0f0f0f]">記事</Link>
+              <Link href="/templates" className="hover:text-[#0f0f0f]">テンプレート</Link>
+            </div>
+          </div>
         </footer>
       </body>
     </html>
