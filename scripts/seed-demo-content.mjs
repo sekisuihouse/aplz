@@ -44,6 +44,7 @@ const demoUsers = [
     displayName: "デモ依頼者｜自治会の高橋",
     role: "requester",
     bio: "自治会・町内会まわりの小さな作業を想定したデモアカウントです。",
+    avatar: { initials: "高", color: "#1B4F72", mark: "班" },
   },
   {
     key: "school",
@@ -51,6 +52,7 @@ const demoUsers = [
     displayName: "デモ依頼者｜放課後教室の森",
     role: "requester",
     bio: "学校・保護者連絡まわりの課題を想定したデモアカウントです。",
+    avatar: { initials: "森", color: "#2F6F4E", mark: "学" },
   },
   {
     key: "event",
@@ -58,6 +60,7 @@ const demoUsers = [
     displayName: "デモ依頼者｜小イベント受付",
     role: "requester",
     bio: "地域イベント・受付作業の課題を想定したデモアカウントです。",
+    avatar: { initials: "受", color: "#8A4B2A", mark: "札" },
   },
   {
     key: "shop",
@@ -65,6 +68,7 @@ const demoUsers = [
     displayName: "デモ依頼者｜商店街事務局",
     role: "requester",
     bio: "小規模店舗・商店街運営の課題を想定したデモアカウントです。",
+    avatar: { initials: "商", color: "#9A3F3F", mark: "店" },
   },
   {
     key: "solo",
@@ -72,6 +76,7 @@ const demoUsers = [
     displayName: "デモ依頼者｜個人事業の佐野",
     role: "requester",
     bio: "一人事業・現場運用の課題を想定したデモアカウントです。",
+    avatar: { initials: "佐", color: "#B85C38", mark: "現" },
   },
   {
     key: "lesson",
@@ -79,6 +84,7 @@ const demoUsers = [
     displayName: "デモ依頼者｜小さな教室の中村",
     role: "requester",
     bio: "教室・ワークショップ運営の課題を想定したデモアカウントです。",
+    avatar: { initials: "中", color: "#7B5A6A", mark: "教" },
   },
   {
     key: "dev-grid",
@@ -86,6 +92,7 @@ const demoUsers = [
     displayName: "デモ開発者｜表と集計が得意",
     role: "developer",
     bio: "一覧表、割り振り、集計ツールを担当するデモ開発者です。",
+    avatar: { initials: "表", color: "#0F5E7A", mark: "Σ" },
   },
   {
     key: "dev-words",
@@ -93,6 +100,7 @@ const demoUsers = [
     displayName: "デモ開発者｜文章整形屋",
     role: "developer",
     bio: "連絡文、貼り付け文、メモ整理を担当するデモ開発者です。",
+    avatar: { initials: "文", color: "#315E8C", mark: "Aa" },
   },
   {
     key: "dev-field",
@@ -100,6 +108,7 @@ const demoUsers = [
     displayName: "デモ開発者｜現場チェック係",
     role: "developer",
     bio: "スマホで使う現場チェック系UIを担当するデモ開発者です。",
+    avatar: { initials: "確", color: "#4C6A77", mark: "✓" },
   },
   {
     key: "dev-calc",
@@ -107,6 +116,7 @@ const demoUsers = [
     displayName: "デモ開発者｜逆算ツール担当",
     role: "developer",
     bio: "材料、在庫、時間の逆算ツールを担当するデモ開発者です。",
+    avatar: { initials: "逆", color: "#34727A", mark: "÷" },
   },
   {
     key: "dev-route",
@@ -114,6 +124,7 @@ const demoUsers = [
     displayName: "デモ開発者｜順番整理係",
     role: "developer",
     bio: "順番、待ち列、時間割の整理を担当するデモ開発者です。",
+    avatar: { initials: "順", color: "#5B578A", mark: "1" },
   },
 ];
 
@@ -129,19 +140,19 @@ const samples = [
     deadline: "2026-06-27",
     name: "【デモ】当番くるっと割り振り",
     authorName: "デモ開発者｜表と集計が得意",
-    description: "名前と当番ごとの必要人数から、偏りを見ながら割り振り表を作るデモアプリです。",
+    description: "名前、前回担当、当番枠を見比べながら、町内会向けの割り振り案を作るデモアプリです。",
     request: {
-      title: "【デモ】町内会の当番表を、毎月組み直すのがつらい",
+      title: "【デモ】班の入れ替わりが多く、町内会の当番が一部の人に寄ってしまう",
       category: "町内会",
       status: "solved",
       privacy: "low",
       target: "町内会の班長、自治会の当番係",
-      workflow: "紙の名簿を見ながら、前月と重ならないように手で割り振っています。",
-      pain: "欠席や引っ越しがあるたびに全体を見直します。公平にしたつもりでも、あとから偏りを指摘されます。",
-      outcome: "名前と当番名、必要人数だけ入れたら、偏りが少ない割り振り表が出てほしいです。",
+      workflow: "班ごとの紙名簿に、前回の担当を赤ペンで書き込んでから当番表を作っています。",
+      pain: "新しく入った世帯と高齢で免除の世帯が混ざるため、単純な順番表では回せません。説明できる公平さがほしいです。",
+      outcome: "名前、免除メモ、当番枠を入れると、偏りの少ない案と確認用の表が出てほしいです。",
       frequency: "月1回",
-      input: "名前、当番名、当番ごとの必要人数",
-      output: "当番ごとの担当者リスト",
+      input: "名前、免除メモ、当番名、当番ごとの必要人数",
+      output: "当番ごとの担当者リストと偏り確認",
     },
     fields: [
       { key: "names", label: "参加者", type: "textarea", value: "青木\n井上\n上田\n遠藤\n大野\n加藤\n木村\n佐々木" },
@@ -149,8 +160,8 @@ const samples = [
     ],
     logic: "rota",
     comments: [
-      ["question", "【デモ質問】前回の担当履歴も入れて、連続しないようにしたいですか？"],
-      ["answer", "【デモ返答】最初は今回の名簿だけで大丈夫です。履歴対応は次の版で考えたいです。"],
+      ["question", "【デモ質問】免除や相談中の人は、完全に外す表示と候補に残す表示のどちらが近いですか？"],
+      ["answer", "【デモ返答】候補には残したいです。あとで班長が事情を見て調整できる形がよいです。"],
     ],
   },
   {
@@ -164,27 +175,27 @@ const samples = [
     deadline: "2026-06-29",
     name: "【デモ】学童お迎え連絡まとめ",
     authorName: "デモ開発者｜文章整形屋",
-    description: "お迎え時間の変更連絡を貼り付けると、欠席・時間変更・補足に分けるデモアプリです。",
+    description: "保護者から届いた短い連絡を、スタッフが夕方に見やすい確認メモへ分けるデモアプリです。",
     request: {
-      title: "【デモ】学童のお迎え変更連絡を、夕方前に整理したい",
+      title: "【デモ】学童の連絡メモがLINE、口頭、紙で混ざり、夕方の確認が怖い",
       category: "学校・委員会",
       status: "answered",
       privacy: "medium",
       target: "学童スタッフ、放課後教室の担当者",
-      workflow: "LINEや紙のメモを見ながら、ホワイトボードに手で転記しています。",
-      pain: "欠席、時間変更、迎えに来る人が混ざっていて、夕方の忙しい時間に見落としやすいです。",
-      outcome: "連絡文を貼ると、欠席・変更・通常連絡に分かれた確認メモになってほしいです。",
+      workflow: "LINEのスクショ、電話メモ、子どもが持ってきた紙を見ながら、スタッフ用ノートへ書き写しています。",
+      pain: "迎えに来る人、時間変更、欠席が同じメモ欄に混ざり、17時台だけ確認が集中します。個人名を残しすぎるのも避けたいです。",
+      outcome: "短い連絡文を貼ると、欠席・時間変更・要確認だけに分かれ、終わったら消せるメモにしたいです。",
       frequency: "平日ほぼ毎日",
-      input: "保護者からの短い連絡文",
-      output: "確認用の一覧メモ",
+      input: "保護者からの短い連絡文、時刻、迎えに来る人の続柄",
+      output: "夕方スタッフ向けの確認メモ",
     },
     fields: [
       { key: "raw", label: "連絡メモ", type: "textarea", value: "田中 17:30に祖母がお迎え\n山本 今日は欠席\n森 18:00 父が迎え\n小林 17:00に変更" },
     ],
     logic: "messages",
     comments: [
-      ["question", "【デモ質問】迎えに来る人の名前は保存しない前提でよいですか？"],
-      ["answer", "【デモ返答】はい。画面で整えるだけで、保存はしない形が安心です。"],
+      ["question", "【デモ質問】確認済みチェックを付けたいですか、それとも印刷前提ですか？"],
+      ["answer", "【デモ返答】スマホで確認済みにできると助かります。ただ保存はその日だけでよいです。"],
     ],
   },
   {
@@ -198,16 +209,16 @@ const samples = [
     deadline: "2026-07-05",
     name: "【デモ】御朱印待ち札ならべ",
     authorName: "デモ開発者｜順番整理係",
-    description: "受付番号と窓口数から、窓口別の呼び出し順を作るデモアプリです。",
+    description: "受付番号を窓口ごとに分け、呼び出し忘れと二重呼び出しを減らすデモアプリです。",
     request: {
-      title: "【デモ】小さな寺社イベントで、御朱印の待ち札を整理したい",
+      title: "【デモ】御朱印受付で番号札を配るが、二つの窓口で呼び出し順がずれる",
       category: "イベント運営",
       status: "testing",
       privacy: "none",
       target: "寺社イベントの受付ボランティア",
-      workflow: "番号札を渡して、呼び出し順を紙に書いています。",
-      pain: "窓口が2つある日だけ順番がずれやすく、列に並び直す人が出て受付が詰まります。",
-      outcome: "番号を入れると、窓口ごとの次の呼び出し候補が見える表になってほしいです。",
+      workflow: "受付で番号札を渡し、書き手が空いた窓口から順番に呼んでいます。",
+      pain: "片方の窓口だけ早く進むと番号が前後します。待っている人に『自分は飛ばされたのか』と聞かれます。",
+      outcome: "受付番号と窓口数を入れると、窓口ごとの次候補と保留番号が一目で分かってほしいです。",
       frequency: "月数回の催事",
       input: "受付番号、窓口数",
       output: "窓口別の呼び出し順",
@@ -218,8 +229,8 @@ const samples = [
     ],
     logic: "queue",
     comments: [
-      ["question", "【デモ質問】途中で番号を飛ばすケースはありますか？"],
-      ["answer", "【デモ返答】あります。呼んでもいない場合は後ろに回せると便利です。"],
+      ["question", "【デモ質問】番号を飛ばした理由も記録しますか？"],
+      ["answer", "【デモ返答】理由までは不要です。『一度呼んだ』印だけあれば現場では足ります。"],
     ],
   },
   {
@@ -233,19 +244,19 @@ const samples = [
     deadline: "2026-06-30",
     name: "【デモ】雨天連絡文メーカー",
     authorName: "デモ開発者｜文章整形屋",
-    description: "少年団や地域イベント向けに、雨天時の連絡文を短く整えるデモアプリです。",
+    description: "天候判断、集合場所、持ち物を抜けなく入れた連絡文へ整えるデモアプリです。",
     request: {
-      title: "【デモ】雨の日の少年団連絡文を、毎回ゼロから書いている",
+      title: "【デモ】少年団の雨天判断を送るたび、集合場所と持ち物を書き忘れそうになる",
       category: "文章作成",
       status: "answered",
       privacy: "none",
       target: "少年団、地域スポーツ、習い事の連絡係",
-      workflow: "過去のLINEを探して、日付と場所を書き換えて送っています。",
-      pain: "急いで送るので、集合時間や持ち物を書き忘れます。言い回しも毎回悩みます。",
-      outcome: "イベント名、場所、判断、補足だけ入れたら、そのまま送れる文章にしたいです。",
+      workflow: "朝の天気を見て、過去のLINE文面を探し、場所と時間だけ書き換えています。",
+      pain: "中止、延期、屋内変更で文面が変わります。急いで送るほど、集合場所や靴、タオルの注意を書き忘れます。",
+      outcome: "開催判断を選ぶと、保護者にそのまま送れる短い文章と確認項目が出てほしいです。",
       frequency: "雨予報の日",
-      input: "イベント名、場所、開催判断、補足",
-      output: "LINEやメールに貼れる連絡文",
+      input: "イベント名、場所、開催判断、集合時刻、持ち物",
+      output: "LINEやメールに貼れる連絡文と送信前チェック",
     },
     fields: [
       { key: "event", label: "イベント名", type: "text", value: "土曜午前の練習" },
@@ -255,8 +266,8 @@ const samples = [
     ],
     logic: "rain",
     comments: [
-      ["question", "【デモ質問】敬語寄りと短文寄り、どちらが近いですか？"],
-      ["answer", "【デモ返答】保護者向けなので、短いけど失礼にならない感じがよいです。"],
+      ["question", "【デモ質問】中止・延期・場所変更の3パターンを切り替える形でよいですか？"],
+      ["answer", "【デモ返答】はい。判断だけ変えれば文面が変わると、朝に迷わず送れます。"],
     ],
   },
   {
@@ -270,27 +281,27 @@ const samples = [
     deadline: "2026-07-01",
     name: "【デモ】商店街抽選券カウンター",
     authorName: "デモ開発者｜表と集計が得意",
-    description: "店舗ごとの抽選券枚数を貼り付けると、合計と上位店舗を出すデモアプリです。",
+    description: "商店街イベントの抽選券配布数を、店舗別に合計して不足しそうな店を見つけるデモアプリです。",
     request: {
-      title: "【デモ】商店街イベントの抽選券残数を、閉店後に集計している",
+      title: "【デモ】商店街の抽選券が、どの店で足りなくなりそうか閉店まで分からない",
       category: "集計",
       status: "solved",
       privacy: "none",
       target: "商店街事務局、イベント係",
-      workflow: "店舗ごとにLINEで枚数を送ってもらい、事務局がExcelへ入れています。",
-      pain: "表記がバラバラで転記ミスが出ます。どの店が多く配っているかもすぐ見えません。",
-      outcome: "店舗名と枚数を貼るだけで、合計と店舗別一覧が出てほしいです。",
+      workflow: "各店舗から『今日何枚出た』というLINEをもらい、事務局が閉店後に集計しています。",
+      pain: "数字だけ送る店、文章で送る店、写真で送る店があり、追加配布が必要な店に気づくのが遅れます。",
+      outcome: "店舗名と枚数を貼るだけで、合計、上位、追加配布候補が見えるようにしたいです。",
       frequency: "イベント期間中の毎晩",
       input: "店舗名、配布済み枚数",
-      output: "合計、店舗別枚数、上位店舗",
+      output: "合計、店舗別枚数、追加配布候補",
     },
     fields: [
       { key: "shops", label: "店舗名, 枚数", type: "textarea", value: "青葉精肉,42\nみどり文具,18\n駅前ベーカリー,55\n小林酒店,31" },
     ],
     logic: "lottery",
     comments: [
-      ["question", "【デモ質問】残数ではなく配布済み枚数の集計でよいですか？"],
-      ["answer", "【デモ返答】はい。配布済みが分かれば追加印刷の判断ができます。"],
+      ["question", "【デモ質問】店舗ごとの初期配布枚数も入れますか？"],
+      ["answer", "【デモ返答】最初は配布済みだけでよいです。残数管理までやると入力が続かなそうです。"],
     ],
   },
   {
@@ -304,19 +315,19 @@ const samples = [
     deadline: "2026-06-26",
     name: "【デモ】キッチンカー仕込み逆算",
     authorName: "デモ開発者｜逆算ツール担当",
-    description: "販売予定数と一食分の材料から、仕込み量をざっくり逆算するデモアプリです。",
+    description: "販売見込み、予備率、材料ごとの単位をもとに、前日仕込みの買い出し量を逆算するデモアプリです。",
     request: {
-      title: "【デモ】キッチンカーの仕込み量を、イベントごとに勘で決めている",
+      title: "【デモ】キッチンカー出店前日、売れ残りを怖がって仕込み量が毎回ぶれる",
       category: "個人事業主",
       status: "answered",
       privacy: "none",
       target: "キッチンカー、屋台、イベント出店者",
-      workflow: "過去の販売数を見て、材料ごとに電卓で計算しています。",
-      pain: "予備分を入れ忘れます。材料ごとに単位が違って、仕込み表を作るのに時間がかかります。",
-      outcome: "販売予定数と一食分の量を入れると、必要な材料量が一覧になると助かります。",
+      workflow: "天気、イベント規模、前回売上を見て、材料ごとに電卓で必要量を出しています。",
+      pain: "米、肉、ソース、容器で単位が違います。忙しいと予備率を入れ忘れ、余らせる日と足りない日の差が大きいです。",
+      outcome: "販売見込み、一食分の材料、予備率を入れると、買い出しメモと仕込み量が一画面で出てほしいです。",
       frequency: "出店前日",
-      input: "販売予定数、予備率、材料ごとの一食分量",
-      output: "材料ごとの必要量",
+      input: "販売予定数、天候メモ、予備率、材料ごとの一食分量",
+      output: "買い出しメモ、仕込み量、余裕分",
     },
     fields: [
       { key: "servings", label: "販売予定数", type: "number", value: "85" },
@@ -325,8 +336,8 @@ const samples = [
     ],
     logic: "stock",
     comments: [
-      ["question", "【デモ質問】単位はgだけで足りますか？"],
-      ["answer", "【デモ返答】最初はgだけで大丈夫です。個数管理は別で見ています。"],
+      ["question", "【デモ質問】容器や割り箸のような個数管理も同じ画面に入れますか？"],
+      ["answer", "【デモ返答】材料とは分けたいです。まずは食材のg計算が一番困っています。"],
     ],
   },
   {
@@ -340,27 +351,27 @@ const samples = [
     deadline: "2026-07-03",
     name: "【デモ】民泊清掃チェック差分",
     authorName: "デモ開発者｜現場チェック係",
-    description: "部屋ごとの清掃項目を貼ると、スマホで見やすいチェックリストにするデモアプリです。",
+    description: "物件ごとの違いを残したまま、当日の清掃だけをスマホ用チェックリストへ整えるデモアプリです。",
     request: {
-      title: "【デモ】民泊清掃の抜け漏れを、部屋ごとに確認したい",
+      title: "【デモ】民泊清掃で、物件ごとの違いを新人スタッフに毎回口頭説明している",
       category: "個人事業主",
       status: "testing",
       privacy: "none",
       target: "小規模民泊の運営者、清掃担当者",
-      workflow: "紙のチェック表を印刷して、終わったら写真で送っています。",
-      pain: "物件ごとに項目が少し違います。紙を作り直すほどではないが、毎回確認が曖昧になります。",
-      outcome: "場所と作業を貼るだけで、スマホで見やすいチェックリストになってほしいです。",
+      workflow: "共通の紙チェック表に、物件ごとの注意点を手書きで足しています。",
+      pain: "A室だけ予備鍵の場所が違う、B室だけ浴室乾燥の確認がある、という細かい差分が口頭伝達になっています。",
+      outcome: "物件名と場所別の作業を貼ると、その日の担当者がスマホで順番に確認できる表にしたいです。",
       frequency: "チェックアウト日の午前",
-      input: "場所、作業項目",
-      output: "部屋ごとのチェックリスト",
+      input: "物件名、場所、作業項目、注意メモ",
+      output: "スマホ用の場所別チェックリスト",
     },
     fields: [
       { key: "rooms", label: "場所:作業", type: "textarea", value: "玄関:鍵返却確認\n浴室:排水口確認\n寝室:シーツ交換\nキッチン:冷蔵庫内確認\nリビング:忘れ物確認" },
     ],
     logic: "cleanup",
     comments: [
-      ["question", "【デモ質問】写真添付まで必要ですか？"],
-      ["answer", "【デモ返答】今はチェックリストだけで十分です。写真は別で送っています。"],
+      ["question", "【デモ質問】チェック完了時刻まで残しますか？"],
+      ["answer", "【デモ返答】時刻までは不要です。新人が迷わず見る順番が分かることが先です。"],
     ],
   },
   {
@@ -374,19 +385,19 @@ const samples = [
     deadline: "2026-07-04",
     name: "【デモ】送迎ざっくり時間割",
     authorName: "デモ開発者｜順番整理係",
-    description: "住所を扱わず、方面と所要分数から送迎の目安時間を作るデモアプリです。",
+    description: "住所を入れずに、方面名と所要分数だけで送迎の順番と目安時刻を作るデモアプリです。",
     request: {
-      title: "【デモ】送迎の順番メモを、住所なしでざっくり組みたい",
+      title: "【デモ】個人住所をアプリに入れず、送迎のざっくり順番だけ組みたい",
       category: "予約・申込",
       status: "answered",
       privacy: "high",
       target: "少人数の教室、整体院、地域送迎の担当者",
-      workflow: "個別の住所を見ながら紙に順番を書いています。",
-      pain: "住所をアプリに入れるのは避けたいです。でも方面と人数だけで所要時間の目安は見たいです。",
-      outcome: "方面名、人数、移動分だけで、出発から戻りまでの時間割を作りたいです。",
+      workflow: "スタッフだけが知っている方面名を紙に書き、前後の移動時間を足しながら順番を決めています。",
+      pain: "住所は入れたくありません。ただ、出発が5分遅れた時に全部の到着目安を手で直すのが面倒です。",
+      outcome: "出発時刻、方面名、人数、移動分だけで、個人情報なしの送迎タイムラインを出したいです。",
       frequency: "送迎がある日",
-      input: "出発時刻、方面名、人数、移動分",
-      output: "住所を含まない送迎時間の目安",
+      input: "出発時刻、方面名、人数、移動分、戻り時間",
+      output: "住所を含まない送迎タイムライン",
     },
     fields: [
       { key: "start", label: "出発時刻", type: "text", value: "15:30" },
@@ -394,8 +405,8 @@ const samples = [
     ],
     logic: "route",
     comments: [
-      ["question", "【デモ質問】個別住所は絶対に入力しない運用でよいですか？"],
-      ["answer", "【デモ返答】はい。方面名だけで十分です。個人情報を入れない前提にしたいです。"],
+      ["question", "【デモ質問】地図表示は不要で、時刻表だけで足りますか？"],
+      ["answer", "【デモ返答】地図は不要です。むしろ住所を入れない設計にしたいです。"],
     ],
   },
   {
@@ -409,19 +420,19 @@ const samples = [
     deadline: "2026-06-29",
     name: "【デモ】編み物教室キット数え",
     authorName: "デモ開発者｜逆算ツール担当",
-    description: "参加人数と材料リストから、予備込みの材料数を数えるデモアプリです。",
+    description: "参加人数、予備数、材料の単位をもとに、教室用キットの不足を防ぐデモアプリです。",
     request: {
-      title: "【デモ】編み物教室の材料キット数を、直前に数え直している",
+      title: "【デモ】編み物教室の材料キットで、説明カードや袋だけ数え忘れる",
       category: "予約・申込",
       status: "solved",
       privacy: "none",
       target: "少人数教室の先生、ワークショップ主催者",
-      workflow: "参加人数を見ながら、材料ごとに手で掛け算してメモしています。",
-      pain: "予備分を忘れがちです。材料が増えると、どれを何個買うか確認に時間がかかります。",
-      outcome: "人数、予備数、材料リストを入れたら、必要数を一気に出したいです。",
+      workflow: "予約人数を見て、毛糸、針、説明カード、袋をそれぞれ手で数えています。",
+      pain: "主材料は忘れませんが、説明カードや持ち帰り袋のような細かいものだけ不足します。追加参加があると全部数え直しです。",
+      outcome: "人数と予備キット数、材料リストを入れると、買う数と詰める数がすぐ分かるようにしたいです。",
       frequency: "開催前",
-      input: "参加人数、予備数、材料名、1人分個数",
-      output: "材料ごとの必要数",
+      input: "参加人数、予備キット数、材料名、1人分個数",
+      output: "材料ごとの必要数と不足確認",
     },
     fields: [
       { key: "people", label: "参加人数", type: "number", value: "14" },
@@ -430,8 +441,8 @@ const samples = [
     ],
     logic: "kit",
     comments: [
-      ["question", "【デモ質問】材料は小数ではなく個数管理でよさそうですか？"],
-      ["answer", "【デモ返答】はい。袋やカードも含めて個数で数えたいです。"],
+      ["question", "【デモ質問】材料ごとの在庫数も入れて、不足だけ出す形にしますか？"],
+      ["answer", "【デモ返答】それが理想です。まずは必要数が一目で分かるだけでも助かります。"],
     ],
   },
   {
@@ -445,19 +456,19 @@ const samples = [
     deadline: "2026-06-27",
     name: "【デモ】タオル洗濯ローテ表",
     authorName: "デモ開発者｜逆算ツール担当",
-    description: "予約数とタオル在庫から、洗濯が必要な枚数の目安を出すデモアプリです。",
+    description: "予約数、使用枚数、残したい予備から、閉店後の洗濯枚数を決めるデモアプリです。",
     request: {
-      title: "【デモ】小さな店舗のタオル洗濯タイミングを、感覚で回している",
+      title: "【デモ】整体院のタオル在庫が、忙しい日の夕方だけ急に足りなくなる",
       category: "個人事業主",
       status: "answered",
       privacy: "none",
       target: "整体院、美容室、個人サロンなどの小規模店舗",
-      workflow: "予約表を見て、足りなさそうな日に多めに洗濯しています。",
-      pain: "忙しい日に不足しそうになります。逆に洗いすぎて干す場所が足りない日もあります。",
-      outcome: "予約数、1予約あたり枚数、清潔な在庫から、洗濯の必要枚数を見たいです。",
+      workflow: "明日の予約表を見て、閉店後に何枚洗うか感覚で決めています。",
+      pain: "洗いすぎると干す場所が足りません。少ないと夕方の予約で足りなくなります。最低予備を残す計算を毎回忘れます。",
+      outcome: "予約数、1人あたり使用枚数、清潔在庫、残したい予備を入れて、洗濯枚数の目安を出したいです。",
       frequency: "前日の閉店後",
-      input: "予約数、使用枚数、在庫枚数",
-      output: "必要枚数、不足枚数、洗濯目安",
+      input: "予約数、1予約あたり使用枚数、在庫枚数、残したい予備",
+      output: "必要枚数、不足枚数、閉店後の洗濯目安",
     },
     fields: [
       { key: "bookings", label: "予約数", type: "number", value: "18" },
@@ -466,8 +477,8 @@ const samples = [
     ],
     logic: "laundry",
     comments: [
-      ["question", "【デモ質問】予備として何枚くらい残す運用ですか？"],
-      ["answer", "【デモ返答】最低10枚は残したいです。急な追加予約があるためです。"],
+      ["question", "【デモ質問】バスタオルとフェイスタオルは分けて計算しますか？"],
+      ["answer", "【デモ返答】最終的には分けたいですが、最初はフェイスタオルだけで大丈夫です。"],
     ],
   },
 ];
@@ -510,10 +521,12 @@ async function ensureDemoUsers() {
       authUser = data.user;
     }
 
+    const avatarUrl = await uploadDemoAvatar(user);
     const { error: profileError } = await supabase.from("profiles").upsert(
       {
         id: authUser.id,
         display_name: user.displayName,
+        avatar_url: avatarUrl,
         bio: user.bio,
         developer_enabled: user.role === "developer",
         skill_categories:
@@ -583,6 +596,19 @@ async function uploadHtml(sample) {
       ContentType: "text/html; charset=utf-8",
     })
   );
+}
+
+async function uploadDemoAvatar(user) {
+  const key = `avatars/demo/${user.key}.svg`;
+  await s3.send(
+    new PutObjectCommand({
+      Bucket: process.env.R2_BUCKET_NAME,
+      Key: key,
+      Body: Buffer.from(renderAvatarSvg(user), "utf8"),
+      ContentType: "image/svg+xml; charset=utf-8",
+    })
+  );
+  return getPublicUrl(key);
 }
 
 async function insertApp(sample, users) {
@@ -754,7 +780,7 @@ function renderHtml(sample) {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>${escapeHtml(sample.name)}</title>
   <style>
-    :root { --accent: ${sample.accent}; --ink: #151515; --muted: #686868; --line: #dedbd4; --paper: #fffdf8; }
+    :root { --accent: ${sample.accent}; --ink: #151515; --muted: #686868; --line: #dedbd4; --paper: #fffdf8; --soft: color-mix(in srgb, var(--accent) 10%, white); }
     * { box-sizing: border-box; }
     body { margin: 0; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg, #f7f3ec); color: var(--ink); }
     body.ledger { --bg: #f3f6f7; --paper: #ffffff; }
@@ -767,13 +793,9 @@ function renderHtml(sample) {
     body.route { --bg: #efeff8; --paper: #ffffff; }
     body.craft { --bg: #f7edf3; --paper: #fffafd; }
     body.salon { --bg: #eaf5f4; --paper: #ffffff; }
-    main { max-width: 1040px; margin: 0 auto; padding: 24px 16px 40px; }
-    .shell { display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(320px, 1fr); gap: 16px; align-items: start; }
-    .panel { background: var(--paper); border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--line)); border-radius: var(--radius, 12px); padding: 18px; box-shadow: 0 14px 34px rgba(0,0,0,.05); }
-    body.ticket .panel { border-style: dashed; border-radius: 2px; }
-    body.receipt .panel { border-radius: 0; box-shadow: 0 8px 0 rgba(0,0,0,.04); }
-    body.sticky .panel { transform: rotate(-0.4deg); }
-    body.route .shell { grid-template-columns: 360px minmax(0, 1fr); }
+    main { max-width: 1120px; margin: 0 auto; padding: 24px 16px 40px; }
+    .layout { min-height: calc(100vh - 48px); }
+    .panel { background: var(--paper); border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--line)); padding: 18px; box-shadow: 0 14px 34px rgba(0,0,0,.05); }
     .tag { display: inline-flex; color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 35%, white); background: white; border-radius: 999px; padding: 5px 10px; font-size: 12px; font-weight: 800; margin-bottom: 12px; }
     h1 { margin: 0; font-size: clamp(25px, 5vw, 44px); line-height: 1.07; letter-spacing: 0; }
     p { color: var(--muted); line-height: 1.7; }
@@ -782,27 +804,46 @@ function renderHtml(sample) {
     textarea { min-height: 116px; resize: vertical; line-height: 1.5; }
     button { width: 100%; min-height: 44px; border: 0; border-radius: 9px; background: var(--accent); color: white; font-weight: 900; cursor: pointer; }
     pre { margin: 0; white-space: pre-wrap; word-break: break-word; font: 14px/1.7 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
-    .result { min-height: 300px; }
     .note { margin-top: 10px; font-size: 12px; color: #777; }
-    @media (max-width: 760px) { .shell, body.route .shell { grid-template-columns: 1fr; } main { padding-top: 18px; } }
+    .ledger-grid { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 14px; }
+    .ledger .panel { border-radius: 4px; box-shadow: none; }
+    .ledger .result { min-height: 420px; background-image: linear-gradient(#0000 31px, rgba(27,79,114,.18) 32px); background-size: 100% 32px; }
+    .sticky-board { display: grid; grid-template-columns: repeat(2, minmax(260px, 1fr)); gap: 26px; padding: 18px; border: 10px solid #cfae75; background: #d8b781; }
+    .sticky .panel { border: 0; border-radius: 3px; box-shadow: 8px 12px 18px rgba(85,66,22,.18); transform: rotate(-1deg); }
+    .sticky .result { transform: rotate(1deg); min-height: 360px; }
+    .ticket-wrap { max-width: 760px; margin: 0 auto; }
+    .ticket-strip { display: grid; grid-template-columns: 1fr 1fr; border: 2px dashed var(--accent); background: var(--paper); }
+    .ticket-strip .panel { border: 0; border-radius: 0; box-shadow: none; }
+    .ticket-strip .result { border-left: 2px dashed var(--accent); min-height: 390px; }
+    .broadcast-phone { max-width: 430px; margin: 0 auto; border-radius: 32px; padding: 14px; background: #1f2c3a; box-shadow: 0 24px 50px rgba(20,30,40,.22); }
+    .broadcast-phone .panel { border-radius: 22px; border: 0; box-shadow: none; }
+    .broadcast-phone .result { margin-top: 10px; min-height: 270px; background: #f6fbff; }
+    .receipt-roll { max-width: 430px; margin: 0 auto; background: repeating-linear-gradient(90deg, #fff 0 8px, #f9f9f9 8px 16px); }
+    .receipt-roll .panel { border-radius: 0; border-style: dashed; box-shadow: 0 10px 0 rgba(0,0,0,.04); }
+    .receipt-roll .result { border-top: 0; min-height: 320px; }
+    .kitchen-line { display: grid; grid-template-columns: minmax(280px, .9fr) minmax(0, 1.1fr); gap: 18px; align-items: stretch; }
+    .kitchen .panel { border-radius: 18px 18px 8px 8px; border-bottom: 8px solid color-mix(in srgb, var(--accent) 24%, #6d3d28); }
+    .kitchen .result { background: #fff7ed; min-height: 400px; }
+    .checklist-phone { max-width: 480px; margin: 0 auto; background: #233534; padding: 12px; border-radius: 28px; }
+    .checklist-phone .panel { border-radius: 20px; border: 0; box-shadow: none; }
+    .checklist-phone .result { margin-top: 10px; min-height: 360px; }
+    .route-map { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 16px; }
+    .route-map .result { min-height: 480px; background: linear-gradient(135deg, #fff 0 24%, #eeeeff 24% 26%, #fff 26% 58%, #e8e8fb 58% 60%, #fff 60%); border-radius: 22px; }
+    .craft-table { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 18px; align-items: start; }
+    .craft .panel { border-radius: 26px 6px 26px 6px; }
+    .craft .result { background: radial-gradient(circle at 18px 18px, rgba(123,90,106,.18) 0 5px, transparent 6px), #fffafd; background-size: 36px 36px; min-height: 420px; }
+    .salon-board { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .salon .panel { border-radius: 8px; border-top: 8px solid var(--accent); }
+    .salon .result { min-height: 380px; background: linear-gradient(#fff 0 48%, #f0fbfa 48%); }
+    @media (max-width: 760px) {
+      main { padding-top: 18px; }
+      .ledger-grid, .sticky-board, .ticket-strip, .kitchen-line, .route-map, .craft-table, .salon-board { grid-template-columns: 1fr; }
+      .ticket-strip .result { border-left: 0; border-top: 2px dashed var(--accent); }
+    }
   </style>
 </head>
 <body class="${escapeHtml(sample.variant)}">
-  <main>
-    <div class="shell">
-      <section class="panel">
-        <span class="tag">APLZ デモアプリ</span>
-        <h1>${escapeHtml(sample.name.replace("【デモ】", ""))}</h1>
-        <p>${escapeHtml(sample.description)}</p>
-        <form id="tool"></form>
-        <button id="run" type="button">結果を見る</button>
-        <p class="note">これはデモです。入力内容はブラウザ内だけで処理されます。</p>
-      </section>
-      <section class="panel result">
-        <pre id="result"></pre>
-      </section>
-    </div>
-  </main>
+  ${renderDemoLayout(sample)}
   <script>
     const config = ${JSON.stringify(config)};
     const form = document.querySelector("#tool");
@@ -898,6 +939,55 @@ function renderHtml(sample) {
 </html>`;
 }
 
+function renderDemoLayout(sample) {
+  const title = escapeHtml(sample.name.replace("【デモ】", ""));
+  const description = escapeHtml(sample.description);
+  const formPanel = `<span class="tag">APLZ デモアプリ</span><h1>${title}</h1><p>${description}</p><form id="tool"></form><button id="run" type="button">結果を見る</button><p class="note">これはデモです。入力内容はブラウザ内だけで処理されます。</p>`;
+  const resultPanel = `<pre id="result"></pre>`;
+
+  if (sample.variant === "ledger") {
+    return `<main><div class="layout ledger-grid"><section class="panel">${formPanel}</section><section class="panel result"><div class="tag">割り振り表</div>${resultPanel}</section></div></main>`;
+  }
+
+  if (sample.variant === "sticky") {
+    return `<main><div class="layout sticky-board"><section class="panel">${formPanel}</section><section class="panel result"><div class="tag">夕方の確認メモ</div>${resultPanel}</section></div></main>`;
+  }
+
+  if (sample.variant === "ticket") {
+    return `<main><div class="layout ticket-wrap"><section class="ticket-strip"><div class="panel">${formPanel}</div><div class="panel result"><div class="tag">呼び出し札</div>${resultPanel}</div></section></div></main>`;
+  }
+
+  if (sample.variant === "broadcast") {
+    return `<main><div class="layout broadcast-phone"><section class="panel">${formPanel}</section><section class="panel result"><div class="tag">送信前プレビュー</div>${resultPanel}</section></div></main>`;
+  }
+
+  if (sample.variant === "receipt") {
+    return `<main><div class="layout receipt-roll"><section class="panel">${formPanel}</section><section class="panel result"><div class="tag">集計レシート</div>${resultPanel}</section></div></main>`;
+  }
+
+  if (sample.variant === "kitchen") {
+    return `<main><div class="layout kitchen-line"><section class="panel">${formPanel}</section><section class="panel result"><div class="tag">仕込み台メモ</div>${resultPanel}</section></div></main>`;
+  }
+
+  if (sample.variant === "checklist") {
+    return `<main><div class="layout checklist-phone"><section class="panel">${formPanel}</section><section class="panel result"><div class="tag">現場チェック</div>${resultPanel}</section></div></main>`;
+  }
+
+  if (sample.variant === "route") {
+    return `<main><div class="layout route-map"><section class="panel">${formPanel}</section><section class="panel result"><div class="tag">送迎タイムライン</div>${resultPanel}</section></div></main>`;
+  }
+
+  if (sample.variant === "craft") {
+    return `<main><div class="layout craft-table"><section class="panel result"><div class="tag">キット準備表</div>${resultPanel}</section><section class="panel">${formPanel}</section></div></main>`;
+  }
+
+  if (sample.variant === "salon") {
+    return `<main><div class="layout salon-board"><section class="panel">${formPanel}</section><section class="panel result"><div class="tag">閉店後チェック</div>${resultPanel}</section></div></main>`;
+  }
+
+  return `<main><div class="layout ledger-grid"><section class="panel">${formPanel}</section><section class="panel result">${resultPanel}</section></div></main>`;
+}
+
 function offsetIso(iso, hours) {
   const date = new Date(iso);
   date.setHours(date.getHours() + hours);
@@ -906,6 +996,27 @@ function offsetIso(iso, hours) {
 
 function randomPassword() {
   return `Demo-${Math.random().toString(36).slice(2)}-${Date.now()}!`;
+}
+
+function getPublicUrl(key) {
+  return `${process.env.R2_PUBLIC_URL.replace(/\/$/, "")}/${key}`;
+}
+
+function renderAvatarSvg(user) {
+  const color = user.avatar.color;
+  const initials = escapeHtml(user.avatar.initials);
+  const mark = escapeHtml(user.avatar.mark);
+  const roleLabel = user.role === "developer" ? "DEV" : "REQ";
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240" role="img" aria-label="${escapeHtml(user.displayName)}">
+  <rect width="240" height="240" rx="56" fill="${color}"/>
+  <circle cx="178" cy="58" r="34" fill="rgba(255,255,255,.22)"/>
+  <circle cx="58" cy="182" r="42" fill="rgba(0,0,0,.13)"/>
+  <rect x="30" y="28" width="92" height="30" rx="15" fill="rgba(255,255,255,.18)"/>
+  <text x="76" y="49" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="800" fill="#fff">${roleLabel}</text>
+  <text x="120" y="138" text-anchor="middle" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="76" font-weight="900" fill="#fff">${initials}</text>
+  <rect x="76" y="160" width="88" height="34" rx="17" fill="rgba(255,255,255,.92)"/>
+  <text x="120" y="183" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" font-weight="900" fill="${color}">${mark}</text>
+</svg>`;
 }
 
 function throwIfError(error, label) {
