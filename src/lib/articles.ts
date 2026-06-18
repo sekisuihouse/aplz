@@ -1,3 +1,5 @@
+import { GENERATED_ARTICLES } from "./generated-articles";
+
 export interface ArticleSection {
   heading: string;
   body: string[];
@@ -409,4 +411,10 @@ export const ARTICLES: Article[] = [
 
 export function getArticle(slug: string): Article | undefined {
   return ARTICLES.find((article) => article.slug === slug);
+}
+
+export const ALL_ARTICLES: Article[] = [...ARTICLES, ...(GENERATED_ARTICLES as unknown as Article[])];
+
+export function getAnyArticle(slug: string): Article | undefined {
+  return ALL_ARTICLES.find((article) => article.slug === slug);
 }

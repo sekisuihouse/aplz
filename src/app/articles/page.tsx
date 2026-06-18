@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ARTICLES } from "@/lib/articles";
+import { ALL_ARTICLES } from "@/lib/articles";
 import { JsonLd, absoluteUrl, breadcrumbJsonLd, pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata({
@@ -11,7 +11,7 @@ export const metadata = pageMetadata({
 });
 
 export default function ArticlesPage() {
-  const [featured, ...rest] = ARTICLES;
+  const [featured, ...rest] = ALL_ARTICLES;
   const jsonLd = [
     breadcrumbJsonLd([
       { name: "APLZ", path: "/" },
@@ -23,7 +23,7 @@ export default function ArticlesPage() {
       name: "APLZの記事",
       description: metadata.description,
       url: absoluteUrl("/articles"),
-      hasPart: ARTICLES.map((article) => ({
+      hasPart: ALL_ARTICLES.map((article) => ({
         "@type": "Article",
         headline: article.title,
         description: article.description,

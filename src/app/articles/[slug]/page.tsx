@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowRight, BookOpen, CheckCircle2, Clock3, PenLine } from "lucide-react";
-import { ARTICLES, getArticle } from "@/lib/articles";
+import { ALL_ARTICLES, getAnyArticle } from "@/lib/articles";
 import { JsonLd, absoluteUrl, breadcrumbJsonLd, pageMetadata } from "@/lib/seo";
 
 interface ArticlePageProps {
@@ -9,12 +9,12 @@ interface ArticlePageProps {
 }
 
 export function generateStaticParams() {
-  return ARTICLES.map((article) => ({ slug: article.slug }));
+  return ALL_ARTICLES.map((article) => ({ slug: article.slug }));
 }
 
 export async function generateMetadata({ params }: ArticlePageProps) {
   const { slug } = await params;
-  const article = getArticle(slug);
+  const article = getAnyArticle(slug);
   if (!article) return { title: "記事が見つかりません | APLZ" };
   return pageMetadata({
     title: `${article.title} | APLZ`,
@@ -29,12 +29,12 @@ export async function generateMetadata({ params }: ArticlePageProps) {
 
 export default async function ArticlePage({ params }: ArticlePageProps) {
   const { slug } = await params;
-  const article = getArticle(slug);
+  const article = getAnyArticle(slug);
   if (!article) notFound();
-  const relatedArticles = ARTICLES.filter(
+  const relatedArticles = ALL_ARTICLES.filter(
     (item) => item.slug !== article.slug && item.category === article.category
   )
-    .concat(ARTICLES.filter((item) => item.slug !== article.slug && item.category !== article.category))
+    .concat(ALL_ARTICLES.filter((item) => item.slug !== article.slug && item.category !== article.category))
     .slice(0, 3);
 
   const jsonLd = [

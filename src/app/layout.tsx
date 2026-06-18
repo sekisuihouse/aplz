@@ -152,6 +152,12 @@ export default async function RootLayout({
               >
                 記事
               </Link>
+              <Link
+                href="/tools"
+                className="hidden xl:inline-flex px-3 py-1.5 rounded-lg text-sm text-[#606060] hover:text-[#0f0f0f] hover:bg-[#f5f5f5] transition-colors"
+              >
+                ツール
+              </Link>
             </div>
             <div className="flex items-center gap-2 sm:gap-3">
               {user ? (
@@ -207,6 +213,7 @@ export default async function RootLayout({
               <Link href="/apps" className="hover:text-[#0f0f0f]">アプリ</Link>
               <Link href="/use-cases" className="hover:text-[#0f0f0f]">用途別</Link>
               <Link href="/articles" className="hover:text-[#0f0f0f]">記事</Link>
+              <Link href="/tools" className="hover:text-[#0f0f0f]">ツール</Link>
               <Link href="/templates" className="hover:text-[#0f0f0f]">テンプレート</Link>
             </div>
           </div>

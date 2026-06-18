@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
-import { ARTICLES } from "@/lib/articles";
+import { ALL_ARTICLES } from "@/lib/articles";
+import { GENERATED_TOOLS } from "@/lib/generated-tools";
 import { createServerClient } from "@/lib/supabase";
 import { USE_CASES } from "@/lib/use-cases";
 import { SITE_URL, absoluteUrl } from "@/lib/seo";
@@ -30,6 +31,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: absoluteUrl("/apps"), lastModified: new Date(), changeFrequency: "hourly", priority: 0.85 },
     { url: absoluteUrl("/use-cases"), lastModified: new Date(), changeFrequency: "weekly", priority: 0.8 },
     { url: absoluteUrl("/articles"), lastModified: new Date(), changeFrequency: "weekly", priority: 0.8 },
+    { url: absoluteUrl("/tools"), lastModified: new Date(), changeFrequency: "weekly", priority: 0.8 },
     { url: absoluteUrl("/templates"), lastModified: new Date(), changeFrequency: "weekly", priority: 0.5 },
   ];
 
@@ -40,7 +42,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.75,
   }));
 
-  const articleRoutes: MetadataRoute.Sitemap = ARTICLES.map((article) => ({
+  const articleRoutes: MetadataRoute.Sitemap = ALL_ARTICLES.map((article) => ({
     url: absoluteUrl(`/articles/${article.slug}`),
     lastModified: new Date(article.updatedAt),
     changeFrequency: "monthly",
@@ -60,6 +62,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     changeFrequency: "weekly",
     priority: 0.6,
   }));
+  const toolRoutes: MetadataRoute.Sitemap = GENERATED_TOOLS.map((tool) => ({
+    url: absoluteUrl(`/tools/${tool.slug}`),
+    lastModified: new Date(),
+    changeFrequency: "monthly",
+    priority: 0.65,
+  }));
 
-  return [...staticRoutes, ...useCaseRoutes, ...articleRoutes, ...requestRoutes, ...appRoutes];
+  return [...staticRoutes, ...useCaseRoutes, ...articleRoutes, ...toolRoutes, ...requestRoutes, ...appRoutes];
 }
