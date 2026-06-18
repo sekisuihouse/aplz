@@ -11,6 +11,7 @@ export const metadata = pageMetadata({
 });
 
 export default function ArticlesPage() {
+  const [featured, ...rest] = ARTICLES;
   const jsonLd = [
     breadcrumbJsonLd([
       { name: "APLZ", path: "/" },
@@ -34,30 +35,51 @@ export default function ArticlesPage() {
   ];
 
   return (
-    <main className="max-w-5xl mx-auto px-4 py-10">
+    <main className="bg-[#fbfbfa]">
       <JsonLd data={jsonLd} />
-      <div className="mb-8">
-        <p className="text-sm font-semibold text-[#1B4F72] mb-2">APLZ Articles</p>
-        <h1 className="text-3xl font-bold text-[#0f0f0f]">小さな業務アプリの記事</h1>
-        <p className="text-sm text-[#606060] leading-relaxed mt-3 max-w-2xl">
-          紙、Excel、LINE、手入力で回している小さな作業を、投稿しやすい困りごとに分解するための実用記事です。
-        </p>
-      </div>
-      <div className="grid md:grid-cols-2 gap-4">
-        {ARTICLES.map((article) => (
+      <div className="max-w-5xl mx-auto px-4 py-10 md:py-14">
+        <div className="mb-10">
+          <p className="text-sm font-semibold text-[#1B4F72] mb-2">APLZ Articles</p>
+          <h1 className="text-3xl md:text-4xl font-bold text-[#0f0f0f]">小さな困りごとを、投稿できる形にする読み物</h1>
+          <p className="text-base text-[#606060] leading-8 mt-4 max-w-2xl">
+            紙、Excel、LINE、手入力で回している作業を、どこから小さなアプリにすればいいか分かるようにまとめています。
+          </p>
+        </div>
+
+        {featured && (
           <Link
-            key={article.slug}
-            href={`/articles/${article.slug}`}
-            className="rounded-lg border border-[#e5e5e5] bg-white p-5 hover:shadow-md transition-all"
+            href={`/articles/${featured.slug}`}
+            className="block rounded-xl border border-[#e5e5e5] bg-white p-6 md:p-8 hover:shadow-md transition-all mb-6"
           >
-            <p className="text-xs font-semibold text-[#1B4F72] mb-2">{article.category}</p>
-            <h2 className="text-lg font-bold text-[#0f0f0f] leading-snug">{article.title}</h2>
-            <p className="text-sm text-[#606060] leading-relaxed mt-2">{article.description}</p>
+            <p className="text-xs font-semibold text-[#1B4F72] mb-3">{featured.category}</p>
+            <h2 className="text-2xl md:text-3xl font-bold text-[#0f0f0f] leading-snug">{featured.title}</h2>
+            <p className="text-base text-[#606060] leading-8 mt-3 max-w-3xl">{featured.description}</p>
             <p className="text-xs text-[#909090] mt-4">
-              {new Date(article.publishedAt).toLocaleDateString("ja-JP")}
+              {new Date(featured.publishedAt).toLocaleDateString("ja-JP")}
             </p>
           </Link>
-        ))}
+        )}
+
+        <div className="divide-y divide-[#e5e5e5] border-y border-[#e5e5e5] bg-white">
+          {rest.map((article) => (
+            <Link
+              key={article.slug}
+              href={`/articles/${article.slug}`}
+              className="grid md:grid-cols-[160px_1fr] gap-3 px-4 py-5 hover:bg-[#f8f8f8] transition-colors"
+            >
+              <div>
+                <p className="text-xs font-semibold text-[#1B4F72]">{article.category}</p>
+                <p className="text-xs text-[#909090] mt-2">
+                  {new Date(article.publishedAt).toLocaleDateString("ja-JP")}
+                </p>
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-[#0f0f0f] leading-snug">{article.title}</h2>
+                <p className="text-sm text-[#606060] leading-7 mt-2">{article.description}</p>
+              </div>
+            </Link>
+          ))}
+        </div>
       </div>
     </main>
   );
