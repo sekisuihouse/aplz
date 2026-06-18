@@ -62,6 +62,18 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
       },
       keywords: article.keywords.join(", "),
     },
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: article.faqs.map((faq) => ({
+        "@type": "Question",
+        name: faq.question,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: faq.answer,
+        },
+      })),
+    },
   ];
 
   return (
@@ -96,6 +108,18 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             </section>
           ))}
         </div>
+
+        <section className="mt-10">
+          <h2 className="text-xl font-bold text-[#0f0f0f] mb-4">よくある質問</h2>
+          <div className="space-y-4">
+            {article.faqs.map((faq) => (
+              <div key={faq.question} className="rounded-lg border border-[#e5e5e5] bg-white p-4">
+                <h3 className="text-sm font-semibold text-[#0f0f0f]">{faq.question}</h3>
+                <p className="text-sm text-[#606060] leading-relaxed mt-2">{faq.answer}</p>
+              </div>
+            ))}
+          </div>
+        </section>
 
         <section className="mt-10 rounded-lg border border-[#e5e5e5] bg-[#f8f8f8] p-5">
           <h2 className="text-lg font-bold text-[#0f0f0f]">関連する困りごとを探す</h2>

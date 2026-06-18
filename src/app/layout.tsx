@@ -135,6 +135,12 @@ export default async function RootLayout({
                 テンプレート
               </Link>
               <Link
+                href="/apps"
+                className="hidden lg:inline-flex px-3 py-1.5 rounded-lg text-sm text-[#606060] hover:text-[#0f0f0f] hover:bg-[#f5f5f5] transition-colors"
+              >
+                アプリ
+              </Link>
+              <Link
                 href="/use-cases"
                 className="hidden lg:inline-flex px-3 py-1.5 rounded-lg text-sm text-[#606060] hover:text-[#0f0f0f] hover:bg-[#f5f5f5] transition-colors"
               >
@@ -198,6 +204,7 @@ export default async function RootLayout({
             </p>
             <div className="flex flex-wrap gap-4 text-sm text-[#606060]">
               <Link href="/requests" className="hover:text-[#0f0f0f]">困りごと</Link>
+              <Link href="/apps" className="hover:text-[#0f0f0f]">アプリ</Link>
               <Link href="/use-cases" className="hover:text-[#0f0f0f]">用途別</Link>
               <Link href="/articles" className="hover:text-[#0f0f0f]">記事</Link>
               <Link href="/templates" className="hover:text-[#0f0f0f]">テンプレート</Link>

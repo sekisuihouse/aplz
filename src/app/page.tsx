@@ -306,6 +306,11 @@ export default async function Home() {
         <h2 className="text-sm font-medium text-[#909090] mb-4">
           公開されたアプリ
         </h2>
+        <div className="flex justify-end -mt-8 mb-4">
+          <Link href="/apps" className="text-sm text-[#1B4F72] hover:underline">
+            アプリ一覧を見る
+          </Link>
+        </div>
 
         {appList.length === 0 ? (
           <div className="text-center py-16 bg-[#f5f5f5] border border-[#e5e5e5] rounded-xl">

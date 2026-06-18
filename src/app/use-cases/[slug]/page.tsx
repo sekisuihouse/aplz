@@ -57,6 +57,18 @@ export default async function UseCasePage({ params }: UseCasePageProps) {
       url: absoluteUrl(`/use-cases/${useCase.slug}`),
       about: useCase.keywords,
     },
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: useCase.faqs.map((faq) => ({
+        "@type": "Question",
+        name: faq.question,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: faq.answer,
+        },
+      })),
+    },
   ];
 
   return (
@@ -72,6 +84,9 @@ export default async function UseCasePage({ params }: UseCasePageProps) {
         </h1>
         <p className="text-base text-[#606060] leading-relaxed mt-4 max-w-3xl">
           {useCase.description}
+        </p>
+        <p className="text-base text-[#404040] leading-relaxed mt-4 max-w-3xl">
+          {useCase.searchIntent}
         </p>
         <div className="flex flex-wrap gap-3 mt-6">
           <Link
@@ -109,6 +124,18 @@ export default async function UseCasePage({ params }: UseCasePageProps) {
               </li>
             ))}
           </ul>
+        </div>
+      </section>
+
+      <section className="mt-10 rounded-lg border border-[#e5e5e5] bg-white p-5">
+        <h2 className="text-lg font-bold text-[#0f0f0f]">よくある質問</h2>
+        <div className="mt-4 space-y-4">
+          {useCase.faqs.map((faq) => (
+            <div key={faq.question}>
+              <h3 className="text-sm font-semibold text-[#0f0f0f]">{faq.question}</h3>
+              <p className="text-sm text-[#606060] leading-relaxed mt-1">{faq.answer}</p>
+            </div>
+          ))}
         </div>
       </section>
 
