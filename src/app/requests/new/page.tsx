@@ -36,6 +36,12 @@ const EXAMPLES = [
   },
 ];
 
+function dateAfterDays(days: number) {
+  const date = new Date();
+  date.setDate(date.getDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
 export default function NewRequestPage() {
   const router = useRouter();
   const [form, setForm] = useState({
@@ -73,13 +79,22 @@ export default function NewRequestPage() {
       input_data: example.input_data,
       output_data: example.output_data,
       privacy_level: "none",
+      deadline: prev.deadline || dateAfterDays(14),
       is_beginner_friendly: true,
     }));
     setDetailsOpen(true);
   };
 
   const submit = async () => {
-    if (submitting || !form.title.trim()) return;
+    if (submitting) return;
+    if (!form.title.trim()) {
+      setError("タイトルを入力してください");
+      return;
+    }
+    if (!form.deadline) {
+      setError("期限を入力してください");
+      return;
+    }
     setSubmitting(true);
     setError("");
     try {
@@ -105,7 +120,8 @@ export default function NewRequestPage() {
     }
   };
 
-  const canSubmit = form.title.trim().length > 0;
+  const hasTitle = form.title.trim().length > 0;
+  const canSubmit = hasTitle && Boolean(form.deadline);
   const hasContext = Boolean(
     form.description.trim() ||
       form.desired_outcome.trim() ||
@@ -113,8 +129,13 @@ export default function NewRequestPage() {
       form.pain_point.trim()
   );
   const progressItems = [
-    { label: "困りごと", done: canSubmit, hint: "タイトルを書く" },
+    { label: "困りごと", done: hasTitle, hint: "タイトルを書く" },
     { label: "状況", done: hasContext, hint: "本文か詳細を少し足す" },
+    {
+      label: "期限",
+      done: Boolean(form.deadline),
+      hint: "いつまでに欲しいか選ぶ",
+    },
     {
       label: "安全",
       done: form.privacy_level !== "unknown",
@@ -142,16 +163,16 @@ export default function NewRequestPage() {
         <div className="mb-5">
           <div className="flex items-center justify-between gap-3 mb-2">
             <p className="text-xs font-medium text-[#606060]">
-              投稿まで {progress}/3
+              投稿まで {progress}/4
             </p>
             <p className="text-xs text-[#909090]">
-              必須はタイトルだけ
+              必須はタイトルと期限
             </p>
           </div>
           <div className="h-2 rounded-full bg-[#f0f0f0] overflow-hidden">
             <div
               className="h-full rounded-full bg-[#1B4F72] transition-all"
-              style={{ width: `${progress === 0 ? 8 : progress * 33.333}%` }}
+              style={{ width: `${progress === 0 ? 8 : progress * 25}%` }}
             />
           </div>
         </div>
@@ -198,7 +219,19 @@ export default function NewRequestPage() {
           />
         </label>
 
-        <div className="grid md:grid-cols-2 gap-3 mt-4">
+        <div className="grid md:grid-cols-3 gap-3 mt-4">
+          <label className="block">
+            <span className="block text-sm text-[#606060] mb-1.5">
+              期限<span className="text-[#B83232] ml-1">*</span>
+            </span>
+            <input
+              type="date"
+              value={form.deadline}
+              onChange={(event) => update("deadline", event.target.value)}
+              className="input"
+              required
+            />
+          </label>
           <label className="block">
             <span className="block text-sm text-[#606060] mb-1.5">カテゴリ</span>
             <select
@@ -298,7 +331,7 @@ export default function NewRequestPage() {
                 />
               </Field>
             </div>
-            <div className="grid md:grid-cols-3 gap-4">
+            <div className="grid md:grid-cols-2 gap-4">
               <Field label="誰が使うか">
                 <input
                   value={form.target_user_type}
@@ -313,14 +346,6 @@ export default function NewRequestPage() {
                   onChange={(event) => update("usage_frequency", event.target.value)}
                   className="input"
                   placeholder="毎週 / 年1回"
-                />
-              </Field>
-              <Field label="期限">
-                <input
-                  type="date"
-                  value={form.deadline}
-                  onChange={(event) => update("deadline", event.target.value)}
-                  className="input"
                 />
               </Field>
             </div>
@@ -392,7 +417,7 @@ export default function NewRequestPage() {
 
       <div className="sticky bottom-0 -mx-4 mt-6 px-4 py-3 bg-white/90 backdrop-blur border-t border-[#e5e5e5] flex items-center justify-between gap-3">
         <p className="text-xs text-[#909090]">
-          {canSubmit ? "この内容で投稿できます。足りない条件は質問で補えます。" : "タイトルだけ入力すれば投稿できます"}
+          {canSubmit ? "この内容で投稿できます。足りない条件は質問で補えます。" : "タイトルと期限を入力すると投稿できます"}
         </p>
         <div className="flex items-center gap-3">
           <Link href="/requests" className="text-sm text-[#606060] hover:underline">

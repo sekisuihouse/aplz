@@ -96,7 +96,13 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     if (typeof body.usage_frequency === "string") updates.usage_frequency = asOptionalString(body.usage_frequency, 500);
     if (typeof body.input_data === "string") updates.input_data = asOptionalString(body.input_data, 2000);
     if (typeof body.output_data === "string") updates.output_data = asOptionalString(body.output_data, 2000);
-    if (typeof body.deadline === "string") updates.deadline = asOptionalString(body.deadline, 20);
+    if (typeof body.deadline === "string") {
+      const deadline = asString(body.deadline, 20);
+      if (!isValidDate(deadline)) {
+        return NextResponse.json({ error: "deadline is required" }, { status: 400 });
+      }
+      updates.deadline = deadline;
+    }
     if (typeof body.reference_url === "string") {
       const referenceUrl = asOptionalString(body.reference_url, 500);
       if (!isValidUrl(referenceUrl)) {
@@ -137,4 +143,10 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     console.error("request PATCH error:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
+}
+
+function isValidDate(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = new Date(`${value}T00:00:00Z`);
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
 }

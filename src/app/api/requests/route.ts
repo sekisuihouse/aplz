@@ -118,11 +118,15 @@ export async function POST(req: NextRequest) {
     const description = asOptionalString(body.description, 5000);
     const desiredOutcome = asOptionalString(body.desired_outcome, 2000);
     const referenceUrl = asOptionalString(body.reference_url, 500);
+    const deadline = asString(body.deadline, 20);
     const privacyLevel = isPrivacyLevel(body.privacy_level)
       ? body.privacy_level
       : "unknown";
 
     if (!title) return NextResponse.json({ error: "title is required" }, { status: 400 });
+    if (!isValidDate(deadline)) {
+      return NextResponse.json({ error: "deadline is required" }, { status: 400 });
+    }
     if (!isValidUrl(referenceUrl)) {
       return NextResponse.json({ error: "reference_url must be a URL" }, { status: 400 });
     }
@@ -143,7 +147,7 @@ export async function POST(req: NextRequest) {
         input_data: asOptionalString(body.input_data, 2000),
         output_data: asOptionalString(body.output_data, 2000),
         privacy_level: privacyLevel,
-        deadline: asOptionalString(body.deadline, 20),
+        deadline,
         reference_url: referenceUrl,
         description,
         status: "open",
@@ -162,4 +166,10 @@ export async function POST(req: NextRequest) {
     console.error("requests POST error:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
+}
+
+function isValidDate(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = new Date(`${value}T00:00:00Z`);
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
 }
