@@ -226,10 +226,10 @@ export default async function RequestDetailPage({ params }: RequestDetailProps) 
           <section id="comments" className="mt-6">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-sm font-semibold text-[#0f0f0f]">
-                コメント・質問
+                質問・やりとり
               </h2>
               <a href="#comment-form" className="text-sm text-[#1B4F72] hover:underline">
-                質問する
+                ひとこと送る
               </a>
             </div>
             <RequestCommentList

@@ -114,22 +114,15 @@ export async function POST(req: NextRequest) {
 
     const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
     const title = asString(body.title, 120);
-    const category = asString(body.category, 80);
-    const description = asString(body.description, 5000);
-    const desiredOutcome = asString(body.desired_outcome, 2000);
+    const category = asString(body.category, 80) || "その他";
+    const description = asOptionalString(body.description, 5000);
+    const desiredOutcome = asOptionalString(body.desired_outcome, 2000);
     const referenceUrl = asOptionalString(body.reference_url, 500);
     const privacyLevel = isPrivacyLevel(body.privacy_level)
       ? body.privacy_level
       : "unknown";
 
     if (!title) return NextResponse.json({ error: "title is required" }, { status: 400 });
-    if (!category) return NextResponse.json({ error: "category is required" }, { status: 400 });
-    if (!description) {
-      return NextResponse.json({ error: "description is required" }, { status: 400 });
-    }
-    if (!desiredOutcome) {
-      return NextResponse.json({ error: "desired_outcome is required" }, { status: 400 });
-    }
     if (!isValidUrl(referenceUrl)) {
       return NextResponse.json({ error: "reference_url must be a URL" }, { status: 400 });
     }

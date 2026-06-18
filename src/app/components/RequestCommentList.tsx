@@ -20,8 +20,8 @@ interface RequestCommentListProps {
 
 const COMMENT_TYPE_LABELS: Record<string, string> = {
   question: "質問",
-  answer: "回答",
-  comment: "コメント",
+  answer: "返答",
+  comment: "補足",
   system: "システム",
 };
 
@@ -33,7 +33,7 @@ export default function RequestCommentList({
   if (comments.length === 0) {
     return (
       <div className="text-center py-8 bg-[#f5f5f5] border border-[#e5e5e5] rounded-lg">
-        <p className="text-sm text-[#909090]">まだコメントはありません</p>
+        <p className="text-sm text-[#909090]">まだやりとりはありません</p>
       </div>
     );
   }
@@ -43,8 +43,14 @@ export default function RequestCommentList({
       {comments.map((comment) => {
         const isOwner = comment.user_id && comment.user_id === requestOwnerId;
         const isMine = comment.user_id && comment.user_id === currentUserId;
+        const isQuestion = comment.comment_type === "question";
         return (
-          <div key={comment.id} className="bg-white border border-[#e5e5e5] rounded-lg p-3">
+          <div
+            key={comment.id}
+            className={`bg-white border rounded-lg p-3 ${
+              isQuestion ? "border-[#1B4F72]/30" : "border-[#e5e5e5]"
+            }`}
+          >
             <div className="flex items-center justify-between gap-3 mb-2">
               <div className="flex items-center gap-2 min-w-0">
                 {comment.author?.avatar_url && (

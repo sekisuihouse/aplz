@@ -21,7 +21,7 @@ export default function RequestCommentForm({ requestSlug }: { requestSlug: strin
         body: JSON.stringify({ body, comment_type: commentType }),
       });
       if (res.status === 401) {
-        setError("ログインするとコメントできます");
+        router.push(`/login?mode=signup&next=/requests/${requestSlug}`);
         return;
       }
       if (!res.ok) {
@@ -39,24 +39,31 @@ export default function RequestCommentForm({ requestSlug }: { requestSlug: strin
     }
   };
 
+  const placeholder =
+    commentType === "question"
+      ? "例: 入力する人数の上限はありますか？スマホでも使いますか？"
+      : commentType === "answer"
+        ? "例: そこは毎月10人前後です。スマホでも使えると助かります。"
+        : "例: 補足です。今はExcelで管理しています。";
+
   return (
     <div className="bg-white border border-[#e5e5e5] rounded-lg p-4">
-      <div className="flex items-center gap-2 mb-3">
-        <select
-          value={commentType}
-          onChange={(event) => setCommentType(event.target.value)}
-          className="bg-[#f5f5f5] border border-[#e5e5e5] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#1B4F72]"
-        >
-          <option value="comment">コメント</option>
-          <option value="question">質問</option>
-          <option value="answer">回答</option>
-        </select>
+      <div className="flex flex-wrap gap-2 mb-3">
+        <TypeButton active={commentType === "question"} onClick={() => setCommentType("question")}>
+          質問する
+        </TypeButton>
+        <TypeButton active={commentType === "answer"} onClick={() => setCommentType("answer")}>
+          返答する
+        </TypeButton>
+        <TypeButton active={commentType === "comment"} onClick={() => setCommentType("comment")}>
+          補足する
+        </TypeButton>
       </div>
       <textarea
         value={body}
         onChange={(event) => setBody(event.target.value.slice(0, 2000))}
-        rows={4}
-        placeholder="確認したいこと、補足、試した結果などを書いてください"
+        rows={3}
+        placeholder={placeholder}
         className="w-full bg-[#f5f5f5] border border-[#e5e5e5] rounded-lg px-4 py-2.5 text-sm placeholder:text-[#909090] focus:outline-none focus:border-[#1B4F72] transition-colors resize-none"
       />
       {error && <p className="text-sm text-red-600 mt-2">{error}</p>}
@@ -65,8 +72,32 @@ export default function RequestCommentForm({ requestSlug }: { requestSlug: strin
         disabled={!body.trim() || submitting}
         className="mt-3 px-4 py-2 rounded-lg bg-[#1B4F72] text-white text-sm font-medium hover:bg-[#15415F] disabled:opacity-50 transition-colors cursor-pointer"
       >
-        {submitting ? "投稿中..." : "投稿する"}
+        {submitting ? "送信中..." : "送る"}
       </button>
     </div>
+  );
+}
+
+function TypeButton({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`px-3 py-1.5 rounded-lg border text-sm transition-colors cursor-pointer ${
+        active
+          ? "border-[#1B4F72] bg-[#1B4F72]/10 text-[#1B4F72]"
+          : "border-[#e5e5e5] bg-white text-[#606060] hover:border-[#1B4F72] hover:text-[#1B4F72]"
+      }`}
+    >
+      {children}
+    </button>
   );
 }
