@@ -17,6 +17,7 @@ export const revalidate = 10;
 
 interface RequestDetailProps {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
 
 export async function generateMetadata({ params }: RequestDetailProps) {
@@ -45,8 +46,9 @@ export async function generateMetadata({ params }: RequestDetailProps) {
   });
 }
 
-export default async function RequestDetailPage({ params }: RequestDetailProps) {
+export default async function RequestDetailPage({ params, searchParams }: RequestDetailProps) {
   const { slug } = await params;
+  const query = await searchParams;
   const db = createServerClient();
   const { data: request } = await db
     .from("requests")
@@ -127,6 +129,7 @@ export default async function RequestDetailPage({ params }: RequestDetailProps) 
     feedback_counts: feedbackMap[solution.id] ?? {},
   }));
   const requestUrl = absoluteUrl(`/requests/${request.slug}`);
+  const backHref = buildBackHref(query);
   const jsonLd = [
     breadcrumbJsonLd([
       { name: "APLZ", path: "/" },
@@ -175,7 +178,7 @@ export default async function RequestDetailPage({ params }: RequestDetailProps) 
       <div className="grid lg:grid-cols-[1fr_320px] gap-6">
         <div className="min-w-0">
           <div className="mb-4">
-            <Link href="/requests" className="text-sm text-[#606060] hover:underline">
+            <Link href={backHref} className="text-sm text-[#606060] hover:underline">
               ← 困りごと一覧へ
             </Link>
           </div>
@@ -332,6 +335,20 @@ export default async function RequestDetailPage({ params }: RequestDetailProps) 
       </div>
     </main>
   );
+}
+
+function buildBackHref(searchParams: Record<string, string | string[] | undefined>) {
+  const params = new URLSearchParams();
+  for (const key of ["q", "filter", "category", "privacy", "sort"] as const) {
+    const value = searchParams[key];
+    if (Array.isArray(value)) {
+      if (value[0]) params.set(key, value[0]);
+    } else if (value) {
+      params.set(key, value);
+    }
+  }
+  const query = params.toString();
+  return query ? `/requests?${query}` : "/requests";
 }
 
 function InfoBlock({
