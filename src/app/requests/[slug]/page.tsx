@@ -241,20 +241,12 @@ export default async function RequestDetailPage({ params, searchParams }: Reques
               <h2 className="text-sm font-semibold text-[#0f0f0f]">
                 アプリ回答
               </h2>
-              <div className="flex items-center gap-2">
-                <Link
-                  href={`/new?request=${request.slug}`}
-                  className="px-3 py-1.5 rounded-lg border border-[#e5e5e5] text-sm text-[#606060] hover:bg-[#f5f5f5] transition-colors"
-                >
-                  作ってみる
-                </Link>
-                <a
-                  href="#solution-form"
-                  className="px-3 py-1.5 rounded-lg bg-[#1B4F72] text-white text-sm font-medium hover:bg-[#15415F] transition-colors"
-                >
-                  アプリで回答する
-                </a>
-              </div>
+              <a
+                href="#solution-form"
+                className="px-3 py-1.5 rounded-lg bg-[#1B4F72] text-white text-sm font-medium hover:bg-[#15415F] transition-colors"
+              >
+                アプリで回答する
+              </a>
             </div>
             {enrichedSolutions.length === 0 ? (
               <div className="text-center py-10 bg-[#f5f5f5] border border-[#e5e5e5] rounded-lg">
@@ -310,14 +302,8 @@ export default async function RequestDetailPage({ params, searchParams }: Reques
             </h2>
             <div className="space-y-2">
               <Link
-                href={`/new?request=${request.slug}`}
-                className="block text-center px-4 py-2 rounded-lg bg-[#1B4F72] text-white text-sm font-medium hover:bg-[#15415F] transition-colors"
-              >
-                アプリを作る
-              </Link>
-              <Link
                 href={`/publish?request=${request.slug}`}
-                className="block text-center px-4 py-2 rounded-lg border border-[#e5e5e5] text-[#606060] text-sm font-medium hover:bg-[#f5f5f5] transition-colors"
+                className="block text-center px-4 py-2 rounded-lg bg-[#1B4F72] text-white text-sm font-medium hover:bg-[#15415F] transition-colors"
               >
                 ファイルをアップロードして回答
               </Link>

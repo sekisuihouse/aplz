@@ -1,40 +1,18 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import { useSearchParams } from "next/navigation";
-import EditorLayout from "@/app/components/editor/EditorLayout";
+export default async function NewAppPage({
+  searchParams,
+}: {
+  searchParams?: { request?: string | string[] };
+}) {
+  const requestValue = searchParams?.request;
+  const requestSlug = Array.isArray(requestValue)
+    ? requestValue[0]?.trim()
+    : requestValue?.trim();
 
-const DEFAULT_TEMPLATE = `<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My App</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: system-ui, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #f5f5f5; }
-    .container { text-align: center; padding: 40px; }
-    h1 { font-size: 24px; margin-bottom: 16px; }
-    p { color: #666; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h1>Hello, APLZ!</h1>
-    <p>ここからアプリを作り始めましょう</p>
-  </div>
-</body>
-</html>`;
+  if (requestSlug) {
+    redirect(`/requests/${encodeURIComponent(requestSlug)}`);
+  }
 
-export default function NewAppPage() {
-  const searchParams = useSearchParams();
-  const requestSlug = searchParams.get("request");
-  return (
-    <EditorLayout
-      app={null}
-      initialCode={DEFAULT_TEMPLATE}
-      isNewApp={true}
-      backUrl={requestSlug ? `/requests/${requestSlug}` : "/publish"}
-      requestSlug={requestSlug}
-    />
-  );
+  redirect("/requests");
 }

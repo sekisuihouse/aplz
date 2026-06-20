@@ -168,12 +168,6 @@ export default async function RootLayout({
                   >
                     困りごとを書く
                   </Link>
-                  <Link
-                    href="/new"
-                    className="hidden md:inline-flex min-h-10 items-center px-3 py-2 rounded-lg border border-[#e5e5e5] text-[#606060] text-sm font-medium hover:bg-[#f5f5f5] transition-colors"
-                  >
-                    アプリを作る
-                  </Link>
                   <NavUser email={user.email ?? ""} avatarUrl={avatarUrl} displayName={displayName} />
                 </>
               ) : (
@@ -189,12 +183,6 @@ export default async function RootLayout({
                     className="inline-flex min-h-10 items-center px-3 sm:px-4 py-2 rounded-lg bg-[#1B4F72] text-white text-sm font-semibold hover:bg-[#15415F] transition-colors"
                   >
                     困りごとを書く
-                  </Link>
-                  <Link
-                    href="/new"
-                    className="hidden md:inline-flex min-h-10 items-center px-3 py-2 rounded-lg border border-[#e5e5e5] text-[#606060] text-sm font-medium hover:bg-[#f5f5f5] transition-colors"
-                  >
-                    アプリを作る
                   </Link>
                 </>
               )}

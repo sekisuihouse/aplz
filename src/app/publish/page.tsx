@@ -352,10 +352,10 @@ function PublishForm() {
 
         <div className="text-center text-sm text-[#909090] my-4">または</div>
         <Link
-          href="/new"
+          href="/requests"
           className="block text-center text-sm text-[#1B4F72] hover:underline"
         >
-          エディタで新しいアプリを作る →
+          困りごと一覧を見る →
         </Link>
       </div>
     </div>

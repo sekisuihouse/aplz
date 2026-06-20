@@ -359,10 +359,10 @@ export default async function Home() {
               未解決を見る
             </Link>
             <Link
-              href="/new"
+              href="/requests"
               className="px-4 py-2 rounded-lg border border-[#e5e5e5] bg-white text-[#606060] text-sm font-medium hover:shadow-md transition-all"
             >
-              アプリを作る
+              困りごと一覧を見る
             </Link>
           </div>
         </div>

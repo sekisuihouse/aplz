@@ -91,10 +91,10 @@ export default function TemplatesPage() {
       {/* Header */}
       <section className="text-center mb-10">
         <h1 className="text-2xl sm:text-3xl font-bold text-[#0f0f0f] mb-3">
-          あなたの職業向けのアプリを見つけよう
+          あなたの職業で起こりやすい困りごとを見つけよう
         </h1>
         <p className="text-[#606060] text-sm sm:text-base">
-          現場の課題を解決するテンプレートを選んで、すぐにアプリを作り始められます
+          現場の課題を具体化するための例を、職種ごとに見比べられます
         </p>
       </section>
 
@@ -139,7 +139,7 @@ export default function TemplatesPage() {
               </div>
               <div>
                 <p className="text-xs font-medium text-[#909090] mb-1">
-                  解決するアプリ
+                  こういう解決イメージ
                 </p>
                 <p className="text-sm text-[#606060] leading-relaxed">
                   {template.solution}
@@ -147,10 +147,10 @@ export default function TemplatesPage() {
               </div>
             </div>
             <Link
-              href="/new"
+              href="/requests"
               className="mt-2 px-4 py-2.5 rounded-lg bg-[#1B4F72] text-white text-sm font-medium hover:bg-[#15415F] transition-colors text-center"
             >
-              このテンプレートで作る
+              関連する困りごとを見る
             </Link>
           </div>
         ))}
