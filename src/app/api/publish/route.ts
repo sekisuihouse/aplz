@@ -5,6 +5,7 @@ import { uploadToR2, getPublicUrl } from "@/lib/r2";
 import { generateSlug, getMimeType } from "@/lib/utils";
 import { createServerClient as createSSRServerClient } from "@supabase/ssr";
 import { createNotification } from "@/lib/request-platform";
+import { recordAnalyticsEvent } from "@/lib/analytics";
 
 async function getUserFromToken(token: string): Promise<{ id: string } | null> {
   const db = createServerClient();
@@ -106,6 +107,13 @@ export async function POST(req: NextRequest) {
         appName: name,
         appUrl: platformUrl,
         description,
+      });
+      await recordAnalyticsEvent({
+        req,
+        eventName: "app_published",
+        userId: user?.id,
+        path: `/apps/${slug}`,
+        metadata: { format: "html_content", linked_to_request: Boolean(solutionId), is_public: isPublic },
       });
       return NextResponse.json({ success: true, app_id: data.id, slug, app_url: appUrl, platform_url: platformUrl, solution_id: solutionId });
     }
@@ -250,6 +258,18 @@ export async function POST(req: NextRequest) {
       appName: name,
       appUrl: platformUrl,
       description,
+    });
+
+    await recordAnalyticsEvent({
+      req,
+      eventName: "app_published",
+      userId: user?.id,
+      path: `/apps/${slug}`,
+      metadata: {
+        format: fileName.endsWith(".zip") ? "zip" : "html",
+        linked_to_request: Boolean(solutionId),
+        is_public: isPublic,
+      },
     });
 
     return NextResponse.json({

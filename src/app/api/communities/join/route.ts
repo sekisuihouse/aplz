@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase";
 import { createServerClient as createSSRServerClient } from "@supabase/ssr";
+import { recordAnalyticsEvent } from "@/lib/analytics";
 
 async function getUser(req: NextRequest) {
   const supabaseResponse = NextResponse.next({ request: req });
@@ -87,6 +88,13 @@ export async function POST(req: NextRequest) {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
+
+    await recordAnalyticsEvent({
+      req,
+      eventName: "community_joined",
+      userId: user.id,
+      path: `/c/${community.slug}`,
+    });
 
     return NextResponse.json({
       success: true,

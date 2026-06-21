@@ -6,6 +6,7 @@ import {
   getUserFromRequest,
   isFeedbackType,
 } from "@/lib/request-platform";
+import { recordAnalyticsEvent } from "@/lib/analytics";
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -50,6 +51,14 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
       type: `solution_feedback_${body.feedback_type}`,
       requestId: solution.request_id,
       solutionId: solution.id,
+    });
+
+    await recordAnalyticsEvent({
+      req,
+      eventName: "solution_feedback_created",
+      userId: user.id,
+      path: req.nextUrl.pathname,
+      metadata: { feedback_type: String(body.feedback_type) },
     });
 
     return NextResponse.json({ success: true, feedback: data });

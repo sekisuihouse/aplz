@@ -60,6 +60,18 @@ SQL Editor で、次の順番で SQL を実行します。
 
 RLS は各テーブルの policy で引き続き制御されます。
 
+### 4本目: アクセス・プロダクト分析
+
+`supabase/migrations/202606210001_product_analytics.sql`
+
+このmigrationは次の分析テーブルを作ります。
+
+- `analytics_visitors`
+- `analytics_sessions`
+- `analytics_events`
+
+IPアドレス、メールアドレス、投稿本文、検索語は保存しません。分析テーブルはservice role経由のサーバーAPIだけが読み書きし、anon/authenticatedからの直接アクセスは許可しません。
+
 ### schema cache reload
 
 各 migration の最後にも入っていますが、反映されない場合は最後にこれを実行します。
@@ -186,6 +198,8 @@ PATH=/opt/homebrew/bin:$PATH npm run check:supabase
 1. `202606120000_initial_core_schema.sql` を実行
 2. `202606120001_request_platform.sql` を実行
 3. `notify pgrst, 'reload schema';` を実行
+
+分析画面でテーブルエラーが出る場合は、`202606210001_product_analytics.sql` も実行してください。
 
 ### `403 permission denied for table ...`
 

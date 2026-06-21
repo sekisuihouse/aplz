@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase";
 import { uploadToR2, getPublicUrl } from "@/lib/r2";
 import { createServerClient as createSSRServerClient } from "@supabase/ssr";
+import { recordAnalyticsEvent } from "@/lib/analytics";
 
 async function getUser(req: NextRequest) {
   const supabaseResponse = NextResponse.next({ request: req });
@@ -129,6 +130,14 @@ export async function PUT(req: NextRequest) {
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+
+  await recordAnalyticsEvent({
+    req,
+    eventName: "profile_updated",
+    userId: user.id,
+    path: "/profile",
+    metadata: { developer_enabled: developerEnabled === "true", avatar_updated: Boolean(avatar?.size) },
+  });
 
   return NextResponse.json({ success: true, profile: data });
 }

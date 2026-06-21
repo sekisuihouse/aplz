@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase";
 import { createNotification, getUserFromRequest } from "@/lib/request-platform";
+import { recordAnalyticsEvent } from "@/lib/analytics";
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -65,6 +66,13 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
       type: "solution_accepted",
       requestId: request.id,
       solutionId: solution.id,
+    });
+
+    await recordAnalyticsEvent({
+      req,
+      eventName: "solution_accepted",
+      userId: user.id,
+      path: req.nextUrl.pathname,
     });
 
     return NextResponse.json({ success: true, solution: accepted.data });

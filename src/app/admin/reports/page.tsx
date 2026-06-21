@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createAuthServerClient } from "@/lib/supabase-server";
 import { createServerClient } from "@/lib/supabase";
 import { formatDate } from "@/lib/utils";
+import Link from "next/link";
 
 export const revalidate = 0;
 
@@ -35,10 +36,15 @@ export default async function AdminReportsPage() {
 
   return (
     <main className="max-w-5xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold text-[#0f0f0f]">通報一覧</h1>
-      <p className="text-sm text-[#606060] mt-1 mb-6">
-        通報の保存状況を確認する簡易運営画面です。
-      </p>
+      <div className="flex flex-wrap items-start justify-between gap-3 mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-[#0f0f0f]">通報一覧</h1>
+          <p className="text-sm text-[#606060] mt-1">通報の保存状況を確認する簡易運営画面です。</p>
+        </div>
+        <Link href="/admin/analytics" className="text-sm text-[#1B4F72] hover:underline">
+          アクセス解析へ
+        </Link>
+      </div>
       <div className="space-y-3">
         {(reports ?? []).length === 0 ? (
           <div className="text-center py-10 bg-[#f5f5f5] border border-[#e5e5e5] rounded-lg">

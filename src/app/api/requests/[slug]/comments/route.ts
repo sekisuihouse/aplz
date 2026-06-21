@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase";
 import { asOptionalString, asString, createNotification, getUserFromRequest } from "@/lib/request-platform";
+import { recordAnalyticsEvent } from "@/lib/analytics";
 
 const COMMENT_TYPES = ["question", "answer", "comment", "system"] as const;
 
@@ -54,6 +55,14 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
       requestId: request.id,
       solutionId,
       commentId: comment.id,
+    });
+
+    await recordAnalyticsEvent({
+      req,
+      eventName: "request_comment_created",
+      userId: user.id,
+      path: `/requests/${slug}`,
+      metadata: { comment_type: String(commentType) },
     });
 
     return NextResponse.json({ success: true, comment });

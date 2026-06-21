@@ -1,651 +1,871 @@
-# APLZ 現行仕様・技術資料
+# APLZ 現状統合資料
 
-最終確認日: 2026-06-12
+最終確認日: 2026-06-21（JST）
 
-この資料は、現行の仕様・デザイン・技術スタックをできるだけ保ったまま大幅アップデートするための基準資料です。コードから確認できる内容を中心にまとめています。
+対象: `https://aplz.dev` / GitHub `sekisuihouse/aplz` の `main` ブランチ
 
-## 1. プロダクト概要
+確認コミット: `8f7551c5b50600de5c896eaa319f181fa919eb93` (`chore: remove demo seeding`)
 
-APLZ は、AI で作った Web アプリや手元の HTML/ZIP アプリを公開し、他ユーザーからフィードバックを受け取るためのプラットフォームです。
+このファイルは、APLZの目的、仕様、画面、ユーザーフロー、技術、データ、インフラ、SEO、コンテンツ、運用状況、既知の課題を一か所で把握するための基準資料である。コード、Supabase、本番サイトを実測した内容を優先し、将来構想や過去仕様とは分けて記載する。
 
-主な体験は次の通りです。
+## 1. 現在の結論
 
-- トップページで公開アプリを一覧表示する
-- `/new` のエディタで HTML アプリを AI と一緒に作成する
-- `/publish` で HTML または ZIP をアップロードして公開する
-- `/apps/[slug]` で公開アプリを iframe 表示し、評価・リアクション・コメントを受ける
-- `/apps/[slug]/edit` で自分の公開アプリを編集・再公開する
-- コミュニティ単位でアプリを公開・閲覧する
-- API トークンを発行し、MCP サーバー経由で AI ツールから公開する
+APLZは、日常や現場の「外注するほどではないが、繰り返し面倒なこと」を投稿し、開発者が質問・回答・小さなWebアプリの提案を行うプラットフォームである。
 
-## 2. 技術スタック
+現在の中心フローは次のとおり。
 
-### Web アプリ本体
+1. 投稿者が困りごとを書く
+2. 開発者がコメント欄で気軽に質問する
+3. 投稿者または他の利用者が回答する
+4. 開発者が既存アプリまたは外部URLを解決案として投稿する
+5. 投稿者が解決案を試し、フィードバックする
+6. 投稿者が解決案を採用し、困りごとを解決済みにする
 
-- フレームワーク: Next.js 16.1.6
-- UI: React 19.2.3
-- 言語: TypeScript
-- ルーティング: Next.js App Router
-- スタイリング: Tailwind CSS v4, PostCSS
-- フォント: DM Sans, JetBrains Mono, Baloo 2
-- アイコン: lucide-react
-- エディタ: @monaco-editor/react
-- ZIP 処理: jszip
-- ID 生成: nanoid
+重要な現状:
 
-### バックエンド/外部サービス
+- `/new` の「AIでアプリを作る」機能は廃止済み。アクセス時は困りごとページへ転送される。
+- HTML/ZIPをアップロードする `/publish` は現在も残っている。
+- アプリ詳細、編集、評価、コメント、リアクション機能も残っている。
+- 本番DBには困りごと3件、解決案2件、アプリ2件がある。
+- デモ用アカウント・デモ投稿・デモアプリは削除済み。
+- Supabase自社アクセス解析を実装済み。2026-06-21以前の訪問履歴は遡って取得できない。
+- コンテンツメディアとして記事210本、用途別ページ11本、無料ツール20本を公開対象にしている。
+- 記事は実行時に共通の補足セクションを追加し、3,000文字以上にしている。ただし内容の反復と一次情報不足が残る。
 
-- API 実装: Next.js Route Handlers
-- 認証: Supabase Auth
-- DB: Supabase Postgres
-- ファイルストレージ: Cloudflare R2
-- R2 接続: @aws-sdk/client-s3
-- AI 編集: Anthropic Messages API
-- MCP: @modelcontextprotocol/sdk, zod
+## 2. プロダクトの目的と対象
 
-### 開発コマンド
+### 2.1 提供価値
 
-```bash
-npm run dev
-npm run build
-npm run start
-npm run lint
+APLZが扱うのは、大規模なシステム導入ではなく、次のような小さな課題である。
+
+- 町内会の当番表
+- 学校や委員会の集計
+- イベント受付や参加者整理
+- 個人事業主の仕込み量、予約、チェックリスト
+- LINE・紙・Excelで分散した連絡や記録
+- 定型文、画像、資料の小さな作成作業
+
+投稿者は完成した仕様書を書く必要がない。まず困っている作業を短く投稿し、不足情報は会話で補う設計である。
+
+### 2.2 主な利用者
+
+- 困りごとを投稿する人
+- 困りごとに質問・回答する人
+- Webアプリや既存ツールを提案する開発者
+- 公開されたアプリを利用・評価する人
+- 通報を確認する管理者
+- 記事、用途別ページ、無料ツールを検索から読む一般ユーザー
+
+### 2.3 現在のユーザー種別
+
+アプリ内では、固定された複数アカウント種別より、プロフィール属性と行動で役割を表す。
+
+- 通常ユーザー: `profiles.role = 'user'` が初期値
+- 開発参加を希望するユーザー: `profiles.developer_enabled = true`
+- 管理者: `ADMIN_EMAILS` 環境変数に含まれるメールアドレス
+- コミュニティ内権限: `community_members.role`
+
+本番の `profiles` は現在1件で、管理者ロールを設定済み。認証ユーザーは1件で、認証方式はメールである。
+
+## 3. 投稿者の利用フロー
+
+### 3.1 困りごとの発見から投稿まで
+
+1. トップ、困りごと一覧、テンプレート、記事などから「困りごとを書く」を選ぶ。
+2. 未ログインの場合は `/login?mode=signup&next=/requests/new` に移動する。
+3. Googleまたはメールリンクで新規登録・ログインする。
+4. 認証後、元の `/requests/new` に戻る。
+5. 必須のタイトルと期限を入力する。
+6. カテゴリ、説明、個人情報レベルを入力する。
+7. 必要に応じて詳細項目を開いて入力する。
+8. 投稿後、困りごと詳細ページへ移動する。
+
+### 3.2 投稿フォーム
+
+必須:
+
+- タイトル
+- 期限
+
+主要項目:
+
+- カテゴリ
+- いま困っていることの説明
+- 個人情報レベル
+
+任意の詳細:
+
+- どうなったら嬉しいか
+- 現在のやり方
+- 面倒な点
+- 入力データ
+- 出力結果
+- 誰が困っているか
+- 使用頻度
+- 参考URL
+- 初心者向け回答を歓迎するか
+
+投稿例として、当番表、アンケート集計、イベント参加者整理の3パターンを用意している。投稿完了条件を画面内で示し、タイトル・期限・安全確認の進捗を表示する。
+
+### 3.3 投稿後
+
+- 投稿者はステータスを変更できる。
+- 他ユーザーからの質問に回答できる。
+- 解決案を確認できる。
+- 解決案へ「使えた」「ありがとう」「作業が楽になった」「わかりやすかった」「また使いたい」「修正してほしい」「使えなかった」の反応を送れる。
+- 解決案を採用できる。
+- 不適切な投稿、回答、アプリを通報できる。
+
+## 4. 開発者の利用フロー
+
+1. `/requests?filter=unsolved` などで未解決の困りごとを探す。
+2. 詳細ページで期限、個人情報レベル、現在の方法、希望結果を確認する。
+3. 情報が足りなければ「質問」として短いコメントを投稿する。
+4. 外部で作ったアプリURL、または自分がAPLZへ公開したアプリを解決案として登録する。
+5. 必要に応じて説明、使い方、できること、できないこと、取扱データ、通信・保存の有無、推奨環境、注意事項を書く。
+6. 投稿者からのフィードバックや追加質問へ返答する。
+
+現在、APLZ内でゼロからアプリを作るエディタへの導線はない。アプリ回答は次のどちらかになる。
+
+- 外部URLを提案する
+- `/publish?request=...` からHTML/ZIPをアップロードし、困りごとへ紐づける
+
+## 5. 認証とアカウント
+
+### 5.1 認証方式
+
+- Supabase Auth
+- Google OAuth
+- メールOTP / Magic Link
+- パスワード不要
+- Next.jsサーバー側ではCookieベースのSSR認証を使用
+
+ログイン画面には「ログイン」と「新規登録」の明示的な切替がある。ログインでは未登録メールからユーザーを作らず、新規登録時だけ `shouldCreateUser = true` にする。
+
+### 5.2 認証コールバック
+
+- URL: `/auth/callback`
+- Supabaseの認証コードをセッションへ交換する。
+- `next` パラメータがあれば、認証前に開いていた画面へ戻す。
+- 認証に失敗した場合は `/login?error=auth` へ移動する。
+
+### 5.3 プロフィール
+
+保存項目:
+
+- 表示名
+- 自己紹介
+- プロフィール画像
+- GitHub URL
+- SNS URL
+- WebサイトURL
+- 開発者として参加するか
+- スキルカテゴリ（最大12件）
+
+画像はJPG/JPEG/PNG/WebP、最大2MBで、Cloudflare R2へ保存する。
+
+### 5.4 保護対象ページ
+
+未ログイン時にログイン画面へ送るページ:
+
+- `/publish`
+- `/apps/[slug]/edit`
+- `/profile`
+- `/c/join`
+- `/requests/new`
+- `/dashboard`
+- `/admin/reports`
+
+ログイン済みで `/login` を開くと `/` へ移動する。
+
+## 6. 画面一覧
+
+### 6.1 公開ページ
+
+| URL | 現在の役割 |
+| --- | --- |
+| `/` | サービス概要、検索、カテゴリ、件数、新着困りごと、解決済み困りごと、公開アプリ |
+| `/requests` | 困りごと一覧。検索、状態、カテゴリ、個人情報、頻度、期限などで絞り込み |
+| `/requests/[slug]` | 困りごと詳細、質問・回答、解決案、採用、フィードバック、通報 |
+| `/apps` | 公開アプリ一覧 |
+| `/apps/[slug]` | アプリ実行、説明、評価、リアクション、コメント、関連アプリ |
+| `/templates` | 職種別の困りごと例。教育、医療、建設、飲食、農業など |
+| `/use-cases` | 用途別ページ一覧 |
+| `/use-cases/[slug]` | 用途ごとの課題、考え方、投稿例、FAQ |
+| `/articles` | 記事一覧 |
+| `/articles/[slug]` | 記事本文、目次、FAQ、構造化データ、関連導線 |
+| `/tools` | 無料ツール一覧 |
+| `/tools/[slug]` | ブラウザ内で動く無料ツール |
+| `/c/[slug]` | コミュニティ詳細・コミュニティ内アプリ |
+| `/login` | ログイン・新規登録 |
+
+### 6.2 ログイン後ページ
+
+| URL | 現在の役割 |
+| --- | --- |
+| `/requests/new` | 困りごと投稿 |
+| `/publish` | HTML/ZIPアプリのアップロードと公開 |
+| `/apps/[slug]/edit` | 所有アプリの編集・再公開 |
+| `/profile` | プロフィール編集 |
+| `/dashboard` | 自分の投稿、解決案、通知などの確認 |
+| `/settings/api-token` | APIトークン発行・管理 |
+| `/c/join` | 招待コードでコミュニティ参加 |
+| `/admin/reports` | 管理者向け通報一覧 |
+
+### 6.3 廃止・互換ルート
+
+| URL | 状態 |
+| --- | --- |
+| `/new` | 廃止済み。`request` があれば該当困りごとへ、それ以外は `/requests` へ転送 |
+
+AIエディタのコンポーネントと `/api/ai-edit` はリポジトリに残っているが、通常UIから新規作成には使われない。完全削除はまだ行っていない。
+
+## 7. 困りごと・回答の状態と分類
+
+### 7.1 カテゴリ
+
+- 集計
+- 予約・申込
+- 当番表
+- イベント運営
+- 学校・委員会
+- 町内会
+- 個人事業主
+- 文章作成
+- 画像・資料
+- その他
+
+### 7.2 ステータス
+
+| DB値 | 表示 |
+| --- | --- |
+| `open` | 募集中 |
+| `questions` | 質問あり |
+| `in_progress` | 作成中 |
+| `answered` | 回答あり |
+| `testing` | 試用中 |
+| `solved` | 解決済み |
+| `on_hold` | 保留 |
+| `hidden` | 非公開 |
+
+### 7.3 個人情報レベル
+
+| DB値 | 表示 |
+| --- | --- |
+| `none` | 個人情報なし |
+| `low` | 注意 |
+| `medium` | 要注意 |
+| `high` | 高リスク |
+| `unknown` | 不明 |
+
+高リスクを選ぶと、個人情報を投稿本文へ直接書かないための警告を表示する。
+
+## 8. アプリ公開機能
+
+### 8.1 対応形式
+
+- 単一HTML
+- ZIP
+
+アップロードされたファイルはCloudflare R2へ保存する。ZIPは展開し、公開アプリの `index.html` を起点として表示する。
+
+### 8.2 公開先
+
+- オープン公開
+- コミュニティ公開
+- 困りごとの解決案として紐づけ
+
+### 8.3 アプリ詳細で提供する機能
+
+- iframeによるアプリ表示
+- 新しいタブで開く
+- QRコード
+- 説明、作者、更新日、バージョン
+- 5段階評価（使いやすさ、デザイン、アイデア）
+- 絵文字リアクション
+- コメント
+- 関連アプリ
+- 所有者向け編集
+- 通報
+
+### 8.4 APIトークン
+
+- `aplz_...` 形式
+- Bearer Tokenとして利用
+- `api_tokens` に保存
+- 最終利用日時を更新
+- `/api/publish` と `/api/apps/mine` などで利用可能
+
+## 9. コンテンツメディア
+
+### 9.1 現在の公開対象数
+
+| 種類 | 数 |
+| --- | ---: |
+| 手書き定義の記事 | 10 |
+| 生成記事 | 200 |
+| 記事合計 | 210 |
+| `content/` 内Markdown | 200 |
+| 用途別ページ | 11 |
+| 無料ツール | 20 |
+| 調査対象企業メディア | 120 |
+
+`src/lib/articles.ts` にある手書き記事と、`src/lib/generated-articles.ts` の200記事を結合して公開している。
+
+### 9.2 編集領域
+
+生成記事は次の40領域を各5本、合計200本で構成する。
+
+- 暮らし: 日常の不便、家族、片付け、時間、連絡、食事、買い物、移動
+- 学び: 学校、教える・学ぶ、子ども、学生プロジェクト、記憶・理解
+- 働く: 名もない作業、疲労、チーム、引き継ぎ、接客、採用、失敗
+- 商う: 個人事業、店舗、飲食、サロン、宿、会計、広報
+- 地域: 町内会、イベント、地方、公共・福祉、環境・再利用
+- 作る: テクノロジー、AI、Excel・紙・LINE、アプリ、デザイン、創作、APLZ
+- 人を知る: 人物・職業・生き方
+
+### 9.3 記事長
+
+公開時に `ensureMinimumArticleLength()` が本文長を確認する。3,000文字未満の記事には共通の補足セクションを追加し、公開される `ALL_ARTICLES` を3,000文字以上にする。
+
+注意:
+
+- 元の生成記事データには `wordCount: 900` のものがある。
+- 3,000文字化は実行時の共通展開で行われる。
+- 文字数条件は満たすが、多くの記事で補足構成と表現が共通している。
+- 公開前品質レポート自身も、一次資料、実取材、写真、図解、個別編集、表現重複の改善が必要と認識している。
+- 全記事を一律86点とした品質スコアは自動設定値であり、人による個別査読結果ではない。
+
+### 9.4 無料ツール
+
+20件のツール定義があり、`/tools/[slug]` で動作する。例:
+
+- 家事分担シャッフル
+- 家族予定共有表
+- 捨てるか残すか診断
+- 忘れ物チェックリスト
+- 会議時間コスト計算
+- イベント必要スタッフ数計算
+- 当番順シャッフル
+- 席替え
+- 町内会費集金チェック
+- キッチンカー原価計算
+- 値付けシミュレーター
+- 予約枠数計算
+- 引き継ぎ項目生成
+- リマインド文作成
+- メニュー文字サイズ確認
+- フォーム質問数診断
+- LINE管理限界診断
+- Excel脱出診断
+- イベント企画抜け漏れ診断
+- 固定費計算
+
+## 10. SEO
+
+### 10.1 実装済み
+
+- ページ別 `title`、`description`、`keywords`
+- canonical URL
+- Open Graph
+- X/Twitter Card
+- `robots.txt`
+- 動的 `sitemap.xml`
+- Web App Manifest
+- Organization / WebSite JSON-LD
+- Article / FAQPage / BreadcrumbList JSON-LD
+- SoftwareApplication JSON-LD
+- 困りごと・アプリの動的サイトマップ登録
+- Googlebot向け大きな画像・長いスニペット許可
+- 非公開・管理・APIページのクロール除外
+
+### 10.2 サイトマップ対象
+
+- トップ
+- 困りごと一覧・詳細
+- アプリ一覧・詳細
+- 用途別一覧・詳細
+- 記事一覧・詳細
+- ツール一覧・詳細
+- テンプレート
+
+サイトマップは1時間ごとに再検証する設定である。
+
+### 10.3 robotsの除外
+
+- `/api/`
+- `/admin/`
+- `/dashboard`
+- `/settings/`
+- `/profile`
+- `/new`
+- `/publish`
+- `/auth/`
+
+### 10.4 SEOの現状と不足
+
+実装上のSEO基盤はあるが、検索順位の効果測定は未完成である。
+
+- Google Search Consoleのデータをコード側から確認できない。
+- Supabase自社解析でPVと主要コンバージョンを取得する。検索クエリと検索表示回数はSearch Consoleが別途必要。
+- 実検索順位を継続計測する仕組みがない。
+- 生成記事の内容が似ており、検索意図の重複や低品質評価のリスクがある。
+- 多くの記事で個別の一次資料・出典リンクが不足している。
+- 公開本数に対して人手による編集品質が追いついていない。
+
+## 11. デザインとUI方針
+
+### 11.1 全体
+
+- 白背景
+- グレーの面と境界線
+- 濃い青を主要アクションに使用
+- 赤は警告や補助アクセント
+- 角丸は主に8px
+- カードの装飾は控えめ
+- sticky header + backdrop blur
+- モバイル優先のレスポンシブ設計
+- 過剰なアニメーションを避け、軽いfade-inのみ
+
+### 11.2 色
+
+- Primary: `#1B4F72`
+- Primary hover: `#15415F`
+- Accent red: `#B83232`
+- Main text: `#0f0f0f`
+- Secondary text: `#606060`
+- Muted text: `#909090`
+- Border: `#e5e5e5`
+- Surface: `#f5f5f5`
+- Background: `#ffffff`
+
+### 11.3 フォント
+
+- 本文: DM Sans
+- コード・数値: JetBrains Mono
+- ロゴ: Baloo 2
+
+### 11.4 アクセシビリティ
+
+- キーボードフォーカス表示
+- 最低40〜48px程度の主要タップ領域
+- ラベル付きの件数・状態表示
+- アイコンだけに依存しない情報表示
+- モバイルで折り返すレイアウト
+
+## 12. 技術スタック
+
+### 12.1 フロントエンド・サーバー
+
+- Next.js `16.1.6`
+- React `19.2.3`
+- React DOM `19.2.3`
+- TypeScript `5`
+- Next.js App Router
+- Next.js Route Handlers
+- Next.js Proxy（旧Middleware相当）
+- Tailwind CSS `4`
+- PostCSS
+- lucide-react `0.576.0`
+- Monaco Editor `4.7.0`（残存AIエディタ）
+- JSZip `3.10.1`
+- nanoid `5.1.6`
+
+### 12.2 バックエンド・外部サービス
+
+- Supabase Auth
+- Supabase Postgres
+- Supabase Data API
+- Cloudflare R2
+- AWS SDK S3 Client（R2接続）
+- Anthropic Messages API（残存AI編集API）
+- Vercel（本番ホスティング）
+- Namecheap（`aplz.dev` のDNS管理）
+
+### 12.3 サーバー構成
+
+APLZのアプリサーバーはVercel上のNext.jsである。独立した常駐バックエンドサーバーはなく、画面SSRとAPIをNext.jsが処理する。
+
+```text
+Browser
+  -> aplz.dev / Vercel / Next.js
+       -> Supabase Auth（認証）
+       -> Supabase Postgres / Data API（データ）
+       -> Cloudflare R2（アプリファイル・プロフィール画像）
+       -> Anthropic API（残存AI編集API）
 ```
 
-### 主な環境変数
+## 13. リポジトリとデプロイ
 
+### 13.1 Git remote
+
+| 名前 | URL | 役割 |
+| --- | --- | --- |
+| `origin` | `https://github.com/sekisuihouse/aplz.git` | 現在の運用・デプロイ元 |
+| `upstream` | `https://github.com/joemekw-code/aplz.git` | 引き継ぎ元 |
+
+確認時点では `main` と `origin/main` は一致している。ローカル参照上、現在の `main` は `upstream/main` より18コミット進んでおり、upstream側だけにあるコミットは0件である。
+
+### 13.2 Vercel
+
+- Project name: `aplz`
+- 独自ドメイン: `aplz.dev`
+- GitHubの `main` へのpushを本番デプロイへつなぐ構成
+- `.vercel/project.json` でローカルリポジトリとVercel Projectを紐づけ済み
+
+### 13.3 DNS
+
+- Registrar / DNS管理: Namecheap
+- Apex `aplz.dev` と `www.aplz.dev` をVercelへ接続
+- 過去に別Vercelアカウントとの所有権競合があり、TXTによる検証を実施済み
+
+## 14. 環境変数
+
+秘密値はこの資料に記録しない。必要な名前のみを示す。
+
+### 必須
+
+- `NEXT_PUBLIC_APP_URL`
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
-- `NEXT_PUBLIC_APP_URL`
 - `R2_ACCOUNT_ID`
 - `R2_ACCESS_KEY_ID`
 - `R2_SECRET_ACCESS_KEY`
 - `R2_BUCKET_NAME`
 - `R2_PUBLIC_URL`
 - `ANTHROPIC_API_KEY`
-- MCP 側: `APLZ_API_TOKEN`
-- MCP 側任意: `APLZ_API_BASE`
 
-## 3. サーバー/インフラ構成
+### 任意
 
-APLZ のアプリ本体は Next.js の Node.js サーバーとして動きます。ローカルでは `next dev`、本番では `next build` 後に `next start` できる構成です。
+- `ADMIN_EMAILS`
 
-ただし、実際の機能は複数サービスに分散しています。
+`.env.local` には確認時点で必須9項目が存在する。Vercel側にも同じ本番値が必要である。`NEXT_PUBLIC_APP_URL` の本番値は `https://aplz.dev` にする。
 
-- Next.js: 画面表示、API、SSR、middleware
-- Supabase: Auth、DB
-- Cloudflare R2: 公開アプリの HTML/ZIP 展開ファイル、プロフィール画像
-- Anthropic: エディタ内の AI 編集
-- MCP サーバー: Claude Desktop / Claude Code / Cursor などから APLZ に公開するための別 Node.js パッケージ
+## 15. データモデル
 
-リポジトリ内には `vercel.json`、Dockerfile、Render/Fly/Railway などの明示的なデプロイ設定はありません。README は create-next-app の初期文面が残っています。
+### 15.1 コア
 
-## 4. 画面構成
+| テーブル | 用途 |
+| --- | --- |
+| `profiles` | 表示名、画像、自己紹介、外部リンク、開発者属性、役割 |
+| `communities` | 公開・非公開コミュニティ |
+| `community_members` | コミュニティ所属と役割 |
+| `apps` | 公開アプリのメタデータ |
+| `comments` | アプリコメント |
+| `ratings` | アプリの使いやすさ・デザイン・アイデア評価 |
+| `reactions` | アプリへの絵文字リアクション |
+| `api_tokens` | API/MCP用トークン |
 
-### `/`
+### 15.2 困りごとプラットフォーム
 
-公開アプリ一覧ページです。
+| テーブル | 用途 |
+| --- | --- |
+| `requests` | 困りごと本文、期限、状態、個人情報レベル |
+| `solutions` | 困りごとへのアプリ・URL回答 |
+| `request_comments` | 質問、回答、一般コメント、システムコメント |
+| `solution_feedback` | 解決案への利用者反応 |
+| `notifications` | 質問、回答、解決案などの通知 |
+| `reports` | 不適切コンテンツの通報 |
 
-- Hero にロゴ、コピー、主要 CTA を表示
-- CTA は「AIでアプリを作る」と「ファイルをアップロード」
-- 公開アプリをグリッド表示
-- `AppCard` は iframe サムネイル、タイトル、作者、評価、コメント数、日付、バージョンを表示
-- `apps.is_public = true` のアプリを新着順に最大 30 件表示
+### 15.3 主な関連
 
-### `/new`
+- Auth user 1 : 0..1 Profile
+- Auth user 1 : N Request
+- Request 1 : N Solution
+- Request 1 : N Request Comment
+- Solution 1 : N Feedback
+- App 0..1 : N Solution
+- Community 1 : N App
+- Community N : N User (`community_members`)
 
-新規アプリ作成エディタです。
+### 15.4 RLS
 
-- 初期 HTML テンプレートから開始
-- 左/中央/右のエディタ体験を `EditorLayout` が管理
-- AI チャットで HTML 全体を更新
-- プレビュー iframe でクリックした要素を選択し、スタイル編集できる
-- undo/redo と履歴あり
-- 新規公開時は `/api/publish` に HTML 内容を送信する
+全主要テーブルでRow Level Securityを有効化している。
 
-### `/publish`
+- 公開困りごと、公開アプリ、公開コミュニティは閲覧可能
+- 非公開データは所有者またはコミュニティメンバーに限定
+- 困りごと、解決案、質問、フィードバック、通報の作成は認証ユーザーに限定
+- プロフィール更新は本人に限定
+- 通知は本人だけ閲覧・更新可能
+- 管理者の通報閲覧はservice roleを使うAPI経由
 
-HTML/ZIP アップロード公開ページです。
+注意: サーバー用 `createServerClient()` はservice roleを使用しRLSを迂回する。API Routeでは必ず個別に認証・所有権を検証する必要がある。
 
-- ドラッグ&ドロップまたはクリックで `.html` / `.zip` を選択
-- アプリ名、説明、公開先を入力
-- オープン公開とコミュニティ公開を選択可能
-- 公開後に直接起動 URL とフィードバックページ URL を表示
+## 16. API一覧
 
-### `/apps/[slug]`
+### 困りごと
 
-アプリ詳細ページです。
+- `/api/requests`
+- `/api/requests/[slug]`
+- `/api/requests/[slug]/comments`
+- `/api/requests/[slug]/solutions`
+- `/api/solutions/[id]/accept`
+- `/api/solutions/[id]/feedback`
 
-- R2 上の `/{slug}/index.html` を iframe 表示
-- アプリ名、説明、作者、バージョン、更新日を表示
-- 所有者の場合は編集リンクを表示
-- 新しいタブで開く、QR コード、編集導線あり
-- リアクション、評価、コメント、関連アプリを表示
-- desktop では関連アプリを右サイドバー、mobile では下部に表示
+### アプリ
 
-### `/apps/[slug]/edit`
+- `/api/apps`
+- `/api/apps/mine`
+- `/api/apps/[slug]/feedback`
+- `/api/apps/[slug]/source`
+- `/api/publish`
+- `/api/comments`
+- `/api/ratings`
+- `/api/reactions`
+- `/api/related-apps`
 
-公開済みアプリの編集ページです。
+### アカウント・運用
 
-- 所有者のみ編集できる想定
-- 既存ソースを取得して `EditorLayout` に渡す
-- 保存/再公開で `PUT /api/publish` を使う
-- バージョン番号と `last_published_at` を更新する
+- `/api/profile`
+- `/api/dashboard`
+- `/api/notifications`
+- `/api/notifications/[id]`
+- `/api/settings/api-token`
+- `/api/reports`
+- `/api/communities`
+- `/api/communities/join`
 
-### `/login`
+### 残存機能
 
-ログインページです。
+- `/api/ai-edit`
 
-- Google OAuth
-- メール OTP / magic link
-- ログイン後は `/auth/callback` を経由
+## 17. 本番データ実測
 
-### `/profile`
+2026-06-21にSupabase service roleで件数のみ確認した結果。
 
-プロフィール設定ページです。
+| 対象 | 件数 |
+| --- | ---: |
+| Auth users | 1 |
+| Profiles | 1 |
+| Communities | 0 |
+| Community members | 0 |
+| Apps | 2 |
+| App comments | 0 |
+| Ratings | 0 |
+| Reactions | 0 |
+| API tokens | 0 |
+| Requests | 3 |
+| Solutions | 2 |
+| Request comments | 0 |
+| Solution feedback | 1 |
+| Notifications | 0 |
+| Reports | 0 |
 
-- 表示名などのプロフィール情報を更新
-- 画像アップロードは R2 を使う
+本番トップでも「公開中の困りごと3」「募集中1」「回答あり2」「公開アプリ2」を確認した。
 
-### `/settings/api-token`
+プロフィールは1件あるが表示名が未設定のため、既存の投稿者名とアプリ作者名は匿名表示になっている。
 
-API トークン設定ページです。
+## 18. アクセス解析
 
-- `aplz_...` 形式のトークンを生成
-- トークンは生成時のみ表示
-- MCP サーバーのセットアップ例を表示
+2026-06-21にSupabaseを使ったファーストパーティ分析を実装した。計測開始後のデータは `/admin/analytics` で確認できる。
 
-### `/c/[slug]`
+保存テーブル:
 
-コミュニティページです。
+- `analytics_visitors`: 匿名訪問者、初回・最終訪問、最初のページ、参照元ホスト
+- `analytics_sessions`: 30分単位のセッション、ログインユーザーとの任意の関連
+- `analytics_events`: ページ表示と主要操作
 
-- コミュニティ内アプリを一覧表示
-- private community はログインと membership が必要
-- メンバーでない場合は招待コード参加導線を表示
-- コミュニティ向け公開リンクは `/publish?community=[slug]`
+計測イベント:
 
-### `/c/join`
+- ページ表示
+- 認証開始
+- 認証リンク送信
+- ログイン・新規登録完了
+- ログアウト
+- 困りごと投稿
+- 質問・回答
+- 解決案投稿
+- 解決案採用
+- 解決案フィードバック
+- アプリ公開
+- プロフィール更新
+- 通報
+- コミュニティ参加
+- APIトークン作成
 
-コミュニティ参加ページです。
+管理画面で確認できる数値:
 
-- 招待コードでコミュニティに参加する導線
+- 累計訪問者
+- 累計セッション
+- 累計イベント
+- 登録アカウント
+- 直近30日のアクティブ会員
+- 開発者プロフィール数
+- 主要イベント件数
+- アカウント種別
+- 30日の日別推移
+- よく見られたページ
 
-### `/templates`
+保存しない情報:
 
-テンプレートページです。現時点ではナビに導線があります。
+- IPアドレス
+- メールアドレス
+- 投稿本文
+- フォーム入力内容
+- URLクエリ
+- 検索語
 
-## 5. 現行デザインの特徴
+外部サービスのVercel Web Analytics、GA4、Plausible等は使用していない。国・地域、端末、ブラウザ、広告アトリビューション、Google検索クエリは現在の自社計測には含まれない。2026-06-21以前の訪問履歴は遡って取得できない。
 
-### 全体トーン
+## 19. セキュリティと安全設計
 
-- 白背景中心
-- 控えめなグレー階調
-- 角丸 8px 前後の UI
-- 余白は広めだが、一覧は密度高め
-- 装飾は少なく、プロダクト UI として静かな印象
-- ロゴとブランドカラーで個性を出している
-
-### ブランド要素
-
-- ブランド名: APLZ
-- ロゴ: 青と赤の交差する曲線 + 中央ドット
-- ロゴフォント: Baloo 2
-- 主要カラー:
-  - Primary blue: `#1B4F72`
-  - Primary blue hover: `#15415F`
-  - Accent red: `#B83232`
-  - Text: `#0f0f0f`, `#1a1a1a`
-  - Secondary text: `#606060`
-  - Muted text: `#909090`
-  - Border: `#e5e5e5`
-  - Surface: `#f5f5f5`
-  - White: `#ffffff`
-
-### レイアウト
-
-- Header は sticky、白 80% + backdrop blur
-- Header 高さは 64px
-- Header 内幅は `max-w-5xl`
-- 一覧ページや詳細ページは `max-w-[1800px]`
-- アプリ一覧は 2〜7 カラムの responsive grid
-- 詳細ページは desktop でメイン + 右サイドバー、mobile で縦積み
-- アプリ iframe は詳細で 16:9、カードで 16:10
-
-### コンポーネント傾向
-
-- ボタン: `rounded-lg`, primary は青地白文字
-- 入力: `bg-[#f5f5f5]`, `border-[#e5e5e5]`, focus はグレーまたは青
-- カード: 白背景、薄い border、hover shadow
-- Dropdown: 白背景、薄い border、shadow
-- Animation: `animate-fade-in` のみ。過度な動きはない
-
-### デザイン維持の注意
-
-大幅アップデートでも、次の要素は維持すると現行の印象を保ちやすいです。
-
-- 白背景 + グレー UI + primary blue の比率
-- `rounded-lg` 中心の角丸
-- Header の sticky / blur / thin border
-- アプリカードの iframe サムネイル
-- 一覧の密度感
-- APLZ ロゴの Baloo 2 と青赤曲線
-- テキストサイズは控えめにし、hero 以外で大きくしすぎない
-
-## 6. 認証/権限
-
-### 認証方式
+### 実装済み
 
 - Supabase Auth
-- Google OAuth
-- メール OTP / magic link
-- SSR Cookie ベースの auth client を使用
-
-### middleware の保護対象
-
-- `/publish`
-- `/apps/*/edit`
-- `/profile`
-- `/c/join`
-- `/login` はログイン済みユーザーを `/` にリダイレクト
-
-### API トークン認証
-
-`/api/publish` と `/api/apps/mine` は Bearer token に対応しています。
-
-- `Authorization: Bearer aplz_...`
-- `api_tokens` テーブルで token を検索
-- `last_used_at` を更新
-- MCP サーバーからの公開・一覧取得・フィードバック取得で使用
-
-## 7. データモデル
-
-コードから確認できる主なテーブルです。正式な migration/schema ファイルはリポジトリ内に見当たりません。
-
-### `apps`
-
-主な用途: 公開アプリのメタデータ
-
-確認できる主なカラム:
-
-- `id`
-- `name`
-- `description`
-- `slug`
-- `author_token`
-- `file_count`
-- `community_id`
-- `user_id`
-- `author_name`
-- `is_public`
-- `version`
-- `last_published_at`
-- `created_at`
-
-### `profiles`
-
-主な用途: ユーザープロフィール
-
-確認できる主なカラム:
-
-- `id`
-- `display_name`
-- `avatar_url`
-
-### `comments`
-
-主な用途: アプリへのコメント
-
-確認できる主なカラム:
-
-- `id`
-- `app_id`
-- `content`
-- `created_at`
-
-### `ratings`
-
-主な用途: 3 軸評価
-
-確認できる主なカラム:
-
-- `app_id`
-- `usability`
-- `design`
-- `idea`
-
-平均評価は `usability + design + idea` を回答数と 3 で割って算出しています。
-
-### `reactions`
-
-主な用途: アプリへのリアクション
-
-確認できる主なカラム:
-
-- `id`
-- `app_id`
-- `emoji`
-
-`LEGACY_EMOJI_MAP` により旧 emoji 形式も新 reaction type に変換しています。
-
-### `communities`
-
-主な用途: コミュニティ管理
-
-確認できる主なカラム:
-
-- `id`
-- `name`
-- `slug`
-- `description`
-- `is_private`
-
-### `community_members`
-
-主な用途: コミュニティ参加状態
-
-確認できる主なカラム:
-
-- `id`
-- `community_id`
-- `user_id`
-
-### `api_tokens`
-
-主な用途: MCP/API 利用トークン
-
-確認できる主なカラム:
-
-- `id`
-- `user_id`
-- `token`
-- `name`
-- `created_at`
-- `last_used_at`
-
-## 8. API 仕様
-
-### `GET /api/apps`
-
-公開アプリ一覧を返します。
-
-- `apps` を新着順に最大 30 件取得
-- コメント数、リアクション数を集計
-
-### `GET /api/apps/mine`
-
-自分が公開したアプリ一覧を返します。
-
-- Cookie auth または Bearer token 対応
-- MCP の `list_apps` から利用
-
-### `GET /api/apps/[slug]/feedback`
-
-対象アプリの評価・コメント・リアクションを返します。
-
-- MCP の `get_feedback` から利用
-
-### `GET /api/apps/[slug]/source`
-
-R2 上の `index.html` を取得して返す用途です。
-
-### `POST /api/publish`
-
-新規公開 API です。
-
-対応形式:
-
-- `application/json`: `html_content` を直接公開
-- `multipart/form-data`: `.html` または `.zip` を公開
-
-主な処理:
-
-- Bearer token または Cookie auth でユーザー特定
-- ZIP の場合は `index.html` の存在を必須にする
-- `__MACOSX` と dotfile 系は除外
-- 単一 root folder は strip する
-- R2 に `/{slug}/...` としてアップロード
-- Supabase `apps` にメタデータを保存
-- `app_url` と `platform_url` を返す
-
-### `PUT /api/publish`
-
-公開済みアプリの更新 API です。
-
-- 所有者のみ更新可能
-- JSON または FormData 対応
-- R2 の HTML/ZIP ファイルを更新
-- `apps.version` を increment
-- `last_published_at` を更新
-
-### `POST /api/ai-edit`
-
-AI 編集 API です。
-
-- Anthropic Messages API を呼び出す
-- 入力: `code`, `prompt`
-- prompt 最大 500 文字
-- code 最大 100KB
-- AI には完全な HTML と日本語 summary を JSON 形式で返すよう指示
-- JSON parse 失敗時は raw HTML として fallback
-
-### `GET /api/communities`
-
-コミュニティ一覧を返します。
-
-- `mine=true` の場合はログインユーザーが所属するコミュニティのみ
-- 通常は全コミュニティ
-
-### `POST /api/communities/join`
-
-招待コードなどを使ったコミュニティ参加 API です。
-
-### `GET/POST/DELETE /api/settings/api-token`
-
-API トークン管理 API です。
-
-- `GET`: 自分の token metadata 一覧
-- `POST`: token 作成。完全な token はこのレスポンスでのみ返す
-- `DELETE`: token 削除
-
-### `POST /api/comments`
-
-コメント投稿 API です。
-
-### `POST /api/ratings`
-
-評価投稿 API です。
-
-### `POST /api/reactions`
-
-リアクション投稿/切り替え API です。
-
-### `GET /api/related-apps`
-
-関連アプリ取得 API です。
-
-### `GET/POST /api/profile`
-
-プロフィール取得・更新 API です。画像アップロード時は R2 を使います。
-
-## 9. 公開ファイルの保存形式
-
-公開アプリは Cloudflare R2 に次のようなキーで保存されます。
-
-```text
-{slug}/index.html
-{slug}/assets/...
+- Cookieベースセッション
+- RLS
+- 非公開ページの認証保護
+- URL入力の `http/https` 制限
+- 投稿文字数の上限
+- プロフィール画像の形式・容量制限
+- 個人情報レベル表示
+- 高リスク投稿への警告
+- 通報機能
+- 管理者メール制限
+- robotsによる管理・認証ページ除外
+
+### 注意点
+
+- service roleを使うAPIの認可漏れは重大なリスクになる。
+- アップロードHTML/ZIPをiframeで実行するため、R2の配信ドメイン分離、CSP、sandbox属性を継続確認する必要がある。
+- 外部アプリURLや参考URLは第三者サイトへ移動する可能性がある。
+- `ANTHROPIC_API_KEY`、Supabase service role、R2 secretは絶対にクライアントへ露出させない。
+- APIトークンは生成時だけ見せ、漏えい時に再発行できる運用が必要。
+
+## 20. 開発・検証コマンド
+
+```bash
+npm install
+npm run dev
+npm run lint
+npm run build
+npm run start
+npm run check:supabase
+npm run content:generate
+npm run content:publish:seo
+npm run content:check:published-seo
+npm run content:check:bias
 ```
 
-アプリ詳細ページでは次の URL を iframe に読み込んでいます。
+ローカルURL:
 
 ```text
-{R2_PUBLIC_URL}/{slug}/index.html
+http://localhost:3000
 ```
 
-カードのサムネイルも同じ HTML を iframe で縮小表示しています。
+## 21. 2026-06-21の検証結果
 
-## 10. エディタ仕様
+- `npm run lint`: 成功
+- `npm run build`: 成功
+- TypeScript check: 成功
+- Next.js production build: 278ページ生成、成功
+- 全17テーブルのSupabase接続: 成功
+- 分析API: 匿名訪問者、セッション、PVの本番DB保存に成功
+- 分析テストデータ: 検証後に削除済み
+- 本番 `https://aplz.dev/`: 表示成功
+- Git `main` と `origin/main`: 一致
+- ワークツリー: 資料更新前はclean
 
-### `EditorLayout`
+自動テスト用の専用テストスクリプト、Playwright、Vitest、Jestは現在ない。検証はlint、build、スキーマ確認と手動確認が中心である。
 
-新規作成と編集の共通レイアウトです。
+## 22. 現在の既知の問題
 
-主な状態:
+優先度の高い順。
 
-- `code`
-- `previewCode`
-- `chatMessages`
-- `aiPrompt`
-- `undoStack`
-- `redoStack`
-- `selectedElement`
-- `showPublishModal`
+### P0: 検索計測は別途必要
 
-主な機能:
+自社アクセス解析は追加したが、Google検索の表示回数、検索語、掲載順位はSearch Consoleとの接続が必要。
 
-- 300ms debounce でプレビュー更新
-- Cmd/Ctrl+Z と Cmd/Ctrl+Shift+Z
-- AI 編集前の履歴保存
-- 最大 50 件の履歴
-- style editor と code editor の切り替え
+### P0: 記事品質の均質化
 
-### `PreviewPanel`
+210記事の多くが共通セクションで3,000文字化されている。文字数は満たすが、記事固有の調査、図、データ、経験、取材が不足し、内容が似て見える。大量の類似ページは検索評価とブランド信頼の両方に悪影響となり得る。
 
-iframe `srcDoc` で HTML を表示します。
+### P1: プロフィール自動作成がない
 
-選択モードが有効な場合、HTML に script を注入して次を実現します。
+現在の管理者プロフィールは作成済みだが、新規Auth user作成時にプロフィールを自動作成するtriggerがない。利用者がプロフィール保存を行わない限り、表示名、アバター、ユーザー種別集計から欠落する。
 
-- iframe 内クリックで対象要素を outline
-- computed style を parent に `postMessage`
-- parent から `apply-style` message を受けて inline style を変更
+### P1: 廃止コードの残存
 
-### `ChatPanel`
+`/new` は無効化したが、Monaco Editor、AI編集コンポーネント、`/api/ai-edit`、Anthropic依存が残っている。今後使わないなら削除し、攻撃面、依存、保守負担を減らすべきである。
 
-AI 指示入力と会話履歴です。
+### P1: 自動テスト不足
 
-- user は青背景
-- assistant はグレー背景
-- loading は「考え中...」
-- Enter で送信
+投稿、認証、回答、採用、公開、権限、RLSの回帰テストがない。主要フローのPlaywright E2EとAPIの認可テストが必要。
 
-## 11. MCP サーバー
+### P1: READMEが初期状態
 
-`mcp-server` は Web 本体とは別の Node.js パッケージです。
+READMEはcreate-next-appの初期文面であり、セットアップ、環境変数、構成、デプロイ手順を説明していない。この統合資料を基に更新する必要がある。
 
-主な用途:
+### P2: 旧機能と新しい主軸の混在
 
-- Claude Desktop / Claude Code / Cursor などから APLZ にアプリを公開する
-- 公開済みアプリ一覧を取得する
-- フィードバックを取得する
-- 公開済みアプリを更新する
+コミュニティ、APIトークン、アプリ評価、記事、ツール、テンプレートなど機能範囲が広く、主軸の困りごとフローが薄まる可能性がある。
 
-主な tool:
+### P2: 記事管理値の不整合
 
-- `publish_app`
-- `list_apps`
-- `get_feedback`
-- `update_app`
+レポートによって記事数が200と210で異なる。理由は、生成記事200本に加えて手書き記事10本があるため。今後は「生成200、手書き10、公開合計210」と統一する。
 
-デフォルト API base は `https://aplz.dev` です。`APLZ_API_BASE` で変更できます。
+## 23. 推奨する次の優先順位
 
-## 12. 現行の強み
+1. Search Consoleを接続し、検索表示・クエリ・順位の計測を開始する。
+2. Auth user作成時にプロフィールを自動作成するDB triggerを追加する。
+3. 投稿、質問、回答、解決案、採用までをPlaywrightで自動テストする。
+4. 210記事を一括公開し続けるのではなく、重複度と一次情報で監査し、弱い記事を非公開・統合・個別改稿する。
+5. 廃止したAIエディタ関連コードと依存を削除するか、今後使う機能として明確に再定義する。
+6. READMEを現状に合わせる。
+7. Supabase分析データを見て、困りごと詳細から質問・回答・解決案投稿までのUIを再改善する。
 
-- 機能の主軸が明確: 作る、公開する、見てもらう、直す
-- R2 に静的アプリを置く構成なので公開物の配信がシンプル
-- Supabase によって auth と DB がコンパクトにまとまっている
-- MCP 連携があり、AI ツールからの公開導線がある
-- iframe サムネイルにより一覧で実際のアプリの雰囲気が伝わる
-- デザインが控えめで、機能追加しても破綻しにくい
+## 24. 変更履歴の要点
 
-## 13. 現行の弱点/アップデート時の注意
+直近の主要コミット:
 
-- README が実態と合っていない
-- DB schema/migration がリポジトリにない
-- Supabase の型生成が使われていない
-- API route 内で同じような auth/user 取得処理が重複している
-- Service role client を多く使っているため、RLS と責務分離の確認が必要
-- `api_tokens.token` は平文保存に見えるため、hash 保存を検討したい
-- iframe sandbox は機能上広めに許可されているため、セキュリティ設計の明文化が必要
-- AI 編集は HTML 全体差し替え方式なので、大きいアプリや複数ファイル編集には弱い
-- ZIP 更新時に古い R2 オブジェクト削除の扱いがコード上明確ではない
-- 一覧ページで rating/profile を別クエリ集計しており、データ増加時は最適化余地がある
-- `mcp-server/package.json` の package name と README の `@aplz/mcp-server` 表記に差がある
-- 一部 `.DS_Store` がリポジトリ内に存在する
+- `8f7551c` デモ投入スクリプトとデモデータを削除
+- `6bba224` 「アプリを作る」新規作成フローを削除
+- `42ebe17` 困りごと一覧・詳細のUI/UX改善
+- `5be15e0` メディア記事公開と記事別SEO
+- `17cf42f` 広範な編集メディア基盤を追加
+- `263df16` 記事の読みやすさ改善
+- `3973f58` 検索意図に合わせたSEO記事調整
 
-## 14. 大幅アップデート時に守るべき互換性
+## 25. 主要ファイル
 
-### URL 互換
+| 対象 | ファイル |
+| --- | --- |
+| 全体レイアウト・ナビ | `src/app/layout.tsx` |
+| トップ | `src/app/page.tsx` |
+| 困りごと一覧 | `src/app/requests/page.tsx` |
+| 困りごと詳細 | `src/app/requests/[slug]/page.tsx` |
+| 投稿フォーム | `src/app/requests/new/page.tsx` |
+| ログイン | `src/app/login/LoginClient.tsx` |
+| 認証保護 | `src/proxy.ts` |
+| 困りごと定数・共通処理 | `src/lib/request-platform.ts` |
+| Supabase client | `src/lib/supabase.ts` |
+| SSR auth client | `src/lib/supabase-server.ts` |
+| R2 | `src/lib/r2.ts` |
+| 記事統合・3,000文字化 | `src/lib/articles.ts` |
+| 生成記事 | `src/lib/generated-articles.ts` |
+| 無料ツール | `src/lib/generated-tools.ts` |
+| SEO共通処理 | `src/lib/seo.tsx` |
+| Sitemap | `src/app/sitemap.ts` |
+| Robots | `src/app/robots.ts` |
+| DB初期スキーマ | `supabase/migrations/202606120000_initial_core_schema.sql` |
+| 困りごと拡張 | `supabase/migrations/202606120001_request_platform.sql` |
+| Data API権限 | `supabase/migrations/202606170001_data_api_grants.sql` |
+| アクセス解析DB | `supabase/migrations/202606210001_product_analytics.sql` |
 
-維持したい URL:
+## 26. この資料の更新ルール
 
-- `/`
-- `/new`
-- `/publish`
-- `/apps/[slug]`
-- `/apps/[slug]/edit`
-- `/login`
-- `/profile`
-- `/settings/api-token`
-- `/c/[slug]`
-- `/c/join`
-- `/templates`
+次の変更を行ったら、このファイルも同じコミットで更新する。
 
-### API 互換
+- 主要フローの追加・削除
+- URLやナビゲーション変更
+- DBテーブル・カラム・RLS変更
+- 認証方式変更
+- Vercel、Supabase、R2、DNS変更
+- 環境変数追加・削除
+- 記事・ツールの公開方針変更
+- アクセス解析導入
+- 本番データを大きく変更
+- 既知の問題の解消
 
-MCP や外部連携のため、特に次は壊さない方がよいです。
-
-- `POST /api/publish`
-- `PUT /api/publish`
-- `GET /api/apps/mine`
-- `GET /api/apps/[slug]/feedback`
-- `GET /api/settings/api-token`
-- `POST /api/settings/api-token`
-
-### データ互換
-
-既存公開アプリの前提:
-
-- R2: `{slug}/index.html`
-- DB: `apps.slug`
-- 詳細 URL: `/apps/{slug}`
-- 直接起動 URL: `{R2_PUBLIC_URL}/{slug}/index.html`
-
-この形式を変える場合は migration と redirect、MCP 互換を同時に設計する必要があります。
-
-## 15. 推奨アップデート方針
-
-現行デザインを保ったまま大幅アップデートするなら、次の順序が安全です。
-
-1. README と docs を実態に合わせる
-2. Supabase schema/migration と型生成を導入する
-3. auth helper と API error handling を共通化する
-4. UI コンポーネントの色・余白・ボタン・入力を小さな design token に整理する
-5. 公開/更新処理を service layer に分離する
-6. R2 の old object cleanup と versioning 方針を決める
-7. エディタを単一 HTML から複数ファイル対応へ拡張するか判断する
-8. MCP API 互換を保ったまま、機能追加する
-9. 主要導線の Playwright/e2e test を追加する
-
-## 16. 参照すべき主要ファイル
-
-- `package.json`
-- `src/app/layout.tsx`
-- `src/app/page.tsx`
-- `src/app/new/page.tsx`
-- `src/app/publish/page.tsx`
-- `src/app/apps/[slug]/page.tsx`
-- `src/app/apps/[slug]/edit/page.tsx`
-- `src/app/c/[slug]/page.tsx`
-- `src/app/components/AppCard.tsx`
-- `src/app/components/WorkspaceSwitcher.tsx`
-- `src/app/components/editor/EditorLayout.tsx`
-- `src/app/components/editor/PreviewPanel.tsx`
-- `src/app/api/publish/route.ts`
-- `src/app/api/ai-edit/route.ts`
-- `src/lib/supabase.ts`
-- `src/lib/supabase-server.ts`
-- `src/lib/r2.ts`
-- `src/middleware.ts`
-- `mcp-server/src/index.ts`
-
+秘密鍵、APIキー、個人メール、パスワード、トークン実値は記載しない。

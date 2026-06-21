@@ -9,6 +9,7 @@ import {
   isValidUrl,
   makeRequestSlug,
 } from "@/lib/request-platform";
+import { recordAnalyticsEvent } from "@/lib/analytics";
 
 export async function GET(req: NextRequest) {
   try {
@@ -160,6 +161,14 @@ export async function POST(req: NextRequest) {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
+
+    await recordAnalyticsEvent({
+      req,
+      eventName: "request_created",
+      userId: user.id,
+      path: `/requests/${data.slug}`,
+      metadata: { category, privacy_level: privacyLevel },
+    });
 
     return NextResponse.json({ success: true, request: data });
   } catch (err) {

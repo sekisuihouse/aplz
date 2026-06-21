@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { createAuthBrowserClient } from "@/lib/supabase";
+import { trackAnalyticsEvent } from "@/lib/analytics-client";
 
 interface Props {
   email: string;
@@ -28,6 +29,7 @@ export default function NavUser({ email, avatarUrl, displayName }: Props) {
   }, []);
 
   const handleSignOut = async () => {
+    trackAnalyticsEvent("logout");
     const supabase = createAuthBrowserClient();
     await supabase.auth.signOut();
     router.refresh();

@@ -6,6 +6,7 @@ import { createServerClient } from "@/lib/supabase";
 import NavLogo from "./components/NavLogo";
 import NavUser from "./components/NavUser";
 import WorkspaceSwitcher from "./components/WorkspaceSwitcher";
+import AnalyticsTracker from "./components/AnalyticsTracker";
 import "./globals.css";
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://aplz.dev";
@@ -117,6 +118,7 @@ export default async function RootLayout({
       <body
         className={`${dmSans.variable} ${jetbrainsMono.variable} ${baloo2.variable} font-sans antialiased bg-white text-[#0f0f0f]`}
       >
+        <AnalyticsTracker />
         <header className="sticky top-0 z-50 backdrop-blur-md bg-white/80 border-b border-[#e5e5e5]">
           <nav className="max-w-[1800px] mx-auto flex items-center justify-between gap-3 px-4 h-16">
             <div className="flex items-center gap-3">

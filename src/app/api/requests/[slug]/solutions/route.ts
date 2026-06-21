@@ -7,6 +7,7 @@ import {
   getUserFromRequest,
   isValidUrl,
 } from "@/lib/request-platform";
+import { recordAnalyticsEvent } from "@/lib/analytics";
 
 interface RouteContext {
   params: Promise<{ slug: string }>;
@@ -155,6 +156,14 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
       type: "solution_created",
       requestId: request.id,
       solutionId: solution.id,
+    });
+
+    await recordAnalyticsEvent({
+      req,
+      eventName: "solution_created",
+      userId: user.id,
+      path: `/requests/${slug}`,
+      metadata: { source: appSlug ? "aplz_app" : "external_url" },
     });
 
     return NextResponse.json({ success: true, solution });

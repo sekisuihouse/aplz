@@ -27,6 +27,9 @@ const tables = [
   "solution_feedback",
   "notifications",
   "reports",
+  "analytics_visitors",
+  "analytics_sessions",
+  "analytics_events",
 ];
 
 let hasError = false;
@@ -61,6 +64,7 @@ if (hasError) {
   console.error("1. supabase/migrations/202606120000_initial_core_schema.sql");
   console.error("2. supabase/migrations/202606120001_request_platform.sql");
   console.error("3. supabase/migrations/202606170001_data_api_grants.sql");
+  console.error("4. supabase/migrations/202606210001_product_analytics.sql");
   console.error("\nThen run:");
   console.error("select pg_notify('pgrst', 'reload schema');");
   process.exit(1);

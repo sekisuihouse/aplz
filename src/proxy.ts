@@ -9,6 +9,7 @@ const PROTECTED = [
   "/requests/new",
   "/dashboard",
   "/admin/reports",
+  "/admin/analytics",
 ];
 
 function isProtected(pathname: string) {
@@ -79,6 +80,7 @@ export const config = {
     "/requests/new",
     "/dashboard",
     "/admin/reports",
+    "/admin/analytics",
     "/login",
   ],
 };

@@ -7,6 +7,7 @@ import {
   getUserFromRequest,
   isReportTargetType,
 } from "@/lib/request-platform";
+import { recordAnalyticsEvent } from "@/lib/analytics";
 
 export async function POST(req: NextRequest) {
   try {
@@ -40,6 +41,13 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+    await recordAnalyticsEvent({
+      req,
+      eventName: "report_created",
+      userId: user.id,
+      metadata: { target_type: String(body.target_type), reason },
+    });
 
     return NextResponse.json({ success: true, report: data });
   } catch (err) {

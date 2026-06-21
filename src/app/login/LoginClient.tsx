@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createAuthBrowserClient } from "@/lib/supabase";
+import { trackAnalyticsEvent } from "@/lib/analytics-client";
 
 type LoginMode = "signin" | "signup";
 
@@ -23,13 +24,14 @@ export default function LoginClient({
   const [error, setError] = useState(initialError);
 
   const callbackUrl = () => {
-    return `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath)}`;
+    return `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath)}&mode=${mode}`;
   };
 
   const handleGoogle = async () => {
     if (loading) return;
     setLoading(true);
     setError("");
+    trackAnalyticsEvent("auth_attempt", { mode, provider: "google" });
     const supabase = createAuthBrowserClient();
     const { error: authError } = await supabase.auth.signInWithOAuth({
       provider: "google",
@@ -40,6 +42,8 @@ export default function LoginClient({
     if (authError) {
       setError("Googleログインは現在利用できません。メールリンクを使ってください。");
       setLoading(false);
+    } else {
+      trackAnalyticsEvent("auth_link_sent", { mode, provider: "google" });
     }
   };
 
@@ -48,6 +52,7 @@ export default function LoginClient({
     if (!email || loading) return;
     setLoading(true);
     setError("");
+    trackAnalyticsEvent("auth_attempt", { mode, provider: "email" });
 
     const supabase = createAuthBrowserClient();
     const { error: authError } = await supabase.auth.signInWithOtp({
@@ -70,6 +75,7 @@ export default function LoginClient({
 
     setSent(true);
     setLoading(false);
+    trackAnalyticsEvent("auth_link_sent", { mode, provider: "email" });
   };
 
   return (

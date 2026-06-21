@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase";
 import { createAuthServerClient } from "@/lib/supabase-server";
 import crypto from "crypto";
+import { recordAnalyticsEvent } from "@/lib/analytics";
 
 async function getAuthUser() {
   const authClient = await createAuthServerClient();
@@ -42,6 +43,13 @@ export async function POST(req: NextRequest) {
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  await recordAnalyticsEvent({
+    req,
+    eventName: "api_token_created",
+    userId: user.id,
+    path: "/settings/api-token",
+  });
 
   // Return full token only once
   return NextResponse.json({ ...data, token });
