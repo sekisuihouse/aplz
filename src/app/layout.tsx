@@ -5,7 +5,6 @@ import { createAuthServerClient } from "@/lib/supabase-server";
 import { createServerClient } from "@/lib/supabase";
 import NavLogo from "./components/NavLogo";
 import NavUser from "./components/NavUser";
-import WorkspaceSwitcher from "./components/WorkspaceSwitcher";
 import AnalyticsTracker from "./components/AnalyticsTracker";
 import "./globals.css";
 
@@ -123,42 +122,29 @@ export default async function RootLayout({
           <nav className="max-w-[1800px] mx-auto flex items-center justify-between gap-3 px-4 h-16">
             <div className="flex items-center gap-3">
               <NavLogo />
-              <WorkspaceSwitcher />
               <Link
-                href="/requests"
-                className="hidden sm:inline-flex px-3 py-1.5 rounded-lg text-sm text-[#606060] hover:text-[#0f0f0f] hover:bg-[#f5f5f5] transition-colors"
-              >
-                困りごとを見る
-              </Link>
-              <Link
-                href="/templates"
+                href="/for-requesters"
                 className="hidden md:inline-flex px-3 py-1.5 rounded-lg text-sm text-[#606060] hover:text-[#0f0f0f] hover:bg-[#f5f5f5] transition-colors"
               >
-                テンプレート
+                困りごとを書く人へ
               </Link>
               <Link
-                href="/apps"
+                href="/for-developers"
                 className="hidden lg:inline-flex px-3 py-1.5 rounded-lg text-sm text-[#606060] hover:text-[#0f0f0f] hover:bg-[#f5f5f5] transition-colors"
               >
-                アプリ
+                開発者へ
               </Link>
               <Link
-                href="/use-cases"
+                href="/find-apps"
                 className="hidden lg:inline-flex px-3 py-1.5 rounded-lg text-sm text-[#606060] hover:text-[#0f0f0f] hover:bg-[#f5f5f5] transition-colors"
               >
-                用途別
+                アプリを探す
               </Link>
               <Link
                 href="/articles"
-                className="hidden lg:inline-flex px-3 py-1.5 rounded-lg text-sm text-[#606060] hover:text-[#0f0f0f] hover:bg-[#f5f5f5] transition-colors"
-              >
-                記事
-              </Link>
-              <Link
-                href="/tools"
                 className="hidden xl:inline-flex px-3 py-1.5 rounded-lg text-sm text-[#606060] hover:text-[#0f0f0f] hover:bg-[#f5f5f5] transition-colors"
               >
-                ツール
+                読みもの
               </Link>
             </div>
             <div className="flex items-center gap-2 sm:gap-3">
@@ -199,12 +185,11 @@ export default async function RootLayout({
               {" "}— 小さな困りごとを小さなアプリで解決する場所
             </p>
             <div className="flex flex-wrap gap-4 text-sm text-[#606060]">
-              <Link href="/requests" className="hover:text-[#0f0f0f]">困りごと</Link>
-              <Link href="/apps" className="hover:text-[#0f0f0f]">アプリ</Link>
-              <Link href="/use-cases" className="hover:text-[#0f0f0f]">用途別</Link>
-              <Link href="/articles" className="hover:text-[#0f0f0f]">記事</Link>
+              <Link href="/for-requesters" className="hover:text-[#0f0f0f]">困りごとを書く人へ</Link>
+              <Link href="/for-developers" className="hover:text-[#0f0f0f]">開発者へ</Link>
+              <Link href="/find-apps" className="hover:text-[#0f0f0f]">アプリを探す</Link>
+              <Link href="/articles" className="hover:text-[#0f0f0f]">読みもの</Link>
               <Link href="/tools" className="hover:text-[#0f0f0f]">ツール</Link>
-              <Link href="/templates" className="hover:text-[#0f0f0f]">テンプレート</Link>
             </div>
           </div>
         </footer>

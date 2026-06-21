@@ -1,144 +1,74 @@
+import Image from "next/image";
 import Link from "next/link";
-import type { ComponentType } from "react";
 import {
+  ArrowDown,
   ArrowRight,
-  CheckCircle2,
-  Clock3,
-  Layers3,
-  MessageCircle,
+  Blocks,
+  MessageCircleQuestion,
   PenLine,
   Search,
+  ShieldCheck,
   Sparkles,
-  Wrench,
 } from "lucide-react";
-import { createServerClient } from "@/lib/supabase";
-import { REQUEST_CATEGORIES } from "@/lib/request-platform";
 import { JsonLd, absoluteUrl, pageMetadata } from "@/lib/seo";
-import { getUseCaseByCategory } from "@/lib/use-cases";
-import AppCard from "./components/AppCard";
-import RequestCard from "./components/RequestCard";
-
-export const revalidate = 30;
 
 export const metadata = pageMetadata({
-  title: "APLZ — 小さな困りごとを小さなアプリで解決",
+  title: "APLZ — 小さな困りごとを、小さなアプリで。",
   description:
-    "町内会・学校・個人事業主・イベント運営などの小さな困りごとを投稿し、開発者が小さなWebアプリで解決するプラットフォームです。",
+    "APLZは、暮らしや仕事の小さな困りごとを書き、開発者と話しながら、ちょうどよいWebアプリを見つける場所です。",
   path: "/",
-  keywords: ["小さな業務アプリ", "困りごと 解決", "業務改善", "当番表 アプリ", "集計 アプリ"],
+  keywords: ["APLZ", "困りごと 解決", "小さなWebアプリ", "アプリを探す", "開発者 募集"],
 });
 
-const FLOW_STEPS = [
+const AUDIENCES = [
   {
-    title: "一言で書く",
-    text: "仕様ではなく、困っている作業からで大丈夫です。",
+    title: "困りごとを書く",
+    label: "相談したい人へ",
+    description: "仕様書はいりません。いま面倒なことと、どうなったら楽かを一言から書けます。",
+    href: "/for-requesters",
+    action: "投稿の流れを見る",
     icon: PenLine,
+    accent: "bg-[#1B4F72] text-white",
   },
   {
-    title: "質問で補う",
-    text: "足りない条件は開発者が短く聞けます。",
-    icon: MessageCircle,
+    title: "開発者として参加",
+    label: "作る人へ",
+    description: "未解決の困りごとを見つけ、質問し、小さく作って実際の反応を受け取れます。",
+    href: "/for-developers",
+    action: "参加方法を見る",
+    icon: Blocks,
+    accent: "bg-[#B83232] text-white",
   },
   {
-    title: "小さく試す",
-    text: "回答アプリを開いて、使えそうか確認します。",
-    icon: Sparkles,
+    title: "アプリを探す",
+    label: "すぐ使いたい人へ",
+    description: "公開アプリや無料ツールを、目的から探して、その場ですぐ試せます。",
+    href: "/find-apps",
+    action: "探し方を見る",
+    icon: Search,
+    accent: "bg-[#F0E7DA] text-[#5A4332]",
   },
 ];
 
-export default async function Home() {
-  const supabase = createServerClient();
-  const [
-    { data: apps },
-    { data: newRequests },
-    { data: solvedRequests },
-    { count: requestCount },
-    { count: openRequestCount },
-    { count: answeredRequestCount },
-    { count: appCount },
-  ] =
-    await Promise.all([
-      supabase
-        .from("apps")
-        .select(
-          `
-          *,
-          comments:comments(count),
-          ratings:ratings(count)
-        `
-        )
-        .eq("is_public", true)
-        .order("created_at", { ascending: false })
-        .limit(30),
-      supabase
-        .from("requests")
-        .select("*")
-        .eq("is_public", true)
-        .neq("status", "hidden")
-        .order("created_at", { ascending: false })
-        .limit(6),
-      supabase
-        .from("requests")
-        .select("*")
-        .eq("is_public", true)
-        .eq("status", "solved")
-        .order("updated_at", { ascending: false })
-        .limit(6),
-      supabase
-        .from("requests")
-        .select("*", { count: "exact", head: true })
-        .eq("is_public", true)
-        .neq("status", "hidden"),
-      supabase
-        .from("requests")
-        .select("*", { count: "exact", head: true })
-        .eq("is_public", true)
-        .in("status", ["open", "questions", "in_progress"]),
-      supabase
-        .from("requests")
-        .select("*", { count: "exact", head: true })
-        .eq("is_public", true)
-        .in("status", ["answered", "testing", "solved"]),
-      supabase
-        .from("apps")
-        .select("*", { count: "exact", head: true })
-        .eq("is_public", true),
-    ]);
+const FLOW = [
+  {
+    number: "01",
+    title: "困りごとに名前をつける",
+    description: "毎回ちょっと面倒、誰か一人が覚えている。そんな状態を短い言葉にします。",
+  },
+  {
+    number: "02",
+    title: "会話して輪郭をつくる",
+    description: "足りない条件は、開発者からの短い質問に答えながら整理できます。",
+  },
+  {
+    number: "03",
+    title: "小さく試して確かめる",
+    description: "完成を待つより、まず使う。役立ったか、直したいかをその場で返せます。",
+  },
+];
 
-  const [requestList, solvedRequestList, appList] = await Promise.all([
-    enrichRequests(supabase, newRequests ?? []),
-    enrichRequests(supabase, solvedRequests ?? []),
-    enrichApps(supabase, apps ?? []),
-  ]);
-
-  const r2PublicUrl = process.env.R2_PUBLIC_URL;
-  const metrics = [
-    {
-      label: "公開中の困りごと",
-      value: requestCount ?? 0,
-      icon: Layers3,
-      href: "/requests",
-    },
-    {
-      label: "募集中",
-      value: openRequestCount ?? 0,
-      icon: Clock3,
-      href: "/requests?filter=unsolved",
-    },
-    {
-      label: "回答あり",
-      value: answeredRequestCount ?? 0,
-      icon: CheckCircle2,
-      href: "/requests?filter=answered",
-    },
-    {
-      label: "公開アプリ",
-      value: appCount ?? 0,
-      icon: Wrench,
-      href: "/#apps",
-    },
-  ];
-
+export default function Home() {
   return (
     <main>
       <JsonLd
@@ -155,372 +85,160 @@ export default async function Home() {
             "@type": "WebSite",
             name: "APLZ",
             url: absoluteUrl("/"),
-            potentialAction: {
-              "@type": "SearchAction",
-              target: `${absoluteUrl("/requests")}?q={search_term_string}`,
-              "query-input": "required name=search_term_string",
-            },
+            description: "小さな困りごとを、小さなWebアプリで解決する場所",
           },
         ]}
       />
-      <section className="px-4 pt-10 pb-8">
-        <div className="max-w-5xl mx-auto">
-          <div className="grid lg:grid-cols-[1fr_360px] gap-8 items-end">
-            <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-[#e5e5e5] bg-[#f8f8f8] px-3 py-1 text-xs font-medium text-[#606060] mb-4">
-                <span className="h-2 w-2 rounded-full bg-[#1B4F72]" />
-                3分で書き始める
-              </div>
-              <h1 className="text-4xl md:text-5xl font-bold leading-tight text-[#0f0f0f]">
-                小さな困りごとを、
-                <br className="hidden sm:block" />
-                小さなアプリで解決。
-              </h1>
-              <p className="max-w-2xl text-sm md:text-base text-[#606060] leading-relaxed mt-4">
-                APLZは、町内会・学校・個人事業主・イベント運営などの「外注するほどではないけど毎回めんどう」な作業を、投稿して小さなアプリで解決する場所です。
-              </p>
-              <div className="flex flex-wrap items-center gap-3 mt-6">
-                <Link
-                  href="/requests/new"
-                  className="inline-flex min-h-12 items-center justify-center px-6 rounded-lg bg-[#1B4F72] text-white font-semibold text-sm hover:bg-[#15415F] transition-colors"
-                >
-                  困りごとを書く
-                </Link>
-                <Link
-                  href="/requests?filter=unsolved"
-                  className="inline-flex min-h-12 items-center justify-center px-5 rounded-lg border border-[#d8d8d8] text-[#0f0f0f] font-semibold text-sm hover:bg-[#f5f5f5] transition-colors"
-                >
-                  未解決を見る
-                </Link>
-              </div>
-            </div>
 
-            <div className="rounded-lg border border-[#e5e5e5] bg-white p-4">
-              <p className="text-sm font-semibold text-[#0f0f0f] mb-3">
-                迷ったら、この順で進めます
-              </p>
-              <div className="space-y-3">
-                {FLOW_STEPS.map((step, index) => (
-                  <div key={step.title} className="flex gap-3">
-                    <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#f5f5f5] text-[#1B4F72]">
-                      <step.icon size={16} />
-                    </span>
-                    <div>
-                      <p className="text-sm font-semibold text-[#0f0f0f]">
-                        {index + 1}. {step.title}
-                      </p>
-                      <p className="text-xs text-[#606060] leading-relaxed mt-0.5">
-                        {step.text}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+      <section className="relative flex min-h-[calc(100svh-112px)] max-h-[720px] items-center overflow-hidden border-b border-[#e5e5e5] bg-white px-5 pb-28 pt-16 sm:px-8 sm:pb-32">
+        <div className="mx-auto w-full max-w-5xl">
+          <div className="max-w-2xl">
+            <p className="mb-4 text-sm font-semibold text-[#1B4F72]">小さな困りごとを、小さなアプリで。</p>
+            <h1 className="text-6xl font-bold leading-none text-[#0f0f0f] sm:text-7xl" style={{ fontFamily: "var(--font-baloo-2)" }}>
+              APLZ
+            </h1>
+            <p className="mt-7 text-lg font-medium leading-9 text-[#292929] sm:text-xl">
+              暮らしや仕事の「毎回ちょっと面倒」を書く。
+              <br />
+              作る人と話して、ちょうどよい道具にする。
+            </p>
+            <p className="mt-4 max-w-xl text-sm leading-7 text-[#606060]">
+              困っている人、作る人、使いたい人が、小さなWebアプリを通して出会う場所です。
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link
+                href="/for-requesters"
+                className="inline-flex min-h-12 items-center gap-2 rounded-lg bg-[#1B4F72] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#15415F]"
+              >
+                困りごとを書きたい
+                <ArrowRight size={16} />
+              </Link>
+              <Link
+                href="#choose"
+                className="inline-flex min-h-12 items-center gap-2 rounded-lg border border-[#cfcfcf] bg-white px-5 py-3 text-sm font-semibold text-[#0f0f0f] transition-colors hover:bg-[#f5f5f5]"
+              >
+                自分に合う入口を選ぶ
+                <ArrowDown size={16} />
+              </Link>
             </div>
           </div>
         </div>
-      </section>
-
-      <section className="max-w-5xl mx-auto px-4 pb-8">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          {metrics.map((metric) => (
-            <MetricTile key={metric.label} {...metric} />
-          ))}
-        </div>
-      </section>
-
-      <section className="max-w-3xl mx-auto px-4 pb-8">
-        <form action="/requests" className="relative">
-          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#909090]" />
-          <input
-            name="q"
-            placeholder="当番表、集計、予約、連絡文などで検索"
-            className="w-full bg-[#f5f5f5] border border-[#e5e5e5] rounded-lg pl-11 pr-4 py-3.5 text-sm focus:outline-none focus:border-[#1B4F72]"
+        <div className="absolute inset-x-0 bottom-0 h-16 sm:h-20" aria-hidden="true">
+          <Image
+            src="/images/aplz-brand-strip.jpg"
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover object-center"
           />
-        </form>
+        </div>
       </section>
 
-      <section className="max-w-5xl mx-auto px-4 pb-10">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-3">
-          <div>
-            <h2 className="text-sm font-semibold text-[#0f0f0f]">カテゴリから探す</h2>
-            <p className="text-sm text-[#606060] mt-1">
-              身近な作業単位で、解決できそうな困りごとを見つけられます。
+      <section id="choose" className="border-b border-[#e5e5e5] bg-[#f7f7f5] px-4 py-16 sm:py-20">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-8 max-w-2xl">
+            <p className="text-xs font-semibold text-[#909090]">目的から選ぶ</p>
+            <h2 className="mt-2 text-2xl font-bold text-[#0f0f0f] sm:text-3xl">今日は、何をしに来ましたか？</h2>
+            <p className="mt-3 text-sm leading-7 text-[#606060]">
+              目的ごとに、必要な情報と次の行動だけをまとめています。
             </p>
           </div>
-          <Link href="/requests" className="inline-flex items-center gap-1 text-sm text-[#1B4F72] hover:underline">
-            すべてのカテゴリ
-            <ArrowRight size={14} />
-          </Link>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {REQUEST_CATEGORIES.map((category) => (
-            <Link
-              key={category}
-              href={`/use-cases/${getUseCaseByCategory(category)?.slug ?? "other"}`}
-              className="px-3 py-1.5 rounded-lg border border-[#e5e5e5] bg-white text-sm text-[#606060] hover:border-[#1B4F72] hover:text-[#1B4F72] transition-colors"
-            >
-              {category}
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      <section className="max-w-[1800px] mx-auto px-4 pb-10">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-medium text-[#909090]">新着の困りごと</h2>
-          <Link href="/requests" className="text-sm text-[#1B4F72] hover:underline">
-            すべて見る
-          </Link>
-        </div>
-        {requestList.length === 0 ? (
-          <EmptyRequest href="/requests/new" text="まだ困りごとはありません" />
-        ) : (
-          <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {requestList.map((request) => (
-              <RequestCard key={request.id} request={request} compact />
+          <div className="grid gap-4 md:grid-cols-3">
+            {AUDIENCES.map((audience) => (
+              <Link
+                key={audience.href}
+                href={audience.href}
+                className="group flex min-h-[260px] flex-col rounded-lg border border-[#dedede] bg-white p-6 transition-colors hover:border-[#a9a9a9]"
+              >
+                <span className={`inline-flex h-11 w-11 items-center justify-center rounded-lg ${audience.accent}`}>
+                  <audience.icon size={21} />
+                </span>
+                <p className="mt-6 text-xs font-semibold text-[#909090]">{audience.label}</p>
+                <h3 className="mt-1 text-xl font-bold text-[#0f0f0f]">{audience.title}</h3>
+                <p className="mt-3 flex-1 text-sm leading-7 text-[#606060]">{audience.description}</p>
+                <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-[#1B4F72]">
+                  {audience.action}
+                  <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" />
+                </span>
+              </Link>
             ))}
           </div>
-        )}
-      </section>
-
-      <section className="max-w-[1800px] mx-auto px-4 pb-10">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-medium text-[#909090]">回答済み・解決済みの困りごと</h2>
-          <Link href="/requests?filter=solved" className="text-sm text-[#1B4F72] hover:underline">
-            解決済みを見る
-          </Link>
         </div>
-        {solvedRequestList.length === 0 ? (
-          <EmptyRequest href="/requests" text="まだ解決済みの困りごとはありません" />
-        ) : (
-          <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {solvedRequestList.map((request) => (
-              <RequestCard key={request.id} request={request} compact />
-            ))}
-          </div>
-        )}
       </section>
 
-      <section id="apps" className="max-w-[1800px] mx-auto px-4 pb-12">
-        <h2 className="text-sm font-medium text-[#909090] mb-4">
-          公開されたアプリ
-        </h2>
-        <div className="flex justify-end -mt-8 mb-4">
-          <Link href="/apps" className="text-sm text-[#1B4F72] hover:underline">
-            アプリ一覧を見る
-          </Link>
+      <section className="border-b border-[#e5e5e5] bg-white px-4 py-16 sm:py-24">
+        <div className="mx-auto max-w-6xl">
+          <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
+            <div>
+              <p className="text-xs font-semibold text-[#909090]">APLZの進み方</p>
+              <h2 className="mt-2 text-2xl font-bold leading-tight text-[#0f0f0f] sm:text-3xl">
+                仕様書からではなく、
+                <br />
+                ひとつの違和感から。
+              </h2>
+              <p className="mt-4 text-sm leading-7 text-[#606060]">
+                大きな計画や完璧な説明は必要ありません。困る場面を言葉にし、会話し、試せる大きさまで小さくします。
+              </p>
+            </div>
+            <ol className="divide-y divide-[#e5e5e5] border-y border-[#e5e5e5]">
+              {FLOW.map((step) => (
+                <li key={step.number} className="grid gap-3 py-6 sm:grid-cols-[52px_1fr]">
+                  <span className="font-mono text-sm font-semibold text-[#B83232]">{step.number}</span>
+                  <div>
+                    <h3 className="text-base font-bold text-[#0f0f0f]">{step.title}</h3>
+                    <p className="mt-2 text-sm leading-7 text-[#606060]">{step.description}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
         </div>
-
-        {appList.length === 0 ? (
-          <div className="text-center py-16 bg-[#f5f5f5] border border-[#e5e5e5] rounded-xl">
-            <p className="text-[#606060] mb-4">まだアプリがありません</p>
-            <Link
-              href="/publish"
-              className="inline-block px-5 py-2 rounded-lg bg-[#1B4F72] text-white font-semibold text-sm hover:bg-[#15415F] transition-colors"
-            >
-              最初のアプリを公開する
-            </Link>
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4">
-            {appList.map((app) => (
-              <AppCard
-                key={app.id}
-                slug={app.slug}
-                name={app.name}
-                appUrl={`${r2PublicUrl}/${app.slug}/index.html`}
-                avgRating={app.avg_rating}
-                ratingCount={app.rating_count}
-                commentCount={app.comment_count}
-                createdAt={app.created_at}
-                authorName={app.profile_display_name || app.author_name}
-                avatarUrl={app.profile_avatar_url}
-                version={app.version}
-              />
-            ))}
-          </div>
-        )}
       </section>
 
-      <section className="max-w-5xl mx-auto px-4 pb-20">
-        <div className="bg-[#f5f5f5] border border-[#e5e5e5] rounded-xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h2 className="text-lg font-bold text-[#0f0f0f]">開発者として参加する</h2>
-            <p className="text-sm text-[#606060] mt-1">
-              小さな困りごとを見つけて、HTMLアプリや公開済みAPLZアプリで回答できます。
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Link
-              href="/requests?filter=unsolved"
-              className="px-4 py-2 rounded-lg bg-[#1B4F72] text-white text-sm font-medium hover:bg-[#15415F] transition-colors"
-            >
-              未解決を見る
-            </Link>
-            <Link
-              href="/requests"
-              className="px-4 py-2 rounded-lg border border-[#e5e5e5] bg-white text-[#606060] text-sm font-medium hover:shadow-md transition-all"
-            >
-              困りごと一覧を見る
-            </Link>
-          </div>
+      <section className="border-b border-[#e5e5e5] bg-[#f7f7f5] px-4 py-14 sm:py-16">
+        <div className="mx-auto grid max-w-6xl gap-8 md:grid-cols-3">
+          <Principle icon={MessageCircleQuestion} title="会話で補える" text="分からないことは質問できる。最初から全部を決める必要はありません。" />
+          <Principle icon={Sparkles} title="小さく始められる" text="一つの作業、一つの画面から。使えるかどうかを先に確かめます。" />
+          <Principle icon={ShieldCheck} title="安全を先に考える" text="扱うデータや外部通信を明記し、個人情報を持ちすぎない設計を大切にします。" />
+        </div>
+      </section>
+
+      <section className="bg-white px-4 py-16 text-center sm:py-20">
+        <div className="mx-auto max-w-2xl">
+          <h2 className="text-2xl font-bold text-[#0f0f0f] sm:text-3xl">その面倒、まず一言にしてみる。</h2>
+          <p className="mt-3 text-sm leading-7 text-[#606060]">3分ほどで書き始められます。細かい条件は、あとから足せます。</p>
+          <Link
+            href="/requests/new"
+            className="mt-6 inline-flex min-h-12 items-center gap-2 rounded-lg bg-[#1B4F72] px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#15415F]"
+          >
+            困りごとを書く
+            <ArrowRight size={16} />
+          </Link>
         </div>
       </section>
     </main>
   );
 }
 
-function MetricTile({
-  label,
-  value,
+function Principle({
   icon: Icon,
-  href,
+  title,
+  text,
 }: {
-  label: string;
-  value: number;
-  icon: ComponentType<{ size?: number; className?: string }>;
-  href: string;
+  icon: typeof ShieldCheck;
+  title: string;
+  text: string;
 }) {
   return (
-    <Link
-      href={href}
-      className="group rounded-lg border border-[#e5e5e5] bg-white px-4 py-3 hover:shadow-md transition-all"
-    >
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <p className="text-2xl font-bold text-[#0f0f0f] leading-none">{value}</p>
-          <p className="text-xs text-[#606060] mt-1.5">{label}</p>
-        </div>
-        <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-[#f5f5f5] text-[#1B4F72] group-hover:bg-[#1B4F72] group-hover:text-white transition-colors">
-          <Icon size={18} />
-        </span>
+    <div className="grid grid-cols-[40px_1fr] gap-3">
+      <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-[#dedede] bg-white text-[#1B4F72]">
+        <Icon size={19} />
+      </span>
+      <div>
+        <h3 className="font-semibold text-[#0f0f0f]">{title}</h3>
+        <p className="mt-1 text-sm leading-6 text-[#606060]">{text}</p>
       </div>
-    </Link>
-  );
-}
-
-async function enrichRequests(supabase: ReturnType<typeof createServerClient>, requests: Record<string, unknown>[]) {
-  const requestIds = requests.map((request) => request.id as string);
-  const userIds = [...new Set(requests.map((request) => request.user_id as string | null).filter(Boolean))];
-
-  const [{ data: solutions }, { data: comments }, { data: profiles }] =
-    await Promise.all([
-      requestIds.length
-        ? supabase.from("solutions").select("request_id").in("request_id", requestIds)
-        : Promise.resolve({ data: [] }),
-      requestIds.length
-        ? supabase.from("request_comments").select("request_id").in("request_id", requestIds)
-        : Promise.resolve({ data: [] }),
-      userIds.length
-        ? supabase.from("profiles").select("id, display_name, avatar_url").in("id", userIds)
-        : Promise.resolve({ data: [] }),
-    ]);
-
-  const solutionCounts: Record<string, number> = {};
-  for (const row of solutions ?? []) {
-    solutionCounts[row.request_id] = (solutionCounts[row.request_id] ?? 0) + 1;
-  }
-  const commentCounts: Record<string, number> = {};
-  for (const row of comments ?? []) {
-    commentCounts[row.request_id] = (commentCounts[row.request_id] ?? 0) + 1;
-  }
-  const profileMap: Record<string, { display_name: string | null; avatar_url: string | null }> = {};
-  for (const profile of profiles ?? []) {
-    profileMap[profile.id] = {
-      display_name: profile.display_name,
-      avatar_url: profile.avatar_url,
-    };
-  }
-
-  return requests.map((request) => ({
-    ...request,
-    answer_count: solutionCounts[request.id as string] ?? 0,
-    comment_count: commentCounts[request.id as string] ?? 0,
-    author: request.user_id ? profileMap[request.user_id as string] ?? null : null,
-  })) as Array<{
-    id: string;
-    slug: string;
-    title: string;
-    category: string | null;
-    status: string;
-    description: string | null;
-    desired_outcome: string | null;
-    usage_frequency: string | null;
-    privacy_level: string | null;
-    deadline: string | null;
-    is_beginner_friendly: boolean;
-    created_at: string;
-    updated_at: string;
-    answer_count: number;
-    comment_count: number;
-    author: { display_name: string | null; avatar_url: string | null } | null;
-  }>;
-}
-
-async function enrichApps(supabase: ReturnType<typeof createServerClient>, apps: Record<string, unknown>[]) {
-  const { data: allRatings } = await supabase
-    .from("ratings")
-    .select("app_id, usability, design, idea");
-
-  const ratingsByApp: Record<string, { sum: number; count: number }> = {};
-  for (const rating of allRatings ?? []) {
-    if (!ratingsByApp[rating.app_id]) {
-      ratingsByApp[rating.app_id] = { sum: 0, count: 0 };
-    }
-    ratingsByApp[rating.app_id].sum += rating.usability + rating.design + rating.idea;
-    ratingsByApp[rating.app_id].count += 1;
-  }
-
-  const userIds = [...new Set(apps.map((app) => app.user_id as string | null).filter(Boolean))];
-  const { data: profiles } = userIds.length > 0
-    ? await supabase
-        .from("profiles")
-        .select("id, display_name, avatar_url")
-        .in("id", userIds)
-    : { data: [] };
-  const profileMap: Record<string, { display_name: string | null; avatar_url: string | null }> = {};
-  for (const profile of profiles ?? []) {
-    profileMap[profile.id] = { display_name: profile.display_name, avatar_url: profile.avatar_url };
-  }
-
-  return apps.map((app) => {
-    const rd = ratingsByApp[app.id as string];
-    const profile = app.user_id ? profileMap[app.user_id as string] : null;
-    const comments = app.comments as Array<{ count: number }> | undefined;
-    return {
-      ...app,
-      comment_count: comments?.[0]?.count ?? 0,
-      rating_count: rd?.count ?? 0,
-      avg_rating: rd ? rd.sum / rd.count / 3 : 0,
-      profile_avatar_url: profile?.avatar_url ?? null,
-      profile_display_name: profile?.display_name ?? null,
-    };
-  }) as Array<{
-    id: string;
-    slug: string;
-    name: string;
-    created_at: string;
-    author_name?: string;
-    version?: number;
-    comment_count: number;
-    rating_count: number;
-    avg_rating: number;
-    profile_avatar_url: string | null;
-    profile_display_name: string | null;
-  }>;
-}
-
-function EmptyRequest({ text, href }: { text: string; href: string }) {
-  return (
-    <div className="text-center py-10 bg-[#f5f5f5] border border-[#e5e5e5] rounded-xl">
-      <p className="text-[#606060] mb-4">{text}</p>
-      <Link
-        href={href}
-        className="inline-block px-5 py-2 rounded-lg bg-[#1B4F72] text-white font-semibold text-sm hover:bg-[#15415F] transition-colors"
-      >
-        見に行く
-      </Link>
     </div>
   );
 }

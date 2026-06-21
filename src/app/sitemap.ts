@@ -33,6 +33,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: absoluteUrl("/articles"), lastModified: new Date(), changeFrequency: "weekly", priority: 0.8 },
     { url: absoluteUrl("/tools"), lastModified: new Date(), changeFrequency: "weekly", priority: 0.8 },
     { url: absoluteUrl("/templates"), lastModified: new Date(), changeFrequency: "weekly", priority: 0.5 },
+    { url: absoluteUrl("/for-requesters"), lastModified: new Date(), changeFrequency: "monthly", priority: 0.85 },
+    { url: absoluteUrl("/for-developers"), lastModified: new Date(), changeFrequency: "monthly", priority: 0.85 },
+    { url: absoluteUrl("/find-apps"), lastModified: new Date(), changeFrequency: "weekly", priority: 0.85 },
   ];
 
   const useCaseRoutes: MetadataRoute.Sitemap = USE_CASES.map((useCase) => ({

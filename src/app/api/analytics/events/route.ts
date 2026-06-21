@@ -17,6 +17,10 @@ const SESSION_MINUTES = 30;
 
 export async function POST(req: NextRequest) {
   try {
+    if (process.env.NODE_ENV !== "production") {
+      return NextResponse.json({ success: true, skipped: "development" }, { status: 202 });
+    }
+
     const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
     const eventName = typeof body.event_name === "string" ? body.event_name : "";
     if (!(PUBLIC_ANALYTICS_EVENTS as readonly string[]).includes(eventName)) {
