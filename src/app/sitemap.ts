@@ -10,7 +10,7 @@ export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const db = createServerClient();
-  const [{ data: requests }, { data: apps }] = await Promise.all([
+  const [{ data: requests }, { data: apps }, { data: communities }] = await Promise.all([
     db
       .from("requests")
       .select("slug, updated_at, created_at")
@@ -22,6 +22,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .from("apps")
       .select("slug, created_at, last_published_at")
       .eq("is_public", true)
+      .order("created_at", { ascending: false })
+      .limit(5000),
+    db
+      .from("communities")
+      .select("slug, created_at")
+      .eq("is_private", false)
       .order("created_at", { ascending: false })
       .limit(5000),
   ]);
@@ -67,6 +73,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     changeFrequency: "weekly",
     priority: 0.6,
   }));
+  const communityRoutes: MetadataRoute.Sitemap = (communities ?? []).map((community) => ({
+    url: absoluteUrl(`/c/${community.slug}`),
+    lastModified: new Date(community.created_at),
+    changeFrequency: "weekly",
+    priority: 0.55,
+  }));
   const toolRoutes: MetadataRoute.Sitemap = GENERATED_TOOLS.map((tool) => ({
     url: absoluteUrl(`/tools/${tool.slug}`),
     lastModified: new Date(),
@@ -74,5 +86,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.65,
   }));
 
-  return [...staticRoutes, ...useCaseRoutes, ...articleRoutes, ...toolRoutes, ...requestRoutes, ...appRoutes];
+  return [
+    ...staticRoutes,
+    ...useCaseRoutes,
+    ...articleRoutes,
+    ...toolRoutes,
+    ...requestRoutes,
+    ...appRoutes,
+    ...communityRoutes,
+  ];
 }

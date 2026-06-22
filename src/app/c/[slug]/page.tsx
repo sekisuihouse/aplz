@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createServerClient } from "@/lib/supabase";
 import { createAuthServerClient } from "@/lib/supabase-server";
 import AppCard from "@/app/components/AppCard";
+import { pageMetadata } from "@/lib/seo";
 
 export const revalidate = 15;
 
@@ -15,16 +16,24 @@ export async function generateMetadata({ params }: Props) {
   const supabase = createServerClient();
   const { data: community } = await supabase
     .from("communities")
-    .select("name, description")
+    .select("name, description, is_private")
     .eq("slug", slug)
     .single();
 
-  if (!community) return { title: "コミュニティが見つかりません" };
+  if (!community) return pageMetadata({
+    title: "コミュニティが見つかりません | APLZ",
+    description: "指定されたコミュニティは見つかりませんでした。",
+    path: `/c/${slug}`,
+    noIndex: true,
+  });
 
-  return {
-    title: `${community.name} — aplz`,
-    description: community.description || community.name,
-  };
+  return pageMetadata({
+    title: `${community.name} | APLZコミュニティ`,
+    description: community.description || `${community.name}で公開されている小さなWebアプリを確認できます。`,
+    path: `/c/${slug}`,
+    noIndex: community.is_private,
+    keywords: [community.name, `${community.name} アプリ`, "APLZ コミュニティ"],
+  });
 }
 
 export default async function CommunityPage({ params }: Props) {

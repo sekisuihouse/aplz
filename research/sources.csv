@@ -28,3 +28,6 @@
 "S027","official","Creating helpful, reliable, people-first content","https://developers.google.com/search/docs/fundamentals/creating-helpful-content","検索流入だけを目的にしない記事品質の確認"
 "S028","official","Control your snippets in search results","https://developers.google.com/search/docs/appearance/snippet","検索ごとのスニペット生成と説明文設計の確認"
 "S029","official","Influencing title links in Google Search","https://developers.google.com/search/docs/advanced/appearance/good-titles-snippets","title・H1・リンク文言の整合性確認"
+"S030","official","Build and submit a sitemap","https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap","サイトマップの構成・送信方法・上限の確認"
+"S031","official","Ask Google to recrawl your URLs","https://developers.google.com/search/docs/crawling-indexing/ask-google-to-recrawl","多数URLはサイトマップ、少数URLはURL検査を使う方針の確認"
+"S032","official","How to specify a canonical URL","https://developers.google.com/search/docs/crawling-indexing/consolidate-duplicate-urls","canonicalとサイトマップURLを一致させる方針の確認"
