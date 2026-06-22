@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: ArticlePageProps) {
     type: "article",
     publishedTime: article.publishedAt,
     modifiedTime: geo.updatedAt,
-    keywords: article.seoKeywords ?? article.keywords,
+    keywords: geo.searchQueries,
   });
 }
 
@@ -61,10 +61,10 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         name: "APLZ 読みもの",
         url: absoluteUrl("/articles"),
       },
-      hasPart: article.sections.map((section, index) => ({
+      hasPart: geo.sections.map((section) => ({
         "@type": "WebPageElement",
         name: section.heading,
-        url: absoluteUrl(`/articles/${article.slug}#section-${index + 1}`),
+        url: absoluteUrl(`/articles/${article.slug}#${section.anchor}`),
       })),
       about: [
         article.category,
@@ -92,7 +92,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           url: absoluteUrl("/icon-512.png"),
         },
       },
-      keywords: (article.seoKeywords ?? article.keywords).join(", "),
+      keywords: geo.searchQueries.join(", "),
     },
     {
       "@context": "https://schema.org",
@@ -170,8 +170,8 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         </section>
 
         <div className="space-y-12">
-          {article.sections.map((section, index) => (
-            <section id={`section-${index + 1}`} key={`${section.heading}-${index}`} className="scroll-mt-24">
+          {geo.sections.map((section, index) => (
+            <section id={section.anchor} key={`${section.heading}-${index}`} className="scroll-mt-24">
               <h2 className="text-2xl font-bold text-[#0f0f0f] mb-5 leading-snug">{section.heading}</h2>
               <div className="space-y-5">
                 {section.body.map((paragraph) => (

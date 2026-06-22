@@ -24,6 +24,9 @@ for (const article of articles) {
   if (geo.directAnswer.length < 30) reasons.push("結論が短い");
   if (geo.keyPoints.length < 2) reasons.push("要点が2件未満");
   if (geo.keyPoints.some((point) => !point.summary || !point.anchor)) reasons.push("要点の要約またはアンカーがない");
+  if (geo.sections.length !== article.sections.length) reasons.push("検索意図を反映した見出しが不足している");
+  if (geo.searchQueries.length !== 10) reasons.push("検索文が10件ではない");
+  if (new Set(geo.searchQueries.map((query) => query.toLowerCase().replace(/\s+/g, ""))).size !== 10) reasons.push("記事内で検索文が重複している");
   if (geo.sources.length < 2) reasons.push("関連する公的資料が2件未満");
   if (geo.sources.some((source) => !source.url.startsWith("https://"))) reasons.push("HTTPSではない資料URLがある");
   if (!article.publishedAt || !geo.updatedAt) reasons.push("公開日または更新日がない");
@@ -37,6 +40,8 @@ const robots = fs.readFileSync(path.join(root, "src/app/robots.ts"), "utf8");
 const templateChecks = [
   [articlePage.includes("abstract: geo.directAnswer"), "Article JSON-LDにabstractがない"],
   [articlePage.includes("citation: geo.sources"), "Article JSON-LDにcitationがない"],
+  [articlePage.includes("keywords: geo.searchQueries"), "記事メタデータに検索文がない"],
+  [articlePage.includes("geo.searchQueries.join"), "Article JSON-LDに検索文がない"],
   [articlePage.includes("APLZ編集部"), "編集主体が表示されていない"],
   [articlePage.includes("関連する一次情報・公的資料"), "関連資料が画面に表示されていない"],
   [robots.includes('userAgent: "OAI-SearchBot"'), "OAI-SearchBotの規則がない"],
@@ -54,6 +59,7 @@ const report = `# GEO検証
 - 共通テンプレートの不備: ${templateFailures.length}
 - 各記事の結論・要点: ${articles.length - failures.length}/${articles.length}
 - 各記事の公的資料: ${articles.length - failures.length}/${articles.length}
+- 各記事の検索文10件: ${articles.length - failures.length}/${articles.length}
 
 ## 記事データの不備
 

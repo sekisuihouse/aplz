@@ -12,7 +12,8 @@
     "content:publish:seo": "node scripts/publish-and-optimize-seo.mjs",
     "content:check:published-seo": "node scripts/validate-published-seo.mjs",
     "content:check:bias": "node scripts/detect-aplz-bias.mjs",
-    "content:check:geo": "node scripts/validate-geo.mjs"
+    "content:check:geo": "node scripts/validate-geo.mjs",
+    "content:search-map": "node scripts/generate-article-search-map.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.999.0",

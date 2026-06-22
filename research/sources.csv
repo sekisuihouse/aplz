@@ -24,3 +24,7 @@
 "S023","official","デジタル庁デザインシステム アクセシビリティ","https://design.digital.go.jp/guidance/accessibility/","UI・情報設計記事の公式ガイダンス"
 "S024","official","IPA AIセキュリティ","https://www.ipa.go.jp/digital/ai/security/index.html","AI記事の安全性に関する公的資料"
 "S025","official","個人情報保護法令・ガイドライン","https://www.ppc.go.jp/personalinfo/legal/","データを扱う記事の法令・ガイドライン"
+"S026","official","Google SEO Starter Guide","https://developers.google.com/search/docs/fundamentals/seo-starter-guide","検索エンジンの理解とキーワード詰め込み回避の確認"
+"S027","official","Creating helpful, reliable, people-first content","https://developers.google.com/search/docs/fundamentals/creating-helpful-content","検索流入だけを目的にしない記事品質の確認"
+"S028","official","Control your snippets in search results","https://developers.google.com/search/docs/appearance/snippet","検索ごとのスニペット生成と説明文設計の確認"
+"S029","official","Influencing title links in Google Search","https://developers.google.com/search/docs/advanced/appearance/good-titles-snippets","title・H1・リンク文言の整合性確認"
