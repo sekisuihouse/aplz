@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { ALL_ARTICLES } from "@/lib/articles";
+import { getArticleGeo } from "@/lib/article-geo";
 import { GENERATED_TOOLS } from "@/lib/generated-tools";
 import { createServerClient } from "@/lib/supabase";
 import { USE_CASES } from "@/lib/use-cases";
@@ -36,6 +37,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: absoluteUrl("/for-requesters"), lastModified: new Date(), changeFrequency: "monthly", priority: 0.85 },
     { url: absoluteUrl("/for-developers"), lastModified: new Date(), changeFrequency: "monthly", priority: 0.85 },
     { url: absoluteUrl("/find-apps"), lastModified: new Date(), changeFrequency: "weekly", priority: 0.85 },
+    { url: absoluteUrl("/editorial-policy"), lastModified: new Date(), changeFrequency: "monthly", priority: 0.4 },
   ];
 
   const useCaseRoutes: MetadataRoute.Sitemap = USE_CASES.map((useCase) => ({
@@ -47,7 +49,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const articleRoutes: MetadataRoute.Sitemap = ALL_ARTICLES.map((article) => ({
     url: absoluteUrl(`/articles/${article.slug}`),
-    lastModified: new Date(article.updatedAt),
+    lastModified: new Date(getArticleGeo(article).updatedAt),
     changeFrequency: "monthly",
     priority: 0.7,
   }));

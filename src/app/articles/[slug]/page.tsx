@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowRight, BookOpen, CheckCircle2, Clock3, PenLine } from "lucide-react";
+import { ArrowRight, BookOpen, CheckCircle2, Clock3, ExternalLink, PenLine } from "lucide-react";
+import { getArticleGeo, getRelatedArticles } from "@/lib/article-geo";
 import { ALL_ARTICLES, getAnyArticle } from "@/lib/articles";
 import { JsonLd, absoluteUrl, breadcrumbJsonLd, pageMetadata } from "@/lib/seo";
 
@@ -16,13 +17,14 @@ export async function generateMetadata({ params }: ArticlePageProps) {
   const { slug } = await params;
   const article = getAnyArticle(slug);
   if (!article) return { title: "記事が見つかりません | APLZ" };
+  const geo = getArticleGeo(article);
   return pageMetadata({
     title: article.seoTitle ?? `${article.title} | APLZ`,
     description: article.seoDescription ?? article.description,
     path: `/articles/${article.slug}`,
     type: "article",
     publishedTime: article.publishedAt,
-    modifiedTime: article.updatedAt,
+    modifiedTime: geo.updatedAt,
     keywords: article.seoKeywords ?? article.keywords,
   });
 }
@@ -31,11 +33,8 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   const { slug } = await params;
   const article = getAnyArticle(slug);
   if (!article) notFound();
-  const relatedArticles = ALL_ARTICLES.filter(
-    (item) => item.slug !== article.slug && item.category === article.category
-  )
-    .concat(ALL_ARTICLES.filter((item) => item.slug !== article.slug && item.category !== article.category))
-    .slice(0, 3);
+  const geo = getArticleGeo(article);
+  const relatedArticles = getRelatedArticles(article, ALL_ARTICLES);
 
   const jsonLd = [
     breadcrumbJsonLd([
@@ -50,11 +49,23 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
       description: article.seoDescription ?? article.description,
       inLanguage: "ja",
       datePublished: article.publishedAt,
-      dateModified: article.updatedAt,
+      dateModified: geo.updatedAt,
       mainEntityOfPage: absoluteUrl(`/articles/${article.slug}`),
       articleSection: article.category,
       wordCount: article.wordCount,
       isAccessibleForFree: true,
+      abstract: geo.directAnswer,
+      citation: geo.sources.map((source) => source.url),
+      isPartOf: {
+        "@type": "CollectionPage",
+        name: "APLZ 読みもの",
+        url: absoluteUrl("/articles"),
+      },
+      hasPart: article.sections.map((section, index) => ({
+        "@type": "WebPageElement",
+        name: section.heading,
+        url: absoluteUrl(`/articles/${article.slug}#section-${index + 1}`),
+      })),
       about: [
         article.category,
         article.secondaryWorld,
@@ -69,8 +80,8 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         : undefined,
       author: {
         "@type": "Organization",
-        name: "APLZ",
-        url: absoluteUrl("/"),
+        name: "APLZ編集部",
+        url: absoluteUrl("/editorial-policy"),
       },
       publisher: {
         "@type": "Organization",
@@ -97,12 +108,6 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     },
   ];
 
-  const takeaways = [
-    article.sections[0]?.heading,
-    article.sections[1]?.heading,
-    article.faqs[0]?.question,
-  ].filter(Boolean);
-
   return (
     <main className="bg-[#fbfbfa]">
       <JsonLd data={jsonLd} />
@@ -118,16 +123,27 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             </span>
             <span className="inline-flex items-center gap-1">
               <Clock3 size={13} />
-              約3分で読めます
+              約{geo.readingMinutes}分
             </span>
-            <span>{new Date(article.publishedAt).toLocaleDateString("ja-JP")}</span>
+            <span>
+              公開 <time dateTime={article.publishedAt}>{formatDate(article.publishedAt)}</time>
+            </span>
+            <span>
+              更新 <time dateTime={geo.updatedAt}>{formatDate(geo.updatedAt)}</time>
+            </span>
           </div>
           <h1 className="text-[32px] md:text-[44px] font-bold text-[#0f0f0f] leading-[1.18] tracking-normal">
             {article.title}
           </h1>
-          <p className="text-lg md:text-xl text-[#404040] leading-9 mt-7">
-            {article.lead}
+          <p className="mt-5 text-sm text-[#606060]">
+            編集: <Link href="/editorial-policy" className="font-medium text-[#1B4F72] hover:underline">APLZ編集部</Link>
           </p>
+          <section aria-labelledby="direct-answer" className="mt-7 border-l-4 border-[#1B4F72] pl-5">
+            <h2 id="direct-answer" className="text-sm font-bold text-[#1B4F72]">結論</h2>
+            <p className="mt-2 text-lg md:text-xl text-[#303030] leading-9">
+              {geo.directAnswer}
+            </p>
+          </section>
           {article.reader && (
             <div className="mt-7 border-l-4 border-[#1B4F72] bg-white px-5 py-4">
               <p className="text-xs font-semibold text-[#1B4F72] mb-1">この記事が向いている人</p>
@@ -137,20 +153,25 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         </header>
 
         <section className="border-y border-[#e5e5e5] py-6 mb-12">
-          <h2 className="text-sm font-bold text-[#0f0f0f] mb-4">この記事でわかること</h2>
+          <h2 className="text-sm font-bold text-[#0f0f0f] mb-4">この記事の要点</h2>
           <ul className="space-y-3">
-            {takeaways.map((item) => (
-              <li key={item} className="flex gap-3 text-sm text-[#404040] leading-7">
+            {geo.keyPoints.map((item) => (
+              <li key={item.anchor} className="flex gap-3 text-sm text-[#404040] leading-7">
                 <CheckCircle2 size={18} className="mt-1 shrink-0 text-[#1B4F72]" />
-                <span>{item}</span>
+                <span>
+                  <Link href={`#${item.anchor}`} className="font-semibold text-[#0f0f0f] hover:underline">
+                    {item.heading}
+                  </Link>
+                  <span className="block text-[#606060]">{item.summary}</span>
+                </span>
               </li>
             ))}
           </ul>
         </section>
 
         <div className="space-y-12">
-          {article.sections.map((section) => (
-            <section key={section.heading}>
+          {article.sections.map((section, index) => (
+            <section id={`section-${index + 1}`} key={`${section.heading}-${index}`} className="scroll-mt-24">
               <h2 className="text-2xl font-bold text-[#0f0f0f] mb-5 leading-snug">{section.heading}</h2>
               <div className="space-y-5">
                 {section.body.map((paragraph) => (
@@ -180,6 +201,33 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             </div>
           </section>
         )}
+
+        <section className="mt-12 border-t border-[#e5e5e5] pt-8" aria-labelledby="article-sources">
+          <h2 id="article-sources" className="text-xl font-bold text-[#0f0f0f]">
+            関連する一次情報・公的資料
+          </h2>
+          <p className="mt-2 text-sm text-[#606060] leading-7">
+            このテーマの制度、統計、背景を確認するための資料です。制度や数値は更新されるため、リンク先の最新情報も確認してください。
+          </p>
+          <ul className="mt-5 space-y-4">
+            {geo.sources.map((source) => (
+              <li key={source.url}>
+                <a
+                  href={source.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 font-semibold text-[#1B4F72] hover:underline"
+                >
+                  {source.name}
+                  <ExternalLink size={14} aria-hidden="true" />
+                </a>
+                <p className="mt-1 text-sm text-[#606060] leading-7">
+                  {source.organization}。{source.description}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </section>
 
         <section className="mt-10">
           <h2 className="text-2xl font-bold text-[#0f0f0f] mb-5">よくある質問</h2>
@@ -253,4 +301,12 @@ function ArticleMemo({ label, value }: { label: string; value: string }) {
       <p className="text-sm text-[#0f0f0f] leading-7 whitespace-pre-wrap">{value}</p>
     </div>
   );
+}
+
+function formatDate(value: string) {
+  return new Intl.DateTimeFormat("ja-JP", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  }).format(new Date(value));
 }

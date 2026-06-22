@@ -190,6 +190,7 @@ export default async function RootLayout({
               <Link href="/find-apps" className="hover:text-[#0f0f0f]">アプリを探す</Link>
               <Link href="/articles" className="hover:text-[#0f0f0f]">読みもの</Link>
               <Link href="/tools" className="hover:text-[#0f0f0f]">ツール</Link>
+              <Link href="/editorial-policy" className="hover:text-[#0f0f0f]">編集方針</Link>
             </div>
           </div>
         </footer>
