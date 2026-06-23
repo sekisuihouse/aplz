@@ -130,6 +130,29 @@ export default async function RequestDetailPage({ params, searchParams }: Reques
   }));
   const requestUrl = absoluteUrl(`/requests/${request.slug}`);
   const backHref = buildBackHref(query);
+  const discussionComments = [
+    ...enrichedComments.map((comment) => ({
+      "@type": "Comment",
+      text: comment.body,
+      datePublished: comment.created_at,
+      url: `${requestUrl}#comments`,
+      author: {
+        "@type": "Person",
+        name: comment.author?.display_name || "匿名ユーザー",
+      },
+    })),
+    ...enrichedSolutions.map((solution) => ({
+      "@type": "Comment",
+      text: [solution.title, solution.description].filter(Boolean).join("\n\n"),
+      datePublished: solution.created_at,
+      dateModified: solution.updated_at,
+      url: solution.app_slug ? absoluteUrl(`/apps/${solution.app_slug}`) : solution.app_url || requestUrl,
+      author: {
+        "@type": "Person",
+        name: solution.author?.display_name || "APLZユーザー",
+      },
+    })),
+  ];
   const jsonLd = [
     breadcrumbJsonLd([
       { name: "APLZ", path: "/" },
@@ -157,6 +180,8 @@ export default async function RequestDetailPage({ params, searchParams }: Reques
       },
       discussionUrl: requestUrl,
       keywords: [request.category, request.usage_frequency, request.privacy_level].filter(Boolean),
+      commentCount: discussionComments.length,
+      ...(discussionComments.length ? { comment: discussionComments } : {}),
       interactionStatistic: [
         {
           "@type": "InteractionCounter",
