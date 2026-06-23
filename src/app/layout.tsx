@@ -8,7 +8,8 @@ import NavUser from "./components/NavUser";
 import AnalyticsTracker from "./components/AnalyticsTracker";
 import "./globals.css";
 
-const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://aplz.dev";
+const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? "https://aplz.dev").replace(/\/$/, "");
+const homeUrl = `${appUrl}/`;
 
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",
@@ -27,7 +28,7 @@ const baloo2 = Baloo_2({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(appUrl),
+  metadataBase: new URL(homeUrl),
   applicationName: "APLZ",
   title: {
     default: "APLZ — 小さな困りごとを小さなアプリで解決",
@@ -48,7 +49,7 @@ export const metadata: Metadata = {
   creator: "APLZ",
   publisher: "APLZ",
   alternates: {
-    canonical: appUrl,
+    canonical: homeUrl,
   },
   robots: {
     index: true,
@@ -70,7 +71,7 @@ export const metadata: Metadata = {
     title: "APLZ — 小さな困りごとを小さなアプリで解決",
     description:
       "町内会・学校・個人事業主・イベント運営などの日常の小さな困りごとを投稿し、小さなWebアプリで解決する場所です。",
-    url: appUrl,
+    url: homeUrl,
     siteName: "APLZ",
     locale: "ja_JP",
     type: "website",

@@ -4,7 +4,7 @@ import { getArticleGeo } from "@/lib/article-geo";
 import { GENERATED_TOOLS } from "@/lib/generated-tools";
 import { createServerClient } from "@/lib/supabase";
 import { USE_CASES } from "@/lib/use-cases";
-import { SITE_URL, absoluteUrl } from "@/lib/seo";
+import { absoluteUrl } from "@/lib/seo";
 
 export const revalidate = 3600;
 
@@ -33,7 +33,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ]);
 
   const staticRoutes: MetadataRoute.Sitemap = [
-    { url: SITE_URL, lastModified: new Date(), changeFrequency: "daily", priority: 1 },
+    { url: absoluteUrl("/"), lastModified: new Date(), changeFrequency: "daily", priority: 1 },
     { url: absoluteUrl("/requests"), lastModified: new Date(), changeFrequency: "hourly", priority: 0.9 },
     { url: absoluteUrl("/apps"), lastModified: new Date(), changeFrequency: "hourly", priority: 0.85 },
     { url: absoluteUrl("/use-cases"), lastModified: new Date(), changeFrequency: "weekly", priority: 0.8 },
