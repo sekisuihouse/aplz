@@ -6,6 +6,7 @@ export const DEFAULT_OG_IMAGE = "/ogp.png";
 
 export function absoluteUrl(path = "/"): string {
   if (path.startsWith("http://") || path.startsWith("https://")) return path;
+  if (path === "/") return `${SITE_URL}/`;
   return `${SITE_URL}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
