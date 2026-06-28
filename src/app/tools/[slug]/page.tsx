@@ -8,6 +8,8 @@ interface ToolPageProps {
   params: Promise<{ slug: string }>;
 }
 
+export const dynamicParams = false;
+
 export function generateStaticParams() {
   return PUBLISHED_TOOLS.map((tool) => ({ slug: tool.slug }));
 }

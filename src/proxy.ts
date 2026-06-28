@@ -6,7 +6,6 @@ const PROTECTED = [
   "/apps/*/edit",
   "/profile",
   "/c/join",
-  "/requests/new",
   "/dashboard",
   "/admin/reports",
   "/admin/analytics",
@@ -55,9 +54,6 @@ export async function proxy(request: NextRequest) {
   if (!user && isProtected(pathname)) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
-    if (pathname === "/requests/new") {
-      url.searchParams.set("mode", "signup");
-    }
     url.searchParams.set("next", pathname + request.nextUrl.search);
     return NextResponse.redirect(url);
   }
@@ -77,7 +73,6 @@ export const config = {
     "/apps/:path*/edit",
     "/profile",
     "/c/join",
-    "/requests/new",
     "/dashboard",
     "/admin/reports",
     "/admin/analytics",
