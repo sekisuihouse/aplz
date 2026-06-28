@@ -1,11 +1,12 @@
 import Link from "next/link";
 import Image from "next/image";
-import { MessageCircle } from "lucide-react";
+import { ExternalLink, MessageCircle, ShieldCheck } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 
 interface AppCardProps {
   slug: string;
   name: string;
+  description?: string | null;
   appUrl: string;
   avgRating: number;
   ratingCount: number;
@@ -20,6 +21,7 @@ interface AppCardProps {
 export default function AppCard({
   slug,
   name,
+  description,
   appUrl,
   avgRating,
   ratingCount,
@@ -70,6 +72,11 @@ export default function AppCard({
             </span>
           )}
         </h3>
+        {description && (
+          <p className="mt-1 line-clamp-2 text-xs leading-5 text-[#606060]">
+            {description}
+          </p>
+        )}
         {authorName && (
           <div className="flex items-center gap-1.5 mt-0.5">
             {avatarUrl && (
@@ -105,6 +112,19 @@ export default function AppCard({
         <p className="text-xs text-[#909090] mt-1">
           {formatDate(createdAt)}
         </p>
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          <span className="inline-flex items-center gap-1 rounded-md bg-[#f5f5f5] px-1.5 py-0.5 text-[11px] text-[#606060]">
+            <ShieldCheck size={11} />
+            ブラウザ
+          </span>
+          <span className="rounded-md bg-[#f5f5f5] px-1.5 py-0.5 text-[11px] text-[#606060]">
+            保存要確認
+          </span>
+        </div>
+        <span className="mt-3 inline-flex min-h-9 w-full items-center justify-center gap-1 rounded-lg bg-[#1B4F72] px-3 py-2 text-xs font-semibold text-white group-hover:bg-[#15415F]">
+          アプリを試す
+          <ExternalLink size={12} />
+        </span>
       </div>
     </Link>
   );

@@ -21,6 +21,8 @@ interface RequestCardProps {
     updated_at: string;
     answer_count?: number;
     comment_count?: number;
+    completed_app_title?: string | null;
+    completed_app_href?: string | null;
     author?: {
       display_name: string | null;
       avatar_url: string | null;
@@ -74,6 +76,11 @@ export default function RequestCard({
           {!compact && (
             <p className="text-sm text-[#505050] mt-2 line-clamp-3 leading-7">
               {summary}
+            </p>
+          )}
+          {request.completed_app_title && (
+            <p className="mt-3 rounded-lg border border-[#d9eadf] bg-[#f3fbf5] px-3 py-2 text-sm font-semibold text-[#2f6f3e]">
+              完成アプリ: {request.completed_app_title}
             </p>
           )}
         </div>

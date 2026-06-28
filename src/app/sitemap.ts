@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { ALL_ARTICLES } from "@/lib/articles";
 import { getArticleGeo } from "@/lib/article-geo";
-import { GENERATED_TOOLS } from "@/lib/generated-tools";
+import { PUBLISHED_TOOLS } from "@/lib/public-tools";
 import { createServerClient } from "@/lib/supabase";
 import { USE_CASES } from "@/lib/use-cases";
 import { absoluteUrl } from "@/lib/seo";
@@ -38,12 +38,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: absoluteUrl("/apps"), lastModified: new Date(), changeFrequency: "hourly", priority: 0.85 },
     { url: absoluteUrl("/use-cases"), lastModified: new Date(), changeFrequency: "weekly", priority: 0.8 },
     { url: absoluteUrl("/articles"), lastModified: new Date(), changeFrequency: "weekly", priority: 0.8 },
-    { url: absoluteUrl("/tools"), lastModified: new Date(), changeFrequency: "weekly", priority: 0.8 },
     { url: absoluteUrl("/templates"), lastModified: new Date(), changeFrequency: "weekly", priority: 0.5 },
     { url: absoluteUrl("/for-requesters"), lastModified: new Date(), changeFrequency: "monthly", priority: 0.85 },
     { url: absoluteUrl("/for-developers"), lastModified: new Date(), changeFrequency: "monthly", priority: 0.85 },
     { url: absoluteUrl("/find-apps"), lastModified: new Date(), changeFrequency: "weekly", priority: 0.85 },
     { url: absoluteUrl("/editorial-policy"), lastModified: new Date(), changeFrequency: "monthly", priority: 0.4 },
+    { url: absoluteUrl("/terms"), lastModified: new Date(), changeFrequency: "monthly", priority: 0.3 },
+    { url: absoluteUrl("/privacy"), lastModified: new Date(), changeFrequency: "monthly", priority: 0.3 },
+    { url: absoluteUrl("/operator"), lastModified: new Date(), changeFrequency: "monthly", priority: 0.3 },
+    { url: absoluteUrl("/contact"), lastModified: new Date(), changeFrequency: "monthly", priority: 0.3 },
   ];
 
   const useCaseRoutes: MetadataRoute.Sitemap = USE_CASES.map((useCase) => ({
@@ -79,7 +82,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     changeFrequency: "weekly",
     priority: 0.55,
   }));
-  const toolRoutes: MetadataRoute.Sitemap = GENERATED_TOOLS.map((tool) => ({
+  const toolRoutes: MetadataRoute.Sitemap = PUBLISHED_TOOLS.map((tool) => ({
     url: absoluteUrl(`/tools/${tool.slug}`),
     lastModified: new Date(),
     changeFrequency: "monthly",

@@ -8,7 +8,7 @@ export const revalidate = 60;
 export const metadata = pageMetadata({
   title: "公開アプリ一覧 — 小さな業務アプリとデモツール | APLZ",
   description:
-    "APLZで公開された小さなWebアプリ一覧です。当番表、集計、連絡文、受付、材料計算などのアプリを探せます。",
+    "APLZで公開された小さなWebアプリ一覧です。用途、対象、データ保存や外部通信の注意を見ながら試せます。",
   path: "/apps",
   keywords: ["小さなWebアプリ", "業務アプリ 一覧", "当番表 アプリ", "集計 アプリ"],
 });
@@ -76,6 +76,7 @@ export default async function AppsPage() {
               key={app.id}
               slug={app.slug}
               name={app.name}
+              description={app.description}
               appUrl={`${r2PublicUrl}/${app.slug}/index.html`}
               avgRating={app.avg_rating}
               ratingCount={app.rating_count}
@@ -132,6 +133,7 @@ async function enrichApps(supabase: ReturnType<typeof createServerClient>, apps:
     id: string;
     slug: string;
     name: string;
+    description?: string | null;
     created_at: string;
     author_name?: string;
     version?: number;

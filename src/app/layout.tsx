@@ -122,22 +122,22 @@ export default async function RootLayout({
             <div className="flex items-center gap-3">
               <NavLogo />
               <Link
-                href="/for-requesters"
+                href="/requests"
                 className="hidden md:inline-flex px-3 py-1.5 rounded-lg text-sm text-[#606060] hover:text-[#0f0f0f] hover:bg-[#f5f5f5] transition-colors"
               >
-                困りごとを書く人へ
+                困りごと
+              </Link>
+              <Link
+                href="/apps"
+                className="hidden lg:inline-flex px-3 py-1.5 rounded-lg text-sm text-[#606060] hover:text-[#0f0f0f] hover:bg-[#f5f5f5] transition-colors"
+              >
+                アプリ
               </Link>
               <Link
                 href="/for-developers"
                 className="hidden lg:inline-flex px-3 py-1.5 rounded-lg text-sm text-[#606060] hover:text-[#0f0f0f] hover:bg-[#f5f5f5] transition-colors"
               >
-                開発者へ
-              </Link>
-              <Link
-                href="/find-apps"
-                className="hidden lg:inline-flex px-3 py-1.5 rounded-lg text-sm text-[#606060] hover:text-[#0f0f0f] hover:bg-[#f5f5f5] transition-colors"
-              >
-                アプリを探す
+                開発者向け
               </Link>
               <Link
                 href="/articles"
@@ -184,11 +184,14 @@ export default async function RootLayout({
               {" "}— 小さな困りごとを小さなアプリで解決する場所
             </p>
             <div className="flex flex-wrap gap-4 text-sm text-[#606060]">
-              <Link href="/for-requesters" className="hover:text-[#0f0f0f]">困りごとを書く人へ</Link>
-              <Link href="/for-developers" className="hover:text-[#0f0f0f]">開発者へ</Link>
-              <Link href="/find-apps" className="hover:text-[#0f0f0f]">アプリを探す</Link>
+              <Link href="/requests" className="hover:text-[#0f0f0f]">困りごと</Link>
+              <Link href="/apps" className="hover:text-[#0f0f0f]">アプリ</Link>
+              <Link href="/for-developers" className="hover:text-[#0f0f0f]">開発者向け</Link>
               <Link href="/articles" className="hover:text-[#0f0f0f]">読みもの</Link>
-              <Link href="/tools" className="hover:text-[#0f0f0f]">ツール</Link>
+              <Link href="/terms" className="hover:text-[#0f0f0f]">利用規約</Link>
+              <Link href="/privacy" className="hover:text-[#0f0f0f]">プライバシー</Link>
+              <Link href="/operator" className="hover:text-[#0f0f0f]">運営者情報</Link>
+              <Link href="/contact" className="hover:text-[#0f0f0f]">問い合わせ</Link>
               <Link href="/editorial-policy" className="hover:text-[#0f0f0f]">編集方針</Link>
             </div>
           </div>

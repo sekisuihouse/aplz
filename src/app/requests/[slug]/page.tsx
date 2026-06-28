@@ -130,6 +130,8 @@ export default async function RequestDetailPage({ params, searchParams }: Reques
   }));
   const requestUrl = absoluteUrl(`/requests/${request.slug}`);
   const backHref = buildBackHref(query);
+  const requestSummary = request.desired_outcome || request.description || request.pain_point || "詳しい条件は投稿本文とコメントで確認してください。";
+  const developmentEstimate = estimateDevelopment(request);
   const discussionComments = [
     ...enrichedComments.map((comment) => ({
       "@type": "Comment",
@@ -226,7 +228,20 @@ export default async function RequestDetailPage({ params, searchParams }: Reques
                   {request.updated_at && ` ・ ${formatDate(request.updated_at)}に更新`}
                 </p>
               </div>
-              <ReportButton targetType="request" targetId={request.id} />
+              <div className="flex shrink-0 items-center gap-2">
+                <a
+                  href="#solution-form"
+                  className="hidden sm:inline-flex rounded-lg bg-[#1B4F72] px-4 py-2 text-sm font-semibold text-white hover:bg-[#15415F]"
+                >
+                  この困りごとを作ってみる
+                </a>
+                <ReportButton targetType="request" targetId={request.id} />
+              </div>
+            </div>
+
+            <div className="mt-5 rounded-lg border border-[#d8e2e8] bg-[#f7fbfd] p-4">
+              <p className="text-xs font-semibold text-[#1B4F72]">課題の要約</p>
+              <p className="mt-2 text-base leading-8 text-[#0f0f0f]">{requestSummary}</p>
             </div>
 
             {request.privacy_level === "high" && (
@@ -242,9 +257,17 @@ export default async function RequestDetailPage({ params, searchParams }: Reques
               <InfoBlock label="理想状態" value={request.desired_outcome} />
               <InfoBlock label="誰が困っているか" value={request.target_user_type} />
               <InfoBlock label="使う頻度" value={request.usage_frequency} />
-              <InfoBlock label="入力データ" value={request.input_data} />
-              <InfoBlock label="出力結果" value={request.output_data} />
+              <InfoBlock label="必須条件" value={request.output_data} />
+              <InfoBlock label="できれば欲しい条件" value={request.input_data} />
               <InfoBlock label="期限" value={request.deadline} />
+              <InfoBlock label="想定端末" value="スマートフォンとPCのブラウザ" />
+              <InfoBlock label="想定開発期間" value={developmentEstimate.period} />
+              <InfoBlock label="想定作業量" value={developmentEstimate.effort} />
+              <InfoBlock label="報酬条件" value="未設定の場合は、無償・有償・相談可能をコメントで確認してください。" />
+              <InfoBlock label="公開範囲" value={request.is_public ? "公開ページとして表示" : "非公開"} />
+              <InfoBlock label="著作権・再利用条件" value="投稿本文の再利用や完成アプリの再利用条件は、投稿者と制作者の合意を優先します。" />
+              <InfoBlock label="投稿者の返信目安" value="コメント後、数日以内の返信を目安にしてください。急ぎの場合は期限も確認してください。" />
+              <InfoBlock label="外部サービス連携" value="必要な場合はコメントで確認してください。個人情報や外部通信が増える場合は明記が必要です。" />
               {request.reference_url && (
                 <div className="md:col-span-2 bg-[#f5f5f5] border border-[#e5e5e5] rounded-lg p-3">
                   <p className="text-xs text-[#909090] mb-1">参考URL</p>
@@ -270,7 +293,7 @@ export default async function RequestDetailPage({ params, searchParams }: Reques
                 href="#solution-form"
                 className="px-3 py-1.5 rounded-lg bg-[#1B4F72] text-white text-sm font-medium hover:bg-[#15415F] transition-colors"
               >
-                アプリで回答する
+                この困りごとを作ってみる
               </a>
             </div>
             {enrichedSolutions.length === 0 ? (
@@ -292,7 +315,7 @@ export default async function RequestDetailPage({ params, searchParams }: Reques
 
           <section id="solution-form" className="mt-6">
             <h2 className="text-sm font-semibold text-[#0f0f0f] mb-3">
-              アプリで回答する
+              この困りごとを作ってみる
             </h2>
             <SolutionForm requestSlug={request.slug} />
           </section>
@@ -311,6 +334,9 @@ export default async function RequestDetailPage({ params, searchParams }: Reques
               requestOwnerId={request.user_id}
               currentUserId={user?.id ?? null}
             />
+            <p className="mt-3 rounded-lg bg-[#f8f8f8] p-3 text-sm leading-6 text-[#606060]">
+              開発者は、入力データ、出力結果、必須条件、個人情報の扱いを短く質問してください。投稿者は分かる範囲で返答すれば十分です。
+            </p>
             <div id="comment-form" className="mt-4">
               <RequestCommentForm requestSlug={request.slug} />
             </div>
@@ -391,4 +417,20 @@ function makeProfileMap(
     };
   }
   return map;
+}
+
+function estimateDevelopment(request: {
+  input_data?: string | null;
+  output_data?: string | null;
+  reference_url?: string | null;
+  privacy_level?: string | null;
+}) {
+  const complexity =
+    (request.input_data ? 1 : 0) +
+    (request.output_data ? 1 : 0) +
+    (request.reference_url ? 1 : 0) +
+    (request.privacy_level === "medium" || request.privacy_level === "high" ? 2 : 0);
+  if (complexity >= 4) return { period: "1〜3週間程度", effort: "中規模。要件確認と安全確認が必要" };
+  if (complexity >= 2) return { period: "数日〜2週間程度", effort: "小〜中規模。1〜3画面程度から開始" };
+  return { period: "数日程度", effort: "小規模。1画面の試作から開始" };
 }

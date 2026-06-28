@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { GENERATED_TOOLS } from "@/lib/generated-tools";
+import { PUBLISHED_TOOLS } from "@/lib/public-tools";
 import { JsonLd, absoluteUrl, breadcrumbJsonLd, pageMetadata } from "@/lib/seo";
 import ToolClient from "./ToolClient";
 
@@ -9,12 +9,12 @@ interface ToolPageProps {
 }
 
 export function generateStaticParams() {
-  return GENERATED_TOOLS.map((tool) => ({ slug: tool.slug }));
+  return PUBLISHED_TOOLS.map((tool) => ({ slug: tool.slug }));
 }
 
 export async function generateMetadata({ params }: ToolPageProps) {
   const { slug } = await params;
-  const tool = GENERATED_TOOLS.find((item) => item.slug === slug);
+  const tool = PUBLISHED_TOOLS.find((item) => item.slug === slug);
   if (!tool) return { title: "ツールが見つかりません | APLZ" };
   return pageMetadata({
     title: tool.seoTitle,
@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: ToolPageProps) {
 
 export default async function ToolPage({ params }: ToolPageProps) {
   const { slug } = await params;
-  const tool = GENERATED_TOOLS.find((item) => item.slug === slug);
+  const tool = PUBLISHED_TOOLS.find((item) => item.slug === slug);
   if (!tool) notFound();
 
   return (

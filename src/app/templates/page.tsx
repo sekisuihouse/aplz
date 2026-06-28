@@ -1,110 +1,130 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 
-type Category = "all" | "education" | "medical" | "construction" | "food" | "agriculture" | "other";
+type Category = "all" | "local" | "school" | "shop" | "home" | "work";
 
-interface Template {
+type Template = {
   id: string;
   title: string;
   category: Category;
   categoryLabel: string;
   problem: string;
-  solution: string;
-}
+  input: string;
+  output: string;
+  time: string;
+  beginner: boolean;
+  skills: string;
+};
 
 const CATEGORIES: { key: Category; label: string }[] = [
   { key: "all", label: "すべて" },
-  { key: "education", label: "教育（教師・学校）" },
-  { key: "medical", label: "医療（医師・看護師）" },
-  { key: "construction", label: "建設・不動産" },
-  { key: "food", label: "飲食・小売" },
-  { key: "agriculture", label: "農業" },
-  { key: "other", label: "その他" },
+  { key: "local", label: "町内会・地域" },
+  { key: "school", label: "学校・PTA" },
+  { key: "shop", label: "店・商売" },
+  { key: "home", label: "家・生活" },
+  { key: "work", label: "小さな仕事" },
 ];
 
 const TEMPLATES: Template[] = [
   {
-    id: "desk-layout",
-    title: "教室の机・椅子配置最適化ツール",
-    category: "education",
-    categoryLabel: "教育",
-    problem:
-      "クラス替えや席替えのたびに、教室の机と椅子の配置を手作業で考えるのが大変。生徒の視力や身長、人間関係も考慮したい。",
-    solution:
-      "教室のサイズと生徒情報を入力すると、最適な座席配置を自動で提案。ドラッグ＆ドロップで微調整も可能。",
+    id: "duty-roster",
+    title: "当番表を自動で並べたい",
+    category: "local",
+    categoryLabel: "町内会",
+    problem: "名前と当番の種類を入れるだけで、偏りが少ない当番表を作りたい。",
+    input: "名前、当番名、必要人数",
+    output: "名前と当番の対応表",
+    time: "半日〜2日",
+    beginner: true,
+    skills: "フォーム / 表示 / シャッフル",
   },
   {
-    id: "medication-schedule",
-    title: "患者の投薬スケジュール管理",
-    category: "medical",
-    categoryLabel: "医療",
-    problem:
-      "複数の患者に対する投薬タイミングの管理が煩雑。飲み合わせの確認や投薬漏れの防止に手間がかかる。",
-    solution:
-      "患者ごとの投薬スケジュールを一覧表示し、次の投薬時間をアラートで通知。飲み合わせチェック機能付き。",
+    id: "event-staff",
+    title: "イベントの必要スタッフ数を見積もりたい",
+    category: "local",
+    categoryLabel: "地域イベント",
+    problem: "受付、誘導、片付けなど、何人必要か毎回あいまいになる。",
+    input: "来場予定人数、受付数、開催時間",
+    output: "役割別の必要人数メモ",
+    time: "1〜3日",
+    beginner: true,
+    skills: "計算 / 条件分岐",
   },
   {
-    id: "daily-sales",
-    title: "日次売上・在庫記録シート",
-    category: "food",
-    categoryLabel: "飲食",
-    problem:
-      "毎日の売上集計と在庫確認を紙やExcelで管理しており、入力ミスや集計に時間がかかる。",
-    solution:
-      "スマホからワンタップで売上・在庫を入力。日次・週次・月次のグラフを自動生成し、発注タイミングも提案。",
+    id: "school-items",
+    title: "持ち物チェック表を作りたい",
+    category: "school",
+    categoryLabel: "学校・PTA",
+    problem: "行事ごとに持ち物が変わり、連絡文を作るたびに抜け漏れが出る。",
+    input: "行事名、日付、必要な持ち物",
+    output: "印刷しやすいチェック表",
+    time: "半日〜2日",
+    beginner: true,
+    skills: "チェックリスト / 印刷CSS",
   },
   {
-    id: "planting-calendar",
-    title: "作付けカレンダー管理",
-    category: "agriculture",
-    categoryLabel: "農業",
-    problem:
-      "作物の種まき・植え付け・収穫時期の管理が複雑。天候や連作障害も考慮する必要がある。",
-    solution:
-      "作物ごとの栽培スケジュールをカレンダーで可視化。地域の気候データと連携し、最適な作業タイミングを通知。",
+    id: "shop-menu-label",
+    title: "小さな店のメニュー札を作りたい",
+    category: "shop",
+    categoryLabel: "店舗",
+    problem: "商品名と価格を入力して、見やすいメニュー札をすぐ作りたい。",
+    input: "商品名、価格、ひとこと説明",
+    output: "スマホでも印刷でも見やすい札",
+    time: "1〜3日",
+    beginner: true,
+    skills: "レイアウト / 印刷",
   },
   {
-    id: "safety-checklist",
-    title: "現場の安全チェックリスト",
-    category: "construction",
-    categoryLabel: "建設",
-    problem:
-      "建設現場の安全確認を紙のチェックリストで行っており、記録の管理や過去の確認が困難。",
-    solution:
-      "デジタルチェックリストで現場の安全確認を実施。写真添付・GPS記録・過去履歴の検索が可能。",
+    id: "family-schedule",
+    title: "家族の予定を1週間分だけ共有したい",
+    category: "home",
+    categoryLabel: "家・生活",
+    problem: "アプリを増やすほどではないけれど、今週の予定だけ見える表がほしい。",
+    input: "人、曜日、予定",
+    output: "1週間の共有表",
+    time: "半日〜2日",
+    beginner: true,
+    skills: "表 / localStorage",
+  },
+  {
+    id: "handover-list",
+    title: "引き継ぎ項目を漏れなく並べたい",
+    category: "work",
+    categoryLabel: "小さな仕事",
+    problem: "担当が変わるとき、何を伝えればよいか毎回思い出すのが大変。",
+    input: "作業名、頻度、注意点",
+    output: "引き継ぎチェックリスト",
+    time: "1〜3日",
+    beginner: true,
+    skills: "フォーム / テンプレート生成",
   },
 ];
 
 export default function TemplatesPage() {
   const [selectedCategory, setSelectedCategory] = useState<Category>("all");
-  const [showModal, setShowModal] = useState(false);
-
-  const filtered =
-    selectedCategory === "all"
-      ? TEMPLATES
-      : TEMPLATES.filter((t) => t.category === selectedCategory);
+  const filtered = useMemo(
+    () => selectedCategory === "all" ? TEMPLATES : TEMPLATES.filter((template) => template.category === selectedCategory),
+    [selectedCategory]
+  );
 
   return (
-    <main className="max-w-5xl mx-auto px-4 py-12 animate-fade-in">
-      {/* Header */}
-      <section className="text-center mb-10">
-        <h1 className="text-2xl sm:text-3xl font-bold text-[#0f0f0f] mb-3">
-          あなたの職業で起こりやすい困りごとを見つけよう
-        </h1>
-        <p className="text-[#606060] text-sm sm:text-base">
-          現場の課題を具体化するための例を、職種ごとに見比べられます
+    <main className="mx-auto max-w-6xl px-4 py-12">
+      <section className="mb-10">
+        <p className="text-sm font-semibold text-[#1B4F72]">Templates</p>
+        <h1 className="mt-2 text-3xl font-bold text-[#0f0f0f]">小さく作れる困りごとテンプレート</h1>
+        <p className="mt-3 max-w-2xl text-sm leading-7 text-[#606060]">
+          実データなしで試せる、1画面から作れる例だけを載せています。医療判断や大量の個人情報を扱う例は掲載しません。
         </p>
       </section>
 
-      {/* Category Filter */}
-      <section className="flex flex-wrap gap-2 justify-center mb-10">
+      <section className="mb-8 flex flex-wrap gap-2">
         {CATEGORIES.map((cat) => (
           <button
             key={cat.key}
             onClick={() => setSelectedCategory(cat.key)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
               selectedCategory === cat.key
                 ? "bg-[#1B4F72] text-white"
                 : "border border-[#e5e5e5] text-[#606060] hover:bg-[#f5f5f5]"
@@ -115,105 +135,41 @@ export default function TemplatesPage() {
         ))}
       </section>
 
-      {/* Template Cards */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-12">
+      <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {filtered.map((template) => (
-          <div
-            key={template.id}
-            className="border border-[#e5e5e5] rounded-xl p-5 flex flex-col gap-3 hover:shadow-md transition-shadow"
-          >
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-[#f5f5f5] text-[#606060]">
-                {template.categoryLabel}
+          <article key={template.id} className="flex flex-col rounded-lg border border-[#e5e5e5] bg-white p-5">
+            <div className="flex flex-wrap gap-2">
+              <span className="rounded-md bg-[#f5f5f5] px-2 py-0.5 text-xs text-[#606060]">{template.categoryLabel}</span>
+              <span className="rounded-md bg-[#1B4F72]/10 px-2 py-0.5 text-xs text-[#1B4F72]">
+                {template.beginner ? "初心者向け" : "経験者向け"}
               </span>
+              <span className="rounded-md bg-[#f5f5f5] px-2 py-0.5 text-xs text-[#606060]">{template.time}</span>
             </div>
-            <h3 className="font-bold text-[#0f0f0f] text-base">
-              {template.title}
-            </h3>
-            <div className="flex-1 flex flex-col gap-2">
-              <div>
-                <p className="text-xs font-medium text-[#909090] mb-1">課題</p>
-                <p className="text-sm text-[#606060] leading-relaxed">
-                  {template.problem}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs font-medium text-[#909090] mb-1">
-                  こういう解決イメージ
-                </p>
-                <p className="text-sm text-[#606060] leading-relaxed">
-                  {template.solution}
-                </p>
-              </div>
+            <h2 className="mt-4 text-lg font-bold text-[#0f0f0f]">{template.title}</h2>
+            <p className="mt-2 text-sm leading-7 text-[#606060]">{template.problem}</p>
+            <div className="mt-4 grid gap-2 rounded-lg bg-[#f8f8f8] p-3 text-sm">
+              <SmallSpec label="入力" value={template.input} />
+              <SmallSpec label="出力" value={template.output} />
+              <SmallSpec label="必要技術" value={template.skills} />
             </div>
             <Link
-              href="/requests"
-              className="mt-2 px-4 py-2.5 rounded-lg bg-[#1B4F72] text-white text-sm font-medium hover:bg-[#15415F] transition-colors text-center"
+              href={`/requests/new?template=${template.id}`}
+              className="mt-5 inline-flex min-h-10 items-center justify-center rounded-lg bg-[#1B4F72] px-4 py-2 text-sm font-semibold text-white hover:bg-[#15415F]"
             >
-              関連する困りごとを見る
+              このテンプレートで投稿する
             </Link>
-          </div>
+          </article>
         ))}
       </section>
-
-      {/* CTA */}
-      <section className="text-center">
-        <p className="text-[#606060] text-sm mb-4">
-          あなたの職業で困っていることはありませんか？
-        </p>
-        <button
-          onClick={() => setShowModal(true)}
-          className="px-6 py-3 rounded-lg border border-[#e5e5e5] text-[#0f0f0f] text-sm font-medium hover:bg-[#f5f5f5] transition-colors"
-        >
-          課題を投稿する
-        </button>
-      </section>
-
-      {/* Modal */}
-      {showModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-          onClick={() => setShowModal(false)}
-        >
-          <div
-            className="bg-white rounded-xl p-6 w-full max-w-md mx-4 animate-fade-in"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 className="text-lg font-bold text-[#0f0f0f] mb-2">
-              課題を投稿する
-            </h2>
-            <p className="text-sm text-[#606060] mb-5">
-              この機能は近日公開予定です。あなたの職業で困っていることを教えてください。
-            </p>
-            <div className="flex flex-col gap-3 mb-5">
-              <input
-                type="text"
-                placeholder="あなたの職業（例：小学校教師）"
-                className="w-full bg-[#f5f5f5] border border-[#e5e5e5] rounded-lg px-4 py-2.5 text-sm text-[#0f0f0f] placeholder:text-[#909090] focus:outline-none focus:border-[#909090] transition-colors"
-              />
-              <textarea
-                placeholder="困っていること・解決したい課題を教えてください"
-                rows={4}
-                className="w-full bg-[#f5f5f5] border border-[#e5e5e5] rounded-lg px-4 py-2.5 text-sm text-[#0f0f0f] placeholder:text-[#909090] focus:outline-none focus:border-[#909090] transition-colors resize-none"
-              />
-            </div>
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={() => setShowModal(false)}
-                className="px-4 py-2 rounded-lg text-sm text-[#606060] hover:bg-[#f5f5f5] transition-colors"
-              >
-                閉じる
-              </button>
-              <button
-                onClick={() => setShowModal(false)}
-                className="px-4 py-2 rounded-lg bg-[#1B4F72] text-white text-sm font-medium hover:bg-[#15415F] transition-colors"
-              >
-                送信（準備中）
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </main>
+  );
+}
+
+function SmallSpec({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-xs text-[#909090]">{label}</p>
+      <p className="mt-0.5 text-[#0f0f0f]">{value}</p>
+    </div>
   );
 }

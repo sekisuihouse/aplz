@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { CheckCircle2, ChevronDown, Sparkles } from "lucide-react";
+import { CheckCircle2, ChevronDown, Eye, Save, Sparkles } from "lucide-react";
 import { REQUEST_CATEGORIES } from "@/lib/request-platform";
+
+const DRAFT_KEY = "aplz.requestDraft.v2";
 
 const EXAMPLES = [
   {
@@ -62,8 +64,35 @@ export default function NewRequestPage() {
     is_beginner_friendly: true,
   });
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(true);
+  const [draftState, setDraftState] = useState("未保存");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(DRAFT_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as Partial<typeof form>;
+      setForm((prev) => ({ ...prev, ...parsed }));
+      setDetailsOpen(true);
+      setDraftState("下書きを復元しました");
+    } catch {
+      setDraftState("下書きを読み込めませんでした");
+    }
+  }, []);
+
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      try {
+        window.localStorage.setItem(DRAFT_KEY, JSON.stringify(form));
+        setDraftState("下書き保存済み");
+      } catch {
+        setDraftState("下書きを保存できませんでした");
+      }
+    }, 350);
+    return () => window.clearTimeout(id);
+  }, [form]);
 
   const update = (key: keyof typeof form, value: string | boolean) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -104,6 +133,9 @@ export default function NewRequestPage() {
         body: JSON.stringify(form),
       });
       if (res.status === 401) {
+        try {
+          window.localStorage.setItem(DRAFT_KEY, JSON.stringify(form));
+        } catch {}
         router.push("/login?mode=signup&next=/requests/new");
         return;
       }
@@ -112,6 +144,7 @@ export default function NewRequestPage() {
         setError(data.error || "投稿できませんでした");
         return;
       }
+      window.localStorage.removeItem(DRAFT_KEY);
       router.push(`/requests/${data.request.slug}`);
     } catch {
       setError("通信エラーが発生しました");
@@ -143,6 +176,7 @@ export default function NewRequestPage() {
     },
   ];
   const progress = progressItems.filter((item) => item.done).length;
+  const guidance = useMemo(() => buildGuidance(form), [form]);
 
   return (
     <main className="max-w-5xl mx-auto px-4 py-8">
@@ -154,7 +188,7 @@ export default function NewRequestPage() {
           困りごとを書く
         </h1>
         <p className="text-sm text-[#606060] mt-1">
-          まずは一言で大丈夫です。あとから質問で補えます。
+          まずは一言で大丈夫です。登録は投稿直前でできます。入力内容はこのブラウザに下書き保存されます。
         </p>
       </div>
 
@@ -166,7 +200,7 @@ export default function NewRequestPage() {
               投稿まで {progress}/4
             </p>
             <p className="text-xs text-[#909090]">
-              必須はタイトルと期限
+              必須はタイトルと期限。登録は最後でOK
             </p>
           </div>
           <div className="h-2 rounded-full bg-[#f0f0f0] overflow-hidden">
@@ -202,6 +236,17 @@ export default function NewRequestPage() {
             placeholder="何に困っていますか？"
           />
         </label>
+
+        {guidance.length > 0 && (
+          <div className="mt-4 rounded-lg border border-[#f1dfb8] bg-[#fff8ea] p-4">
+            <p className="text-sm font-semibold text-[#5A4332]">もう少しだけ分かると、作る人が動きやすくなります</p>
+            <ul className="mt-2 space-y-1.5 text-sm leading-6 text-[#6f5845]">
+              {guidance.map((item) => (
+                <li key={item}>・{item}</li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         <label className="block mt-5">
           <span className="block text-sm text-[#606060] mb-1.5">本文</span>
@@ -267,6 +312,9 @@ export default function NewRequestPage() {
             具体的な氏名、住所、連絡先、支払い情報は公開本文に書かないでください。
           </p>
         )}
+        <p className="mt-3 rounded-lg bg-[#f8f8f8] p-3 text-sm leading-6 text-[#606060]">
+          公開される場所です。氏名、住所、電話番号、メール、支払い情報、子どもや学校を特定できる情報は本文に書かないでください。
+        </p>
 
         <button
           type="button"
@@ -292,6 +340,26 @@ export default function NewRequestPage() {
               />
             </Field>
             <div className="grid md:grid-cols-2 gap-4">
+              <Field label="必須条件">
+                <textarea
+                  value={form.output_data}
+                  onChange={(event) => update("output_data", event.target.value)}
+                  rows={3}
+                  className="input resize-none"
+                  placeholder="これだけは必要: 表で出したい、スマホで見たい、印刷したいなど"
+                />
+              </Field>
+              <Field label="できれば欲しい条件">
+                <textarea
+                  value={form.input_data}
+                  onChange={(event) => update("input_data", event.target.value)}
+                  rows={3}
+                  className="input resize-none"
+                  placeholder="あると嬉しい: CSV保存、色分け、履歴など"
+                />
+              </Field>
+            </div>
+            <div className="grid md:grid-cols-2 gap-4">
               <Field label="今のやり方">
                 <textarea
                   value={form.current_workflow}
@@ -308,26 +376,6 @@ export default function NewRequestPage() {
                   rows={3}
                   className="input resize-none"
                   placeholder="ミスが多い、毎回時間がかかる、共有しづらいなど"
-                />
-              </Field>
-            </div>
-            <div className="grid md:grid-cols-2 gap-4">
-              <Field label="入力するもの">
-                <textarea
-                  value={form.input_data}
-                  onChange={(event) => update("input_data", event.target.value)}
-                  rows={3}
-                  className="input resize-none"
-                  placeholder="名前、人数、日付、金額など"
-                />
-              </Field>
-              <Field label="出てほしいもの">
-                <textarea
-                  value={form.output_data}
-                  onChange={(event) => update("output_data", event.target.value)}
-                  rows={3}
-                  className="input resize-none"
-                  placeholder="表、PDF、文章、チェックリストなど"
                 />
               </Field>
             </div>
@@ -374,6 +422,18 @@ export default function NewRequestPage() {
       </section>
 
       <aside className="lg:sticky lg:top-24 space-y-3">
+        <div className="rounded-lg border border-[#d8e2e8] bg-[#f7fbfd] p-4">
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="text-sm font-semibold text-[#0f0f0f]">
+              下書き
+            </h2>
+            <Save size={15} className="text-[#1B4F72]" />
+          </div>
+          <p className="mt-2 text-sm text-[#606060]">{draftState}</p>
+          <p className="mt-2 text-xs leading-5 text-[#909090]">
+            この端末のブラウザにだけ保存します。共有端末では入力内容を残さないでください。
+          </p>
+        </div>
         <div className="rounded-lg border border-[#e5e5e5] bg-[#fafafa] p-4">
           <h2 className="text-sm font-semibold text-[#0f0f0f] mb-3">
             書く順番
@@ -406,6 +466,28 @@ export default function NewRequestPage() {
             「誰が」「今どうしていて」「何が面倒か」のうち、書けるところだけで十分です。
           </p>
         </div>
+        <div className="rounded-lg border border-[#e5e5e5] bg-white p-4">
+          <button
+            type="button"
+            onClick={() => setPreviewOpen((value) => !value)}
+            className="flex w-full items-center justify-between text-left text-sm font-semibold text-[#0f0f0f]"
+          >
+            完成イメージ
+            <Eye size={15} className="text-[#1B4F72]" />
+          </button>
+          {previewOpen && (
+            <div className="mt-3 rounded-lg bg-[#f8f8f8] p-3">
+              <p className="text-xs text-[#909090]">タイトル</p>
+              <p className="mt-1 text-sm font-semibold text-[#0f0f0f]">{form.title || "例: 町内会の当番表を作るのが大変"}</p>
+              <p className="mt-3 text-xs text-[#909090]">理想状態</p>
+              <p className="mt-1 text-sm leading-6 text-[#606060]">{form.desired_outcome || form.description || "どうなったら楽かがここに表示されます。"}</p>
+              <p className="mt-3 text-xs text-[#909090]">作る人が見るポイント</p>
+              <p className="mt-1 text-sm leading-6 text-[#606060]">
+                {form.target_user_type || "誰が使うか"} / {form.current_workflow || "今のやり方"} / {form.pain_point || "面倒な点"}
+              </p>
+            </div>
+          )}
+        </div>
       </aside>
       </div>
 
@@ -417,7 +499,7 @@ export default function NewRequestPage() {
 
       <div className="sticky bottom-0 -mx-4 mt-6 px-4 py-3 bg-white/90 backdrop-blur border-t border-[#e5e5e5] flex items-center justify-between gap-3">
         <p className="text-xs text-[#909090]">
-          {canSubmit ? "この内容で投稿できます。足りない条件は質問で補えます。" : "タイトルと期限を入力すると投稿できます"}
+          {canSubmit ? "投稿後、未ログインの場合は登録画面へ進みます。下書きは消えません。" : "タイトルと期限を入力すると投稿できます"}
         </p>
         <div className="flex items-center gap-3">
           <Link href="/requests" className="text-sm text-[#606060] hover:underline">
@@ -434,6 +516,26 @@ export default function NewRequestPage() {
       </div>
     </main>
   );
+}
+
+function buildGuidance(form: {
+  title: string;
+  target_user_type: string;
+  current_workflow: string;
+  pain_point: string;
+  desired_outcome: string;
+  description: string;
+}) {
+  const items: string[] = [];
+  const combined = `${form.title} ${form.description}`.trim();
+  if (combined.length > 0 && combined.length < 24) {
+    items.push("短すぎるので、どんな場面で困るかを一文だけ足す");
+  }
+  if (!form.target_user_type.trim()) items.push("誰が困っているかを書く");
+  if (!form.current_workflow.trim()) items.push("今は紙、Excel、LINE、手作業など何で対応しているかを書く");
+  if (!form.pain_point.trim()) items.push("何が面倒か、ミスが起きる場所を書く");
+  if (!form.desired_outcome.trim()) items.push("完成したらどうなってほしいかを書く");
+  return items.slice(0, 4);
 }
 
 function Field({

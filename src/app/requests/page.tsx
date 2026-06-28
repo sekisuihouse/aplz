@@ -46,6 +46,8 @@ type RequestRow = {
   updated_at: string;
   answer_count: number;
   comment_count: number;
+  completed_app_title: string | null;
+  completed_app_href: string | null;
   author: { display_name: string | null; avatar_url: string | null } | null;
 };
 
@@ -102,7 +104,10 @@ export default async function RequestsPage({ searchParams }: RequestsPageProps) 
 
   const [{ data: solutions }, { data: comments }, { data: profiles }] = await Promise.all([
     requestIds.length
-      ? db.from("solutions").select("request_id").in("request_id", requestIds)
+      ? db
+          .from("solutions")
+          .select("request_id, title, app_slug, app_url, is_accepted, updated_at")
+          .in("request_id", requestIds)
       : Promise.resolve({ data: [] }),
     requestIds.length
       ? db.from("request_comments").select("request_id").in("request_id", requestIds)
@@ -113,8 +118,17 @@ export default async function RequestsPage({ searchParams }: RequestsPageProps) 
   ]);
 
   const solutionCounts: Record<string, number> = {};
+  const completedAppByRequest: Record<string, { title: string; href: string | null; accepted: boolean }> = {};
   for (const row of solutions ?? []) {
     solutionCounts[row.request_id] = (solutionCounts[row.request_id] ?? 0) + 1;
+    const href = row.app_slug ? `/apps/${row.app_slug}` : row.app_url || null;
+    if (href && (row.is_accepted || !completedAppByRequest[row.request_id])) {
+      completedAppByRequest[row.request_id] = {
+        title: row.title,
+        href,
+        accepted: Boolean(row.is_accepted),
+      };
+    }
   }
 
   const commentCounts: Record<string, number> = {};
@@ -134,6 +148,8 @@ export default async function RequestsPage({ searchParams }: RequestsPageProps) 
     ...request,
     answer_count: solutionCounts[request.id] ?? 0,
     comment_count: commentCounts[request.id] ?? 0,
+    completed_app_title: completedAppByRequest[request.id]?.title ?? null,
+    completed_app_href: completedAppByRequest[request.id]?.href ?? null,
     author: request.user_id ? profileMap[request.user_id] ?? null : null,
   }));
 
@@ -165,7 +181,7 @@ export default async function RequestsPage({ searchParams }: RequestsPageProps) 
           <p className="text-sm font-semibold text-[#1B4F72] mb-2">Requests</p>
           <h1 className="text-2xl md:text-3xl font-bold text-[#0f0f0f]">困りごと一覧</h1>
           <p className="text-sm text-[#606060] mt-1 max-w-2xl">
-            投稿を横並びで比べながら、状態、期限、回答数、安全レベルを先に見られるようにしています。
+            いま作ってほしい困りごとと、完成したアプリにつながった投稿を見られます。
           </p>
         </div>
         <Link
@@ -184,35 +200,17 @@ export default async function RequestsPage({ searchParams }: RequestsPageProps) 
           href={buildRequestsHref(params, { filter: "unsolved", selected: "" })}
           active={filter === "unsolved"}
         >
-          未解決
-        </QuickFilter>
-        <QuickFilter
-          href={buildRequestsHref(params, { filter: "answered", selected: "" })}
-          active={filter === "answered"}
-        >
-          回答あり
+          募集中
         </QuickFilter>
         <QuickFilter
           href={buildRequestsHref(params, { filter: "solved", selected: "" })}
           active={filter === "solved"}
         >
-          解決済み
-        </QuickFilter>
-        <QuickFilter
-          href={buildRequestsHref(params, { filter: "beginner", selected: "" })}
-          active={filter === "beginner"}
-        >
-          初心者向け
-        </QuickFilter>
-        <QuickFilter
-          href={buildRequestsHref(params, { filter: "privacy_none", selected: "" })}
-          active={filter === "privacy_none"}
-        >
-          個人情報なし
+          アプリ完成
         </QuickFilter>
       </div>
 
-      <form className="bg-white border border-[#e5e5e5] rounded-xl p-4 mb-5 shadow-sm">
+      <form className="bg-white border border-[#e5e5e5] rounded-xl p-4 mb-5">
         <input type="hidden" name="selected" value={selected} />
         <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_240px_240px]">
           <label className="relative block">
@@ -220,7 +218,7 @@ export default async function RequestsPage({ searchParams }: RequestsPageProps) 
             <input
               name="q"
               defaultValue={q}
-              placeholder="例: 当番表、集計、予約、連絡文"
+            placeholder="例: 当番表、集計、予約、連絡文"
               className="w-full bg-[#fafafa] border border-[#e5e5e5] rounded-xl pl-9 pr-4 py-3 text-sm focus:outline-none focus:border-[#1B4F72]"
             />
           </label>
@@ -252,7 +250,7 @@ export default async function RequestsPage({ searchParams }: RequestsPageProps) 
         <details className="mt-4 group" open={hasAdvancedFilters}>
           <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 text-sm text-[#1B4F72] hover:underline">
             <SlidersHorizontal size={15} />
-            詳細フィルター
+            さらに絞り込む
             {hasAdvancedFilters && (
               <span className="rounded-full bg-[#1B4F72]/10 px-2 py-0.5 text-xs text-[#1B4F72]">
                 適用中
@@ -278,9 +276,9 @@ export default async function RequestsPage({ searchParams }: RequestsPageProps) 
             </select>
             <select name="filter" defaultValue={filter} className="input min-w-36">
               <option value="">状態を指定しない</option>
-              <option value="unsolved">未解決</option>
+              <option value="unsolved">募集中</option>
               <option value="answered">回答あり</option>
-              <option value="solved">解決済み</option>
+              <option value="solved">アプリ完成</option>
               <option value="beginner">初心者向け</option>
               <option value="privacy_none">個人情報なし</option>
             </select>

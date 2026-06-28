@@ -78,12 +78,12 @@ export const PRIVACY_LEVEL_LABELS: Record<PrivacyLevel, string> = {
 };
 
 export const FEEDBACK_LABELS: Record<FeedbackType, string> = {
-  worked: "使えた",
+  worked: "役に立った",
   thanks: "ありがとう",
   saved_time: "作業が楽になった",
   clear: "わかりやすかった",
   use_again: "また使いたい",
-  needs_fix: "修正してほしい",
+  needs_fix: "改善希望",
   did_not_work: "使えなかった",
 };
 

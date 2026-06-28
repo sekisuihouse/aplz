@@ -15,6 +15,9 @@ export default function FeedbackButtons({
   const [counts, setCounts] = useState<Record<string, number>>(initialCounts);
   const [message, setMessage] = useState("");
   const [loadingType, setLoadingType] = useState<string | null>(null);
+  const visibleTypes = FEEDBACK_TYPES.filter((type) =>
+    ["worked", "did_not_work", "needs_fix"].includes(type)
+  );
 
   const sendFeedback = async (feedbackType: FeedbackType) => {
     if (loadingType) return;
@@ -49,7 +52,7 @@ export default function FeedbackButtons({
   return (
     <div>
       <div className="flex flex-wrap gap-2">
-        {FEEDBACK_TYPES.map((type) => (
+        {visibleTypes.map((type) => (
           <button
             key={type}
             onClick={() => sendFeedback(type)}

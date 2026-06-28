@@ -139,6 +139,16 @@ export default async function AppDetailPage({ params }: Props) {
     authorProfile = profile;
   }
 
+  const { data: sourceSolution } = await supabase
+    .from("solutions")
+    .select("title, description, usage_guide, data_handled, external_communication, data_storage, recommended_environment, caution_note, requests(title, slug, description, desired_outcome, privacy_level)")
+    .eq("app_slug", slug)
+    .order("is_accepted", { ascending: false })
+    .order("updated_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const sourceRequest = normalizeSourceRequest(sourceSolution?.requests);
+
   const iframeSrc = `${process.env.R2_PUBLIC_URL}/${slug}/index.html`;
   const r2PublicUrl = process.env.R2_PUBLIC_URL!;
   const appUrl = absoluteUrl(`/apps/${slug}`);
@@ -272,6 +282,30 @@ export default async function AppDetailPage({ params }: Props) {
             {app.description && (
               <p className="text-[#606060] mt-2 text-sm">{app.description}</p>
             )}
+            <div className="mt-4 grid gap-3 md:grid-cols-3">
+              <SafetyItem label="データ保存" value={sourceSolution?.data_storage ? "保存あり" : "要確認"} />
+              <SafetyItem label="外部通信" value={sourceSolution?.external_communication ? "あり" : "要確認"} />
+              <SafetyItem label="個人情報" value={sourceSolution?.data_handled || "入力前に確認"} />
+            </div>
+            {sourceSolution && (
+              <div className="mt-4 rounded-lg border border-[#e5e5e5] bg-[#fbfbfb] p-4">
+                <p className="text-xs font-semibold text-[#909090]">元になった困りごと</p>
+                <h2 className="mt-1 text-base font-bold text-[#0f0f0f]">
+                  {sourceRequest?.title}
+                </h2>
+                <p className="mt-2 text-sm leading-7 text-[#606060]">
+                  {sourceRequest?.desired_outcome || sourceRequest?.description}
+                </p>
+                {sourceRequest?.slug && (
+                  <Link
+                    href={`/requests/${sourceRequest.slug}`}
+                    className="mt-3 inline-flex text-sm font-semibold text-[#1B4F72] hover:underline"
+                  >
+                    元の困りごとへ戻る
+                  </Link>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Reactions */}
@@ -300,4 +334,25 @@ export default async function AppDetailPage({ params }: Props) {
       </div>
     </main>
   );
+}
+
+function SafetyItem({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-[#e5e5e5] bg-[#f8f8f8] px-3 py-2">
+      <p className="text-xs text-[#909090]">{label}</p>
+      <p className="mt-1 text-sm font-semibold text-[#0f0f0f]">{value}</p>
+    </div>
+  );
+}
+
+function normalizeSourceRequest(value: unknown) {
+  const item = Array.isArray(value) ? value[0] : value;
+  if (!item || typeof item !== "object") return null;
+  const record = item as Record<string, unknown>;
+  return {
+    title: typeof record.title === "string" ? record.title : "",
+    slug: typeof record.slug === "string" ? record.slug : "",
+    description: typeof record.description === "string" ? record.description : "",
+    desired_outcome: typeof record.desired_outcome === "string" ? record.desired_outcome : "",
+  };
 }
